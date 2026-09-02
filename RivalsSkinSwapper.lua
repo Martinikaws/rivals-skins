@@ -1,176 +1,141 @@
 -- =========================================================================
---  RIVALS FIRST-PERSON VISUAL TRANSFORMER (100% AutoExec & Queue Safe)
+--  RIVALS 100% TELEPORT & QUEUE-SAFE SKIN SWAPPER
 -- =========================================================================
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
+if not pcall(memory_read, "int", game.Address) then 
+    pcall(notify, "UnsafeLua is disabled in executor.", "SC", 5) 
+    return 
+end
 
-local LP = Players.LocalPlayer
-if not LP then return end
+local mrd, mwr, pcall, ipairs, pairs = memory_read, memory_write, pcall, ipairs, pairs
+local floor = math.floor
 
--- 📂 READ CONFIGURATION FROM WORKSPACE
-local configFileName = "rivals_config.lua"
-local skinConfig = {}
+local rd = function(a) 
+    local o, v = pcall(mrd, "uintptr_t", a)
+    return o and v or nil 
+end
 
-local function loadConfig()
-    skinConfig = {}
-    if isfile and readfile and isfile(configFileName) then
-        local content = readfile(configFileName)
-        for line in content:gmatch("[^\r\n]+") do
-            local eq = line:find("=")
-            if eq then
-                local w = line:sub(1, eq - 1):match("^%s*(.-)%s*$")
-                local s = line:sub(eq + 1):match("^%s*(.-)%s*$")
-                if #w > 0 and #s > 0 and s ~= "Default" and s ~= "Standard" then
-                    skinConfig[w:lower()] = s
+local wr = function(a, v) 
+    pcall(mwr, "uintptr_t", a, v) 
+end
+
+local LP = game:GetService("Players").LocalPlayer
+if not LP or game.GameId ~= 6035872082 then return end
+
+local OFF = {
+    Parent = 104,
+    Children = 120,
+    Transparency = 304
+}
+
+local A = LP.PlayerScripts:WaitForChild("Assets", 10)
+local vm = A and A:WaitForChild("ViewModels", 10)
+local wf = vm and vm:WaitForChild("Weapons", 10)
+
+local ga = function(f) 
+    if not f or not f.Address then return end
+    local n = rd(f.Address + OFF.Children)
+    if not n or n == 0 then return end
+    local b, e = rd(n), rd(n + 8)
+    if b and e then return b, e end 
+end
+
+local fs = function(b, e, t) 
+    if not b or not e then return end
+    for i = 0, floor((e - b) / 16) - 1 do 
+        local a = b + i * 16
+        if rd(a) == t then return a end 
+    end 
+end
+
+local function hideClutter(m)
+    if not m then return end
+    for _, c in ipairs(m:GetChildren()) do
+        local n = c.Name:lower()
+        if n:find("leg") or n:find("shell") or n:find("watermelon") or n:find("banana") or n:find("apple") or n:find("wing") then
+            for _, desc in ipairs(c:GetDescendants()) do
+                if desc.Address then
+                    pcall(mwr, "float", desc.Address + OFF.Transparency, 1.0)
                 end
             end
         end
     end
 end
 
-loadConfig()
+local function safeSwap(parent, default, skin) 
+    if not parent or not default or not skin then return false end
+    if default == skin then return false end
+    local b, e = ga(parent)
+    if not b then return false end
+    local sl = fs(b, e, default.Address)
+    if not sl then return false end
+    
+    hideClutter(skin)
+    
+    local ok = pcall(function() 
+        wr(sl, skin.Address) 
+    end) 
+    return ok
+end
 
--- 🔍 FIND SKIN MODEL FROM ASSETS
-local function findSkinModel(skinTarget)
-    local assets = LP:FindFirstChild("PlayerScripts") and LP.PlayerScripts:FindFirstChild("Assets")
-    local vm = assets and assets:FindFirstChild("ViewModels")
-    if not vm then return nil end
+local function applySkins()
+    local configFileName = "rivals_config.lua"
+    if not isfile or not readfile or not isfile(configFileName) then return end
+    
+    local r2 = readfile(configFileName)
+    local en = {}
+    for l in r2:gmatch("[^\r\n]+") do 
+        local q = l:find("=")
+        if q then 
+            local w = l:sub(1, q - 1):match("^%s*(.-)%s*$")
+            local s = l:sub(q + 1):match("^%s*(.-)%s*$")
+            if #w > 0 and #s > 0 then en[#en + 1] = {w, s} end 
+        end 
+    end
+    if #en == 0 or not vm or not wf then return end
 
-    for _, folder in ipairs(vm:GetChildren()) do
-        if folder:IsA("Folder") and folder.Name ~= "Weapons" then
-            local found = folder:FindFirstChild(skinTarget)
-            if found then return found end
-        end
+    local sc = {}
+    for _, f in ipairs(vm:GetChildren()) do 
+        if f:IsA("Folder") and f.Name ~= "Weapons" then 
+            for _, x in ipairs(f:GetChildren()) do sc[x.Name] = x end 
+        end 
     end
 
-    -- Check Bundles, Seasons, Unobtainable aliases
     if vm:FindFirstChild("Bundles") then
-        if skinTarget == "Keyblade" and vm.Bundles:FindFirstChild("Gunblade") then return vm.Bundles.Gunblade end
-        if skinTarget == "Crystal Daggers" and vm.Bundles:FindFirstChild("Crystal Daggers") then return vm.Bundles["Crystal Daggers"] end
+        if vm.Bundles:FindFirstChild("Gunblade") then sc["Keyblade"] = vm.Bundles.Gunblade end
+        if vm.Bundles:FindFirstChild("Crystal Daggers") then sc["Crystal Daggers"] = vm.Bundles["Crystal Daggers"] end
     end
     if vm:FindFirstChild("Seasons") then
-        local s = vm.Seasons
-        if skinTarget == "Arch Katana" and s:FindFirstChild("Katana") then return s.Katana end
-        if skinTarget == "Arch Molotov" and s:FindFirstChild("Molotov") then return s.Molotov end
-        if skinTarget == "Spy Gloves" and s:FindFirstChild("Fists") then return s.Fists end
-        if skinTarget == "Arch Crossbow" and s:FindFirstChild("Arch Crossbow") then return s["Arch Crossbow"] end
-        if skinTarget == "Arch Uzi" and (s:FindFirstChild("Arch Uzi") or s:FindFirstChild("Uzi")) then return s:FindFirstChild("Arch Uzi") or s.Uzi end
+        local seasons = vm.Seasons
+        if seasons:FindFirstChild("Katana") then sc["Arch Katana"] = seasons.Katana end
+        if seasons:FindFirstChild("Molotov") then sc["Arch Molotov"] = seasons.Molotov end
+        if seasons:FindFirstChild("Fists") then sc["Spy Gloves"] = seasons.Fists end
+        if seasons:FindFirstChild("Arch Crossbow") then sc["Arch Crossbow"] = seasons["Arch Crossbow"] end
+        if seasons:FindFirstChild("Uzi") then sc["Arch Uzi"] = seasons.Uzi end
+        if seasons:FindFirstChild("Arch Uzi") then sc["Arch Uzi"] = seasons["Arch Uzi"] end
     end
-    if vm:FindFirstChild("Unobtainable") and skinTarget == "Armature.001" then
-        return vm.Unobtainable:FindFirstChild("Armature.001")
+    if vm:FindFirstChild("Unobtainable") then
+        if vm.Unobtainable:FindFirstChild("Armature.001") then sc["Armature.001"] = vm.Unobtainable["Armature.001"] end
     end
 
-    return nil
-end
+    local aW = {}
+    for _, w in ipairs(wf:GetChildren()) do aW[w.Name] = w end
 
--- 🎨 TRANSFORM FIRST-PERSON VIEWMODEL
-local function transformViewModel(itemVisual, weaponName)
-    local targetSkinName = skinConfig[weaponName:lower()]
-    if not targetSkinName then return end
-
-    local sourceSkin = findSkinModel(targetSkinName)
-    if not sourceSkin then return end
-
-    local body = itemVisual:FindFirstChild("Body") or itemVisual:FindFirstChild("Model") or itemVisual:FindFirstChild("Bottom") or itemVisual:FindFirstChild("LeftBody")
-    if not body then return end
-
-    local bodyPrimary = body:FindFirstChild("Primary") or body.PrimaryPart
-    if not bodyPrimary then return end
-
-    -- Hide original weapon visual parts
-    for _, child in ipairs(itemVisual:GetChildren()) do
-        for _, desc in ipairs(child:GetDescendants()) do
-            if desc:IsA("BasePart") and desc.Name ~= "Primary" and not desc:GetAttribute("CustomSkinPart") then
-                desc.Transparency = 1
-            elseif desc:IsA("Decal") or desc:IsA("Texture") then
-                desc.Transparency = 1
-            end
+    local count = 0
+    for _, item in ipairs(en) do
+        local weaponName = item[1]
+        local skinTarget = item[2]
+        
+        local defVm = aW[weaponName]
+        local skinVm = sc[skinTarget]
+        if defVm and skinVm then 
+            if safeSwap(wf, defVm, skinVm) then count = count + 1 end 
         end
     end
-
-    -- If already transformed with this skin, avoid duplicating
-    if itemVisual:GetAttribute("AppliedSkin") == targetSkinName then return end
-    itemVisual:SetAttribute("AppliedSkin", targetSkinName)
-
-    -- Remove any old custom skin clone
-    local oldSkinClone = itemVisual:FindFirstChild("CustomSkinVisual")
-    if oldSkinClone then oldSkinClone:Destroy() end
-
-    -- Clone the target skin model cleanly
-    local skinClone = sourceSkin:Clone()
-    skinClone.Name = "CustomSkinVisual"
-    skinClone:SetAttribute("CustomSkinPart", true)
-
-    local cloneBody = skinClone:FindFirstChild("Body") or skinClone:FindFirstChild("Model") or skinClone:FindFirstChild("Bottom") or skinClone:FindFirstChild("LeftBody") or skinClone:GetChildren()[1]
-    local clonePrimary = cloneBody and (cloneBody:FindFirstChild("Primary") or cloneBody.PrimaryPart)
-
-    -- Clean detached clutter from skin (spider legs, loose shells, giant wings)
-    for _, c in ipairs(skinClone:GetChildren()) do
-        local n = c.Name:lower()
-        if n:find("leg") or n:find("shell") or n:find("watermelon") or n:find("banana") or n:find("apple") or (n:find("wing") and not targetSkinName:lower():find("crossbow")) then
-            c:Destroy()
-        elseif cloneBody and c ~= cloneBody and (n:find("drill") or n:find("slice") or n:find("top") or n:find("front") or n:find("back") or n:find("sword")) then
-            for _, p in ipairs(c:GetChildren()) do
-                p.Parent = cloneBody
-            end
-            c:Destroy()
-        end
-    end
-
-    -- Weld all parts of the new skin to the weapon's native Primary part
-    for _, desc in ipairs(skinClone:GetDescendants()) do
-        if desc:IsA("BasePart") then
-            desc.CanCollide = false
-            desc.CanTouch = false
-            desc.CanQuery = false
-            desc.Massless = true
-            desc.CastShadow = false
-            desc:SetAttribute("CustomSkinPart", true)
-
-            if desc.Name ~= "Primary" and bodyPrimary then
-                local weld = Instance.new("WeldConstraint")
-                weld.Part0 = bodyPrimary
-                weld.Part1 = desc
-                weld.Parent = desc
-            end
-        end
-    end
-
-    skinClone.Parent = itemVisual
     
-    -- Snap skin position to weapon primary
-    if clonePrimary and bodyPrimary then
-        skinClone:PivotTo(bodyPrimary.CFrame)
-    end
+    for _, w in ipairs(wf:GetChildren()) do hideClutter(w) end
+    print("Teleport-Safe Skins Applied! Swapped count:", count)
 end
 
--- 👁️ VIEWMODEL SCANNER & DETECTOR
-local function scanViewModels()
-    local vmFolder = Workspace:FindFirstChild("ViewModels")
-    local fp = vmFolder and vmFolder:FindFirstChild("FirstPerson")
-    local targetFolder = fp or Workspace:FindFirstChild("Camera") or Workspace.CurrentCamera
-
-    if targetFolder then
-        for _, vm in ipairs(targetFolder:GetChildren()) do
-            local iv = vm:FindFirstChild("ItemVisual")
-            if iv then
-                local nameParts = vm.Name:split(" - ")
-                local wName = nameParts[2] or vm.Name
-                transformViewModel(iv, wName)
-            end
-        end
-    end
-end
-
-RunService.Heartbeat:Connect(function()
-    scanViewModels()
-end)
-
-LP.CharacterAdded:Connect(function()
-    task.wait(0.3)
-    loadConfig()
-end)
-
-pcall(notify, "First-Person Skin Transformer Active! (100% Queue & Teleport Safe)", "SC", 5)
+applySkins()
+pcall(notify, "Teleport & Queue Safe Skins Active!", "SC", 4)
