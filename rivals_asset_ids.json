@@ -1,0 +1,500 @@
+{
+  "Weapon Icons": {
+    "Primary": {
+      "Assault Rifle": {
+        "Base": { "Low Res": "17160682738", "High Res": "13197584241" },
+        "10B Visits": { "Low Res": "122165086598560", "High Res": "101791753953377" },
+        "AK-47": { "Low Res": "17691132793", "High Res": "17691136128" },
+        "AKEY-47": { "Low Res": "80017496220683", "High Res": "77244120212187" },
+        "AUG": { "Low Res": "18770192853", "High Res": "18770201102" },
+        "Boneclaw Rifle": { "Low Res": "100015754284323", "High Res": "116725320040796" },
+        "Gingerbread AUG": { "Low Res": "85584922619813", "High Res": "108476862508992" },
+        "Glorious Assault Rifle": { "Low Res": "130669996688265", "High Res": "130592949312939" },
+        "Phoenix Rifle": { "Low Res": "140228738718621", "High Res": "115604025497445" },
+        "Tommy Gun": { "Low Res": "111251887761435", "High Res": "84369917689099" }
+      },
+      "Bow": {
+        "Base": { "Low Res": "17160802080", "High Res": "13717212331" },
+        "Balloon Bow": { "Low Res": "128957010941029", "High Res": "123350417110914" },
+        "Bat Bow": { "Low Res": "108984987378619", "High Res": "71508472340303" },
+        "Beloved Bow": { "Low Res": "110219131386799", "High Res": "92379249333386" },
+        "Compound Bow": { "Low Res": "17672234242", "High Res": "17672229023" },
+        "Dream Bow": { "Low Res": "101089313144218", "High Res": "104571173348964" },
+        "Frostbite Bow": { "Low Res": "121895626623160", "High Res": "82246935699705" },
+        "Glorious Bow": { "Low Res": "84201415206621", "High Res": "139021383472653" },
+        "Key Bow": { "Low Res": "122525140091212", "High Res": "101924188286368" },
+        "Raven Bow": { "Low Res": "18766861627", "High Res": "18766905321" }
+      },
+      "Burst Rifle": {
+        "Base": { "Low Res": "17160801983", "High Res": "13482243466" },
+        "Aqua Burst": { "Low Res": "18837670807", "High Res": "18837677725" },
+        "Electro Rifle": { "Low Res": "132227459821018", "High Res": "87621360986223" },
+        "FAMAS": { "Low Res": "74974560606812", "High Res": "110423034763836" },
+        "Glorious Burst Rifle": { "Low Res": "78517330608597", "High Res": "125258150017244" },
+        "Keyst Rifle": { "Low Res": "78377522426003", "High Res": "138268719789353" },
+        "Pine Burst": { "Low Res": "132753732294083", "High Res": "100589243117991" },
+        "Pixel Burst": { "Low Res": "102648809593259", "High Res": "81440970309830" },
+        "Spectral Burst": { "Low Res": "135012309412679", "High Res": "135650382469411" }
+      },
+      "Crossbow": {
+        "Base": { "Low Res": "140211832612284", "High Res": "130065160832422" },
+        "Arch Crossbow": { "Low Res": "94981733362451", "High Res": "107213949119266" },
+        "Crossbone": { "Low Res": "103469183638638", "High Res": "81476287380261" },
+        "Frostbite Crossbow": { "Low Res": "101536997945363", "High Res": "116171878456521" },
+        "Glorious Crossbow": { "Low Res": "70875146419725", "High Res": "125494419498405" },
+        "Harpoon Crossbow": { "Low Res": "107460405492001", "High Res": "127546301627893" },
+        "Pixel Crossbow": { "Low Res": "115931961841903", "High Res": "129836248906904" },
+        "Violin Crossbow": { "Low Res": "74401302514014", "High Res": "119666131999240" }
+      },
+      "Distortion": {
+        "Base": { "Low Res": "115712150398379", "High Res": "130153907701944" },
+        "Cyber Distortion": { "Low Res": "88995062151276", "High Res": "78940266607471" },
+        "Electropunk Distortion": { "Low Res": "109544539643046", "High Res": "91778033503945" },
+        "Experiment D15": { "Low Res": "103446773933340", "High Res": "118366946179457" },
+        "Glorious Distortion": { "Low Res": "134722661973710", "High Res": "107736694179886" },
+        "Magma Distortion": { "Low Res": "81103807698156", "High Res": "109079139956898" },
+        "Plasma Distortion": { "Low Res": "126813935337091", "High Res": "83622093873798" },
+        "Sleighstortion": { "Low Res": "111242141481650", "High Res": "113075083434001" }
+      },
+      "Energy Rifle": {
+        "Base": { "Low Res": "110259279810005", "High Res": "103736834693278" },
+        "Apex Rifle": { "Low Res": "88144772234151", "High Res": "111748806401551" },
+        "Glorious Energy Rifle": { "Low Res": "72632815443247", "High Res": "95552510838071" },
+        "Hacker Rifle": { "Low Res": "122816271917525", "High Res": "89213922790170" },
+        "Hydro Rifle": { "Low Res": "73690448730060", "High Res": "101984348353475" },
+        "New Year Energy Rifle": { "Low Res": "111446782522703", "High Res": "101868484686291" },
+        "Soul Rifle": { "Low Res": "129351366788323", "High Res": "140115840236565" },
+        "Void Rifle": { "Low Res": "95985016411441", "High Res": "107749233395884" }
+      },
+      "Flamethrower": {
+        "Base": { "Low Res": "89455038280473", "High Res": "85223987405833" },
+        "Extinguisher": { "Low Res": "95815875434568", "High Res": "131706096760273" },
+        "Glitterthrower": { "Low Res": "88920581735649", "High Res": "83419562243412" },
+        "Glorious Flamethrower": { "Low Res": "71676635953177", "High Res": "88697784394796" },
+        "Jack O'Thrower": { "Low Res": "140280020818514", "High Res": "81280342017495" },
+        "Keythrower": { "Low Res": "130308634220965", "High Res": "113419665254766" },
+        "Lamethrower": { "Low Res": "18766862822", "High Res": "18766906741" },
+        "Pixel Flamethrower": { "Low Res": "17771752104", "High Res": "17771753119" },
+        "Rainbowthrower": { "Low Res": "102070206928252", "High Res": "119525701444507" },
+        "Snowblower": { "Low Res": "128743586418880", "High Res": "80434566532022" }
+      },
+      "Grenade Launcher": {
+        "Base": { "Low Res": "17250453814", "High Res": "17250456230" },
+        "Balloon Launcher": { "Low Res": "137862701599991", "High Res": "104286567552270" },
+        "Gearnade Launcher": { "Low Res": "133756750612042", "High Res": "91208130484582" },
+        "Glorious Grenade Launcher": { "Low Res": "134130354519919", "High Res": "133636006123737" },
+        "Skull Launcher": { "Low Res": "103257281022910", "High Res": "88061081371943" },
+        "Snowball Launcher": { "Low Res": "112349955391111", "High Res": "136762406657736" },
+        "Swashbuckler": { "Low Res": "17821233828", "High Res": "17821265007" },
+        "Uranium Launcher": { "Low Res": "18766860114", "High Res": "18766902983" }
+      },
+      "Gunblade": {
+        "Base": { "Low Res": "131231034374465", "High Res": "131462750179690" },
+        "Boneblade": { "Low Res": "126327381608481", "High Res": "126287813768518" },
+        "Crude Gunblade": { "Low Res": "126996645502136", "High Res": "111573250598753" },
+        "Elf's Gunblade": { "Low Res": "114103306647123", "High Res": "81214817732179" },
+        "Glorious Gunblade": { "Low Res": "88003799126136", "High Res": "88582922101753" },
+        "Gunsaw": { "Low Res": "102700915422689", "High Res": "136642950174663" },
+        "Hyper Gunblade": { "Low Res": "134415898983004", "High Res": "134499903901922" },
+        "Keyblade": { "Low Res": "117153249348040", "High Res": "131097713481055" }
+      },
+      "Minigun": {
+        "Base": { "Low Res": "17250458611", "High Res": "17250457775" },
+        "Fighter Jet": { "Low Res": "70780739230558", "High Res": "95650502925488" },
+        "Glorious Minigun": { "Low Res": "84246894288637", "High Res": "99372535399034" },
+        "Lasergun 3000": { "Low Res": "103437974285778", "High Res": "116040043955852" },
+        "Pixel Minigun": { "Low Res": "18766861798", "High Res": "18769001642" },
+        "Pumpkin Minigun": { "Low Res": "77388785880854", "High Res": "101609024294564" },
+        "Wrapped Minigun": { "Low Res": "127077702465909", "High Res": "77902572458498" }
+      },
+      "Paintball Gun": {
+        "Base": { "Low Res": "17160853798", "High Res": "16560547676" },
+        "Boba Gun": { "Low Res": "18768830660", "High Res": "18768828072" },
+        "Brain Gun": { "Low Res": "85970592668118", "High Res": "135843933439701" },
+        "Glorious Paintball Gun": { "Low Res": "86297318955856", "High Res": "92272641219379" },
+        "Ketchup Gun": { "Low Res": "76083615050939", "High Res": "130402361506639" },
+        "Paintballoon Gun": { "Low Res": "100129918948246", "High Res": "71822933033710" },
+        "Slime Gun": { "Low Res": "17672062472", "High Res": "17672087561" },
+        "Snowball Gun": { "Low Res": "113685354916533", "High Res": "78161595959189" }
+      },
+      "Permafrost": {
+        "Base": { "Low Res": "74353733133888", "High Res": "78468628083590" },
+        "Glorious Permafrost": { "Low Res": "119977291442329", "High Res": "82134252571554" },
+        "Ice Permafrost": { "Low Res": "83722160119335", "High Res": "122848886028890" },
+        "Snowman Permafrost": { "Low Res": "100890626643184", "High Res": "70467865456788" }
+      },
+      "RPG": {
+        "Base": { "Low Res": "17160802243", "High Res": "13197583434" },
+        "Firework Launcher": { "Low Res": "75233372670156", "High Res": "93131277391830" },
+        "Glorious RPG": { "Low Res": "130506879885802", "High Res": "77567945870953" },
+        "Nuke Launcher": { "Low Res": "17672061995", "High Res": "17672088925" },
+        "Pencil Launcher": { "Low Res": "106934516693548", "High Res": "74125168400547" },
+        "Pumpkin Launcher": { "Low Res": "94648176067808", "High Res": "130301464984534" },
+        "RPKEY": { "Low Res": "108438721125410", "High Res": "122750504849596" },
+        "Rocket Launcher": { "Low Res": "116931956715309", "High Res": "90083302291399" },
+        "Spaceship Launcher": { "Low Res": "18766860860", "High Res": "18766904375" },
+        "Squid Launcher": { "Low Res": "130764310743404", "High Res": "80877003243435" }
+      },
+      "Shotgun": {
+        "Base": { "Low Res": "17160800007", "High Res": "13197583302" },
+        "Balloon Shotgun": { "Low Res": "17821234823", "High Res": "17821266090" },
+        "Broomstick": { "Low Res": "118061559757082", "High Res": "126607371232554" },
+        "Cactus Shotgun": { "Low Res": "131606483507460", "High Res": "128141817339029" },
+        "Glorious Shotgun": { "Low Res": "71704618059601", "High Res": "104100596412940" },
+        "Hyper Shotgun": { "Low Res": "18768968419", "High Res": "18768974410" },
+        "Shotkey": { "Low Res": "93004214983981", "High Res": "101615278610735" },
+        "Wrapped Shotgun": { "Low Res": "74894345245237", "High Res": "122560535811833" }
+      },
+      "Sniper": {
+        "Base": { "Low Res": "17160799574", "High Res": "13197583098" },
+        "Event Horizon": { "Low Res": "80749667426815", "High Res": "82446563771968" },
+        "Eyething Sniper": { "Low Res": "103915302076013", "High Res": "96377501719526" },
+        "Gingerbread Sniper": { "Low Res": "99943841952995", "High Res": "120163896680390" },
+        "Glorious Sniper": { "Low Res": "118012090175286", "High Res": "94794978921271" },
+        "Hyper Sniper": { "Low Res": "18766864081", "High Res": "18766907266" },
+        "Keyper": { "Low Res": "85472935605264", "High Res": "122634584511896" },
+        "Pixel Sniper": { "Low Res": "17676081196", "High Res": "17676083400" }
+      }
+    },
+    "Secondary": {
+      "Daggers": {
+        "Base": { "Low Res": "91885384580845", "High Res": "138508026547275" },
+        "Aces": { "Low Res": "139089881483398", "High Res": "78850921968876" },
+        "Bat Daggers": { "Low Res": "92001964015225", "High Res": "137570635514267" },
+        "Broken Hearts": { "Low Res": "74156924296351", "High Res": "136682361594607" },
+        "Cookies": { "Low Res": "114482325531769", "High Res": "112581667413176" },
+        "Crystal Daggers": { "Low Res": "126221748659600", "High Res": "92405854307880" },
+        "Glorious Daggers": { "Low Res": "76023189104485", "High Res": "89590724074968" },
+        "Keynais": { "Low Res": "84562761142610", "High Res": "133742080595679" },
+        "Paper Planes": { "Low Res": "84003122595879", "High Res": "90572065167686" },
+        "Shurikens": { "Low Res": "135574097643275", "High Res": "118592510576313" },
+        "Toaster": { "Low Res": "103344379002564", "High Res": "87473023041771" }
+      },
+      "Energy Pistols": {
+        "Base": { "Low Res": "79471670126710", "High Res": "125338509278840" },
+        "Apex Pistols": { "Low Res": "136156057859453", "High Res": "132394469151873" },
+        "Glorious Energy Pistols": { "Low Res": "114418789647547", "High Res": "85080210873739" },
+        "Hacker Pistols": { "Low Res": "140621407555872", "High Res": "105705939354438" },
+        "Hydro Pistols": { "Low Res": "115281889984097", "High Res": "102390688726302" },
+        "Hyperlaser Guns": { "Low Res": "106947526362970", "High Res": "97275763845090" },
+        "New Year Energy Pistols": { "Low Res": "126589959779039", "High Res": "88240834599421" },
+        "Soul Pistols": { "Low Res": "72213738067158", "High Res": "95359207769282" },
+        "Void Pistols": { "Low Res": "111278471262300", "High Res": "114821885011907" }
+      },
+      "Exogun": {
+        "Base": { "Low Res": "17344796376", "High Res": "17344797370" },
+        "Exogourd": { "Low Res": "137140750597688", "High Res": "125880131168138" },
+        "Glorious Exogun": { "Low Res": "129125201034206", "High Res": "105785189977176" },
+        "Midnight Festive Exogun": { "Low Res": "127612442529810", "High Res": "80015495064851" },
+        "Ray Gun": { "Low Res": "18766861454", "High Res": "18766905089" },
+        "Repulsor": { "Low Res": "109263387714628", "High Res": "130472229545721" },
+        "Singularity": { "Low Res": "17676876756", "High Res": "17676875650" },
+        "Wondergun": { "Low Res": "17672060360", "High Res": "17672086052" }
+      },
+      "Flare Gun": {
+        "Base": { "Low Res": "17160801627", "High Res": "13197583892" },
+        "Banana Flare": { "Low Res": "123589213761955", "High Res": "135246839855870" },
+        "Dynamite Gun": { "Low Res": "18766865384", "High Res": "18766908547" },
+        "Firework Gun": { "Low Res": "17691132917", "High Res": "17691136322" },
+        "Glorious Flare Gun": { "Low Res": "115324763672074", "High Res": "128135635660577" },
+        "Vexed Flare Gun": { "Low Res": "116287930550049", "High Res": "138983159218333" },
+        "Wrapped Flare Gun": { "Low Res": "135638020129378", "High Res": "135904023852615" }
+      },
+      "Handgun": {
+        "Base": { "Low Res": "17160801282", "High Res": "13197583693" },
+        "Blaster": { "Low Res": "17821234554", "High Res": "17821265750" },
+        "Gingerbread Handgun": { "Low Res": "95881238590412", "High Res": "72714528734588" },
+        "Glorious Handgun": { "Low Res": "85129427786041", "High Res": "73041314820303" },
+        "Gumball Handgun": { "Low Res": "106890990556815", "High Res": "138794077251754" },
+        "Hand Gun": { "Low Res": "18837670624", "High Res": "18837677423" },
+        "Pixel Handgun": { "Low Res": "82199841278177", "High Res": "72665687846028" },
+        "Pumpkin Handgun": { "Low Res": "88495685924653", "High Res": "92824393890642" },
+        "Stealth Handgun": { "Low Res": "124919185835138", "High Res": "99321324367928" },
+        "Towerstone Handgun": { "Low Res": "88654252790032", "High Res": "116418326352365" },
+        "Warp Handgun": { "Low Res": "102974911528828", "High Res": "117404871573487" }
+      },
+      "Revolver": {
+        "Base": { "Low Res": "17160800299", "High Res": "14020829500" },
+        "Boneclaw Revolver": { "Low Res": "119174697609264", "High Res": "134217952089145" },
+        "Desert Eagle": { "Low Res": "17821234372", "High Res": "17821265603" },
+        "Glorious Revolver": { "Low Res": "118135542031794", "High Res": "137749607553707" },
+        "Keyvolver": { "Low Res": "87974031410344", "High Res": "73746116648532" },
+        "Peppergun": { "Low Res": "124178691056979", "High Res": "112311707478578" },
+        "Peppermint Sheriff": { "Low Res": "95859403750768", "High Res": "71229586558137" },
+        "Sheriff": { "Low Res": "18770192507", "High Res": "18770200449" }
+      },
+      "Shorty": {
+        "Base": { "Low Res": "17160800091", "High Res": "13255103172" },
+        "Balloon Shorty": { "Low Res": "75590262133322", "High Res": "87872312114961" },
+        "Demon Shorty": { "Low Res": "116443498278384", "High Res": "110819203451709" },
+        "Glorious Shorty": { "Low Res": "105834197552222", "High Res": "78845944937729" },
+        "Lovely Shorty": { "Low Res": "18766862000", "High Res": "18766906011" },
+        "Not So Shorty": { "Low Res": "17672062572", "High Res": "17672087325" },
+        "Too Shorty": { "Low Res": "18129531276", "High Res": "18129532343" },
+        "Wrapped Shorty": { "Low Res": "136522183669611", "High Res": "85255622402845" }
+      },
+      "Slingshot": {
+        "Base": { "Low Res": "17160799888", "High Res": "17095306079" },
+        "Boneshot": { "Low Res": "86606957688341", "High Res": "103283614012077" },
+        "Glorious Slingshot": { "Low Res": "101195664167288", "High Res": "111031840425662" },
+        "Goalpost": { "Low Res": "17672063165", "High Res": "17672086378" },
+        "Harp": { "Low Res": "80850043664453", "High Res": "89702051394732" },
+        "Keyshot": { "Low Res": "74006265601388", "High Res": "112207648939743" },
+        "Lucky Horseshoe": { "Low Res": "131242126669282", "High Res": "126152077516450" },
+        "Reindeer Slingshot": { "Low Res": "121612921203624", "High Res": "106406735551091" },
+        "Stick": { "Low Res": "17672063048", "High Res": "17672086502" }
+      },
+      "Spray": {
+        "Base": { "Low Res": "92882887485248", "High Res": "87291726953666" },
+        "Boneclaw Spray": { "Low Res": "114078818081911", "High Res": "127336875478381" },
+        "Glorious Spray": { "Low Res": "138246745001490", "High Res": "103484739840527" },
+        "Key Spray": { "Low Res": "94061940442700", "High Res": "104758575159924" },
+        "Lovely Spray": { "Low Res": "131203015026683", "High Res": "138177960576401" },
+        "Nail Gun": { "Low Res": "110577809934251", "High Res": "79527532659144" },
+        "Pine Spray": { "Low Res": "128285758736343", "High Res": "79010014206302" },
+        "Spray Bottle": { "Low Res": "137955019285700", "High Res": "88384629194597" }
+      },
+      "Uzi": {
+        "Base": { "Low Res": "17160798908", "High Res": "14020829706" },
+        "Arch Uzi": { "Low Res": "139852585731073", "High Res": "129292939007924" },
+        "Demon Uzi": { "Low Res": "132973040482576", "High Res": "81076572654230" },
+        "Electro Uzi": { "Low Res": "96806694653207", "High Res": "98294074022488" },
+        "Glorious Uzi": { "Low Res": "120045334159124", "High Res": "121978889022374" },
+        "Keyzi": { "Low Res": "100392703246534", "High Res": "127937206087121" },
+        "Money Gun": { "Low Res": "100705725115757", "High Res": "73092203311844" },
+        "Pine Uzi": { "Low Res": "82545206964916", "High Res": "80778273701013" },
+        "Water Uzi": { "Low Res": "17821233590", "High Res": "17821264784" }
+      },
+      "Warper": {
+        "Base": { "Low Res": "88033795039891", "High Res": "97537499062821" },
+        "Arcane Warper": { "Low Res": "83632373572638", "High Res": "92765478127490" },
+        "Electropunk Warper": { "Low Res": "75386728379756", "High Res": "96080679722284" },
+        "Experiment W4": { "Low Res": "126884960764998", "High Res": "77873591123909" },
+        "Frost Warper": { "Low Res": "70539216094396", "High Res": "84458438183331" },
+        "Glitter Warper": { "Low Res": "94607497565715", "High Res": "128289126916762" },
+        "Glorious Warper": { "Low Res": "95823647035211", "High Res": "117284572803988" },
+        "Hotel Bell": { "Low Res": "117742703173821", "High Res": "74303585805484" }
+      }
+    },
+    "Melee": {
+      "Battle Axe": {
+        "Base": { "Low Res": "93390542043222", "High Res": "78364101927650" },
+        "Balloon Axe": { "Low Res": "102429983628211", "High Res": "85852980135764" },
+        "Ban Axe": { "Low Res": "111046431576859", "High Res": "100159715604530" },
+        "Cerulean Axe": { "Low Res": "76353832683350", "High Res": "82989708806032" },
+        "Glorious Battle Axe": { "Low Res": "87227212476138", "High Res": "72356106057179" },
+        "Keyttle Axe": { "Low Res": "122117068984402", "High Res": "100168194779130" },
+        "Mimic Axe": { "Low Res": "111717370450373", "High Res": "96746396437552" },
+        "Nordic Axe": { "Low Res": "80052264197135", "High Res": "86476943038006" },
+        "The Shred": { "Low Res": "71234381808727", "High Res": "95922136476180" }
+      },
+      "Chainsaw": {
+        "Base": { "Low Res": "17160801873", "High Res": "13717445410" },
+        "Blobsaw": { "Low Res": "17825963589", "High Res": "17825961425" },
+        "Buzzsaw": { "Low Res": "74057448201836", "High Res": "128354991167944" },
+        "Festive Buzzsaw": { "Low Res": "80811854818775", "High Res": "111566667788893" },
+        "Glorious Chainsaw": { "Low Res": "122622447397834", "High Res": "140353527719287" },
+        "Handsaws": { "Low Res": "18766864583", "High Res": "18769002596" },
+        "Mega Drill": { "Low Res": "76663867023998", "High Res": "78828669740807" }
+      },
+      "Fists": {
+        "Base": { "Low Res": "17160801745", "High Res": "16560051320" },
+        "Boxing Gloves": { "Low Res": "17672060486", "High Res": "17672089761" },
+        "Brass Knuckles": { "Low Res": "18766866012", "High Res": "18766909587" },
+        "Festive Fists": { "Low Res": "102757458529795", "High Res": "98061476050478" },
+        "Fists of Hurt": { "Low Res": "140103672289959", "High Res": "71585039030211" },
+        "Glorious Fists": { "Low Res": "82492165200104", "High Res": "79755997614985" },
+        "Pumpkin Claws": { "Low Res": "90996407819750", "High Res": "110587168549532" },
+        "Spy Gloves": { "Low Res": "117198095640784", "High Res": "112947025953634" }
+      },
+      "Katana": {
+        "Base": { "Low Res": "17160801158", "High Res": "13968137196" },
+        "Arch Katana": { "Low Res": "94679283541658", "High Res": "98068422294741" },
+        "Crystal Katana": { "Low Res": "88872493010693", "High Res": "107573852829996" },
+        "Evil Trident": { "Low Res": "101234805269080", "High Res": "91973056969213" },
+        "Glorious Katana": { "Low Res": "75588958786035", "High Res": "94429900086533" },
+        "Keytana": { "Low Res": "118899310989170", "High Res": "120478111112813" },
+        "Lightning Bolt": { "Low Res": "18768968241", "High Res": "18769002278" },
+        "Linked Sword": { "Low Res": "83575725004177", "High Res": "131281564276137" },
+        "New Year Katana": { "Low Res": "102866488046710", "High Res": "79288379571855" },
+        "Pixel Katana": { "Low Res": "127922483074145", "High Res": "83686692916164" },
+        "Saber": { "Low Res": "17672062341", "High Res": "17672087756" },
+        "Stellar Katana": { "Low Res": "72617738655198", "High Res": "90901679194899" }
+      },
+      "Knife": {
+        "Base": { "Low Res": "17160800983", "High Res": "13197583583" },
+        "Armature.001": { "Low Res": "104026327618871", "High Res": "91555068782550" },
+        "Balisong": { "Low Res": "93303458333011", "High Res": "114825371645118" },
+        "Caladbolg": { "Low Res": "101180142582964", "High Res": "72181228743456" },
+        "Candy Cane": { "Low Res": "124021545052910", "High Res": "84302121354096" },
+        "Chancla": { "Low Res": "17672060795", "High Res": "17672089600" },
+        "Glorious Knife": { "Low Res": "77448895595314", "High Res": "122760026905111" },
+        "Karambit": { "Low Res": "18766863586", "High Res": "18766907079" },
+        "Keylisong": { "Low Res": "100084654831857", "High Res": "118944160521617" },
+        "Keyrambit": { "Low Res": "108512337101248", "High Res": "73252950434501" },
+        "Machete": { "Low Res": "84364955819899", "High Res": "90332754966135" },
+        "Pencil": { "Low Res": "131450909376802", "High Res": "70869179257286" }
+      },
+      "Maul": {
+        "Base": { "Low Res": "81478141693597", "High Res": "96956174894354" },
+        "Ban Hammer": { "Low Res": "126491383967029", "High Res": "139055067677915" },
+        "Glorious Maul": { "Low Res": "125917253783002", "High Res": "109898315901573" },
+        "Ice Maul": { "Low Res": "100001888078290", "High Res": "79987597452893" },
+        "Sleigh Maul": { "Low Res": "114892026951995", "High Res": "112835874307935" }
+      },
+      "Riot Shield": {
+        "Base": { "Low Res": "121172272442833", "High Res": "126785276332335" },
+        "Door": { "Low Res": "79242603995428", "High Res": "137027368393353" },
+        "Energy Shield": { "Low Res": "90215439337413", "High Res": "127037252186171" },
+        "Glorious Riot Shield": { "Low Res": "132866851386509", "High Res": "117405461442739" },
+        "Masterpiece": { "Low Res": "79914271483818", "High Res": "72274483575028" },
+        "Sled": { "Low Res": "73881731607231", "High Res": "127016476735322" },
+        "Tombstone Shield": { "Low Res": "125895528641243", "High Res": "114630737114417" }
+      },
+      "Scythe": {
+        "Base": { "Low Res": "17160800186", "High Res": "13834995858" },
+        "Anchor": { "Low Res": "18766866743", "High Res": "18769023932" },
+        "Bat Scythe": { "Low Res": "131711174838548", "High Res": "104168535403995" },
+        "Bug Net": { "Low Res": "115620701626004", "High Res": "99173928762511" },
+        "Cryo Scythe": { "Low Res": "119930754357379", "High Res": "84690820919174" },
+        "Crystal Scythe": { "Low Res": "73971549402646", "High Res": "88778703942724" },
+        "Glorious Scythe": { "Low Res": "115811939422419", "High Res": "113721128462866" },
+        "Keythe": { "Low Res": "114560926055433", "High Res": "75967374711732" },
+        "Sakura Scythe": { "Low Res": "133811689655966", "High Res": "115063494552764" },
+        "Scythe of Death": { "Low Res": "17825996537", "High Res": "17825961272" }
+      },
+      "Spear": {
+        "Base": { "Low Res": "122801133017271", "High Res": "111446720428762" },
+        "Giant Pencil": { "Low Res": "107812045486260", "High Res": "76085189198864" },
+        "Glorious Spear": { "Low Res": "98259628954838", "High Res": "108275754332894" },
+        "Studio Light": { "Low Res": "70443632958263", "High Res": "84596578566011" }
+      },
+      "Trowel": {
+        "Base": { "Low Res": "17160799172", "High Res": "16560547384" },
+        "Garden Shovel": { "Low Res": "18766864873", "High Res": "18766908058" },
+        "Glorious Trowel": { "Low Res": "100888500368219", "High Res": "132433921578446" },
+        "Paintbrush": { "Low Res": "84687920829755", "High Res": "83196688094998" },
+        "Plastic Shovel": { "Low Res": "17672062201", "High Res": "17672088012" },
+        "Pumpkin Carver": { "Low Res": "78827307308671", "High Res": "130169648063116" },
+        "Snow Shovel": { "Low Res": "78271338778848", "High Res": "96400887574950" }
+      }
+    },
+    "Utility": {
+      "Flashbang": {
+        "Base": { "Low Res": "17160801529", "High Res": "14664488253" },
+        "Camera": { "Low Res": "18766865640", "High Res": "18766908915" },
+        "Disco Ball": { "Low Res": "17672061796", "High Res": "17672089136" },
+        "Glorious Flashbang": { "Low Res": "96760506528185", "High Res": "131190784940519" },
+        "Lightbulb": { "Low Res": "125489177573287", "High Res": "78421244256536" },
+        "Pixel Flashbang": { "Low Res": "132815625474597", "High Res": "82894448978638" },
+        "Shining Star": { "Low Res": "108392227354212", "High Res": "73486952957582" },
+        "Skullbang": { "Low Res": "73796957224972", "High Res": "94894233513600" }
+      },
+      "Freeze Ray": {
+        "Base": { "Low Res": "18429552328", "High Res": "18429549331" },
+        "Bubble Ray": { "Low Res": "18766865819", "High Res": "18769002868" },
+        "Glorious Freeze Ray": { "Low Res": "120211873831101", "High Res": "96505833323714" },
+        "Gum Ray": { "Low Res": "121504417727123", "High Res": "124339207784760" },
+        "Spider Ray": { "Low Res": "136838810668332", "High Res": "92621276006979" },
+        "Temporal Ray": { "Low Res": "18429552503", "High Res": "18429549663" },
+        "Wrapped Freeze Ray": { "Low Res": "76183738050112", "High Res": "77624613843681" }
+      },
+      "Grappler": {
+        "Base": { "Low Res": "103255844976245", "High Res": "87568033383502" },
+        "Glorious Grappler": { "Low Res": "113576961532090", "High Res": "88153994788904" },
+        "Lasso": { "Low Res": "77061966583531", "High Res": "108092530029598" }
+      },
+      "Grenade": {
+        "Base": { "Low Res": "17160801411", "High Res": "14526777692" },
+        "Cuddle Bomb": { "Low Res": "116801887274189", "High Res": "122359407681537" },
+        "Dynamite": { "Low Res": "119066463640901", "High Res": "97225646481020" },
+        "Frozen Grenade": { "Low Res": "96120996159611", "High Res": "101932886938992" },
+        "Glorious Grenade": { "Low Res": "103034870490455", "High Res": "102502933883025" },
+        "Jingle Grenade": { "Low Res": "97646859596860", "High Res": "117226824301607" },
+        "Keynade": { "Low Res": "102785971311114", "High Res": "122922810220976" },
+        "Soul Grenade": { "Low Res": "85903097459179", "High Res": "126980255892476" },
+        "Water Balloon": { "Low Res": "18766859819", "High Res": "18769001397" },
+        "Whoopee Cushion": { "Low Res": "17672062933", "High Res": "17672086704" }
+      },
+      "Jump Pad": {
+        "Base": { "Low Res": "79459600453621", "High Res": "102532564314723" },
+        "Bounce House": { "Low Res": "71226436012588", "High Res": "79326657484315" },
+        "Glorious Jump Pad": { "Low Res": "71803398862947", "High Res": "96408475917789" },
+        "Jolly Man": { "Low Res": "97375473537804", "High Res": "98002300428288" },
+        "Shady Chicken Sandwich": { "Low Res": "86361684164972", "High Res": "113753042073837" },
+        "Spider Web": { "Low Res": "84204578032332", "High Res": "133104747106136" },
+        "Trampoline": { "Low Res": "103567857194140", "High Res": "92310435035049" }
+      },
+      "Medkit": {
+        "Base": { "Low Res": "17160800734", "High Res": "13717497368" },
+        "Box of Chocolates": { "Low Res": "132421415091712", "High Res": "119971229318198" },
+        "Briefcase": { "Low Res": "18142172067", "High Res": "18142174697" },
+        "Bucket of Candy": { "Low Res": "93791981490691", "High Res": "95706110401359" },
+        "Glorious Medkit": { "Low Res": "73358160718523", "High Res": "73397457340415" },
+        "Laptop": { "Low Res": "18770164868", "High Res": "18766906510" },
+        "Medkitty": { "Low Res": "125732280509514", "High Res": "126646607101307" },
+        "Milk & Cookies": { "Low Res": "99156135330432", "High Res": "73601847002267" },
+        "Sandwich": { "Low Res": "17838232333", "High Res": "17838233196" }
+      },
+      "Molotov": {
+        "Base": { "Low Res": "109264750627289", "High Res": "83303332331234" },
+        "Arch Molotov": { "Low Res": "96589300342777", "High Res": "136971342091354" },
+        "Coffee": { "Low Res": "17672061538", "High Res": "17672089358" },
+        "Glorious Molotov": { "Low Res": "108930340066987", "High Res": "95650602989880" },
+        "Hot Coals": { "Low Res": "110423024723304", "High Res": "98070129509602" },
+        "Lava Lamp": { "Low Res": "79616583726432", "High Res": "76191080417885" },
+        "Torch": { "Low Res": "115586189235552", "High Res": "120882142047198" },
+        "Vexed Candle": { "Low Res": "78128648928195", "High Res": "136079178184476" }
+      },
+      "Satchel": {
+        "Base": { "Low Res": "82237471151891", "High Res": "132559258532984" },
+        "Advanced Satchel": { "Low Res": "113860326910548", "High Res": "118684510688617" },
+        "Bag o' Money": { "Low Res": "129192426700659", "High Res": "118634288543707" },
+        "Glorious Satchel": { "Low Res": "100521994805910", "High Res": "85737788428846" },
+        "Notebook Satchel": { "Low Res": "124817464748150", "High Res": "85589408404069" },
+        "Pizza Box": { "Low Res": "99166555665247", "High Res": "97977209980062" },
+        "Potion Satchel": { "Low Res": "76787046046890", "High Res": "112434777433399" },
+        "Suspicious Gift": { "Low Res": "76209303162814", "High Res": "131542627171282" }
+      },
+      "Smoke Grenade": {
+        "Base": { "Low Res": "17160799767", "High Res": "16373283577" },
+        "Balance": { "Low Res": "18766866168", "High Res": "18766909964" },
+        "Emoji Cloud": { "Low Res": "17821234077", "High Res": "17821265237" },
+        "Eyeball": { "Low Res": "135911399763146", "High Res": "103493376163318" },
+        "Glorious Smoke Grenade": { "Low Res": "139714146508398", "High Res": "121565824954563" },
+        "Hourglass": { "Low Res": "108311418974073", "High Res": "70423041582442" },
+        "Snowglobe": { "Low Res": "119390465944051", "High Res": "86696224913566" }
+      },
+      "Subspace Tripmine": {
+        "Base": { "Low Res": "17160799418", "High Res": "17098773688" },
+        "DIY Tripmine": { "Low Res": "85747991601740", "High Res": "105200997776122" },
+        "Dev-in-the-Box": { "Low Res": "125056115146240", "High Res": "93100882010950" },
+        "Don't Press": { "Low Res": "17821233203", "High Res": "17821264419" },
+        "Glorious Subspace Tripmine": { "Low Res": "112555928142930", "High Res": "80869057489077" },
+        "Pot o' Keys": { "Low Res": "125355191847719", "High Res": "70372236634885" },
+        "Spring": { "Low Res": "18766860615", "High Res": "18766904035" },
+        "Trick or Treat": { "Low Res": "101693036028491", "High Res": "105864401236960" }
+      },
+      "War Horn": {
+        "Base": { "Low Res": "104600246515190", "High Res": "97997387092919" },
+        "Air Horn": { "Low Res": "111168146142976", "High Res": "128732687072177" },
+        "Boneclaw Horn": { "Low Res": "138360812591331", "High Res": "126578341307256" },
+        "Glorious War Horn": { "Low Res": "96293355496772", "High Res": "123021790391323" },
+        "Mammoth Horn": { "Low Res": "93076834584542", "High Res": "107659166723688" },
+        "Megaphone": { "Low Res": "107074211847347", "High Res": "100739584109870" },
+        "Trumpet": { "Low Res": "88975601634708", "High Res": "113408430051712" }
+      },
+      "Warpstone": {
+        "Base": { "Low Res": "94035693279005", "High Res": "99660718217521" },
+        "Cyber Warpstone": { "Low Res": "133002984228937", "High Res": "78671282003316" },
+        "Electropunk Warpstone": { "Low Res": "75299042976369", "High Res": "121167052087315" },
+        "Glorious Warpstone": { "Low Res": "137583560042806", "High Res": "99142505492556" },
+        "Teleport Disc": { "Low Res": "104608154111107", "High Res": "81728761431901" },
+        "Unstable Warpstone": { "Low Res": "110083777654388", "High Res": "71896071193185" },
+        "Warpbone": { "Low Res": "96452209607150", "High Res": "132473085580193" },
+        "Warpeye": { "Low Res": "127023603234857", "High Res": "129554679066276" },
+        "Warpstar": { "Low Res": "102652397897598", "High Res": "85728240647371" }
+      }
+    }
+  }
+}
