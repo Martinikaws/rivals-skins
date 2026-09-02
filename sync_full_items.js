@@ -15,7 +15,7 @@ function fetch(url) {
     });
 }
 
-// Temporarily disabled skins undergoing model rig fixes
+// Temporarily disabled skins undergoing model rig fixes (Arch Crossbow is FIXED!)
 const DISABLED_SKINS = [
     "Crystal Daggers",
     "Mega Drill",
@@ -24,7 +24,6 @@ const DISABLED_SKINS = [
     "Armature.001",
     "Arch Molotov",
     "Pizza Box",
-    "Arch Crossbow",
     "Keyblade",
     "Shotkey",
     "Palm Scythe",
@@ -123,15 +122,13 @@ async function main() {
         });
     }
 
-    // Sort alphabetically A-Z
     allWeapons.sort((a, b) => a.name.localeCompare(b.name));
 
-    console.log(`Parsed ${allWeapons.length} weapons sorted alphabetically A-Z.`);
+    console.log(`Parsed ${allWeapons.length} weapons with Arch Crossbow restored!`);
 
     const indexPath = path.join(__dirname, 'index.html');
     let html = fs.readFileSync(indexPath, 'utf-8');
 
-    // Replace OFFICIAL_WEAPON_DATA
     const startStr = 'const OFFICIAL_WEAPON_DATA = ';
     const endStr = ';\n\n        function getSkinVisual';
 
@@ -145,49 +142,11 @@ async function main() {
 
     html = html.substring(0, startIdx + startStr.length) + JSON.stringify(allWeapons, null, 12) + html.substring(endIdx);
 
-    // Remove category filters HTML block if present
-    html = html.replace(/<div class="category-filters">[\s\S]*?<\/div>\s*<\/div>/g, '');
-    html = html.replace(/<div class="category-filters">[\s\S]*?<\/div>/g, '');
-    
-    // Remove category tag from card-header
-    html = html.replace(/<span class="category-tag">[\s\S]*?<\/span>/g, '');
-
-    // Simplify filterWeapons to only search query
-    const filterFnOld = `function filterWeapons() {
-            const query = document.getElementById("searchInput").value.toLowerCase();
-            const cards = document.querySelectorAll(".weapon-card");
-
-            cards.forEach(card => {
-                const wName = card.dataset.name;
-                const cat = card.dataset.category;
-                const matchSearch = wName.includes(query);
-                const matchCategory = (activeCategory === "all" || cat === activeCategory);
-
-                card.style.display = (matchSearch && matchCategory) ? "flex" : "none";
-            });
-        }`;
-
-    const filterFnNew = `function filterWeapons() {
-            const query = document.getElementById("searchInput").value.toLowerCase();
-            const cards = document.querySelectorAll(".weapon-card");
-
-            cards.forEach(card => {
-                const wName = card.dataset.name;
-                const matchSearch = wName.includes(query);
-                card.style.display = matchSearch ? "flex" : "none";
-            });
-        }`;
-
-    if (html.includes(filterFnOld)) {
-        html = html.replace(filterFnOld, filterFnNew);
-    }
-
     fs.writeFileSync(indexPath, html, 'utf-8');
-    console.log("Updated index.html successfully without categories!");
+    console.log("Updated index.html successfully!");
 
-    console.log("Committing and pushing to GitHub...");
     execSync('git add index.html sync_full_items.js', { cwd: __dirname });
-    execSync('git commit -m "Remove categories for a unified alphabetical weapon list"', { cwd: __dirname });
+    execSync('git commit -m "Restore fixed Arch Crossbow in website catalog"', { cwd: __dirname });
     execSync('git push origin main', { cwd: __dirname });
     console.log("Pushed to GitHub main branch!");
 }
