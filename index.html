@@ -506,14 +506,7 @@
         </div>
     </div>
 
-    <div class="category-filters">
-        <div class="filter-pill active" onclick="setCategoryFilter('all', this)">All Weapons (48)</div>
-        <div class="filter-pill" onclick="setCategoryFilter('Primary', this)">Primary</div>
-        <div class="filter-pill" onclick="setCategoryFilter('Secondary', this)">Secondary</div>
-        <div class="filter-pill" onclick="setCategoryFilter('Melee', this)">Melee</div>
-        <div class="filter-pill" onclick="setCategoryFilter('Utility', this)">Utility & Throwables</div>
-        <div class="filter-pill" onclick="setCategoryFilter('Special', this)">Special / Gear</div>
-    </div>
+    
 
     <div class="container" id="weaponsGrid">
         <!-- Weapon Cards generated dynamically -->
@@ -543,7 +536,6 @@
         const OFFICIAL_WEAPON_DATA = [
           {
                     "name": "Assault Rifle",
-                    "category": "Primary",
                     "icon": "🔫",
                     "skins": [
                               "Default",
@@ -560,9 +552,25 @@
                     ]
           },
           {
+                    "name": "Battle Axe",
+                    "icon": "🪓",
+                    "skins": [
+                              "Default",
+                              "Balloon Axe",
+                              "Ban Axe",
+                              "Cerulean Axe",
+                              "Glorious Battle Axe",
+                              "Keyttle Axe",
+                              "Lifeguard Board",
+                              "Mimic Axe",
+                              "Nordic Axe",
+                              "Street Sign",
+                              "The Shred"
+                    ]
+          },
+          {
                     "name": "Bow",
-                    "category": "Primary",
-                    "icon": "🔫",
+                    "icon": "🏹",
                     "skins": [
                               "Default",
                               "Balloon Bow",
@@ -579,7 +587,6 @@
           },
           {
                     "name": "Burst Rifle",
-                    "category": "Primary",
                     "icon": "🔫",
                     "skins": [
                               "Default",
@@ -595,122 +602,21 @@
                     ]
           },
           {
-                    "name": "Energy Rifle",
-                    "category": "Primary",
-                    "icon": "🔫",
+                    "name": "Chainsaw",
+                    "icon": "🪚",
                     "skins": [
                               "Default",
-                              "Apex Rifle",
-                              "Glorious Energy Rifle",
-                              "Hacker Rifle",
-                              "Hydro Rifle",
-                              "New Year Energy Rifle",
-                              "Soul Rifle",
-                              "Super Soaker Rifle",
-                              "Void Rifle"
-                    ]
-          },
-          {
-                    "name": "Exogun",
-                    "category": "Primary",
-                    "icon": "🔫",
-                    "skins": [
-                              "Default",
-                              "Exogourd",
-                              "Glorious Exogun",
-                              "Laser Pistol",
-                              "Midnight Festive Exogun",
-                              "Ray Gun",
-                              "Repulsor",
-                              "Singularity",
-                              "Wondergun"
-                    ]
-          },
-          {
-                    "name": "Flamethrower",
-                    "category": "Primary",
-                    "icon": "🔫",
-                    "skins": [
-                              "Default",
-                              "Bubblethrower",
-                              "Extinguisher",
-                              "Glitterthrower",
-                              "Glorious Flamethrower",
-                              "Jack O'Thrower",
-                              "Keythrower",
-                              "Lamethrower",
-                              "Pixel Flamethrower",
-                              "Rainbowthrower",
-                              "Snowblower"
-                    ]
-          },
-          {
-                    "name": "Minigun",
-                    "category": "Primary",
-                    "icon": "🔫",
-                    "skins": [
-                              "Default",
-                              "Fighter Jet",
-                              "Glorious Minigun",
-                              "Lasergun 3000",
-                              "Pixel Minigun",
-                              "Pumpkin Minigun",
-                              "Shark",
-                              "Wrapped Minigun"
-                    ]
-          },
-          {
-                    "name": "Paintball Gun",
-                    "category": "Primary",
-                    "icon": "🔫",
-                    "skins": [
-                              "Default",
-                              "Boba Gun",
-                              "Brain Gun",
-                              "Glorious Paintball Gun",
-                              "Ketchup Gun",
-                              "Paintballoon Gun",
-                              "Slime Gun",
-                              "Snowball Gun",
-                              "Water Blaster 3000"
-                    ]
-          },
-          {
-                    "name": "Shotgun",
-                    "category": "Primary",
-                    "icon": "🔫",
-                    "skins": [
-                              "Default",
-                              "Balloon Shotgun",
-                              "Broomstick",
-                              "Cactus Shotgun",
-                              "Glorious Shotgun",
-                              "Hyper Shotgun",
-                              "Super Soaker",
-                              "Wrapped Shotgun"
-                    ]
-          },
-          {
-                    "name": "Sniper",
-                    "category": "Primary",
-                    "icon": "🔫",
-                    "skins": [
-                              "Default",
-                              "Event Horizon",
-                              "Eyething Sniper",
-                              "Gingerbread Sniper",
-                              "Glorious Sniper",
-                              "Hyper Sniper",
-                              "Keyper",
-                              "Pixel Sniper",
-                              "Squirt Gun",
-                              "Umbrella Sniper"
+                              "Blobsaw",
+                              "Buzzsaw",
+                              "Festive Buzzsaw",
+                              "Glorious Chainsaw",
+                              "Handsaws",
+                              "Surfboard"
                     ]
           },
           {
                     "name": "Crossbow",
-                    "category": "Secondary",
-                    "icon": "⚡",
+                    "icon": "🏹",
                     "skins": [
                               "Default",
                               "Crossbone",
@@ -723,173 +629,8 @@
                     ]
           },
           {
-                    "name": "Energy Pistols",
-                    "category": "Secondary",
-                    "icon": "⚡",
-                    "skins": [
-                              "Default",
-                              "Apex Pistols",
-                              "Glorious Energy Pistols",
-                              "Hacker Pistols",
-                              "Hydro Pistols",
-                              "Hyperlaser Guns",
-                              "New Year Energy Pistols",
-                              "Soul Pistols",
-                              "Void Pistols",
-                              "Water Blaster Pistols"
-                    ]
-          },
-          {
-                    "name": "Flare Gun",
-                    "category": "Secondary",
-                    "icon": "⚡",
-                    "skins": [
-                              "Default",
-                              "Banana Flare",
-                              "Dynamite Gun",
-                              "Firework Gun",
-                              "Glorious Flare Gun",
-                              "Squid Flare",
-                              "Vexed Flare Gun",
-                              "Wrapped Flare Gun"
-                    ]
-          },
-          {
-                    "name": "Handgun",
-                    "category": "Secondary",
-                    "icon": "⚡",
-                    "skins": [
-                              "Default",
-                              "Blaster",
-                              "Gingerbread Handgun",
-                              "Glorious Handgun",
-                              "Gumball Handgun",
-                              "Pixel Handgun",
-                              "Pumpkin Handgun",
-                              "Stealth Handgun",
-                              "Summer Handgun",
-                              "Towerstone Handgun",
-                              "Warp Handgun"
-                    ]
-          },
-          {
-                    "name": "Revolver",
-                    "category": "Secondary",
-                    "icon": "⚡",
-                    "skins": [
-                              "Default",
-                              "Boneclaw Revolver",
-                              "Desert Eagle",
-                              "Glorious Revolver",
-                              "Peppermint Sheriff",
-                              "Peppergun",
-                              "Sheriff",
-                              "Squirt Revolver"
-                    ]
-          },
-          {
-                    "name": "Shorty",
-                    "category": "Secondary",
-                    "icon": "⚡",
-                    "skins": [
-                              "Default",
-                              "Balloon Shorty",
-                              "Demon Shorty",
-                              "Glorious Shorty",
-                              "Lovely Shorty",
-                              "Not So Shorty",
-                              "Squirt Pistol",
-                              "Super Shorty",
-                              "Too Shorty",
-                              "Wrapped Shorty"
-                    ]
-          },
-          {
-                    "name": "Slingshot",
-                    "category": "Secondary",
-                    "icon": "⚡",
-                    "skins": [
-                              "Default",
-                              "Boneshot",
-                              "Glorious Slingshot",
-                              "Goalpost",
-                              "Harp",
-                              "Keyshot",
-                              "Lucky Horseshoe",
-                              "Palmshot",
-                              "Reindeer Slingshot",
-                              "Stick"
-                    ]
-          },
-          {
-                    "name": "Spray",
-                    "category": "Secondary",
-                    "icon": "⚡",
-                    "skins": [
-                              "Default",
-                              "Boneclaw Spray",
-                              "Glorious Spray",
-                              "Key Spray",
-                              "Lovely Spray",
-                              "Nail Gun",
-                              "Pine Spray",
-                              "Spray Bottle",
-                              "Sunscreen Spray"
-                    ]
-          },
-          {
-                    "name": "Uzi",
-                    "category": "Secondary",
-                    "icon": "⚡",
-                    "skins": [
-                              "Default",
-                              "Arch Uzi",
-                              "Demon Uzi",
-                              "Electro Uzi",
-                              "Glorious Uzi",
-                              "Keyzi",
-                              "Money Gun",
-                              "Pine Uzi",
-                              "Super Soaker Uzi",
-                              "Water Uzi"
-                    ]
-          },
-          {
-                    "name": "Battle Axe",
-                    "category": "Melee",
-                    "icon": "⚔️",
-                    "skins": [
-                              "Default",
-                              "Balloon Axe",
-                              "Ban Axe",
-                              "Cerulean Axe",
-                              "Glorious Battle Axe",
-                              "Keyttle Axe",
-                              "Lifeguard Board",
-                              "Mimic Axe",
-                              "Nordic Axe",
-                              "Street Sign",
-                              "The Shred"
-                    ]
-          },
-          {
-                    "name": "Chainsaw",
-                    "category": "Melee",
-                    "icon": "⚔️",
-                    "skins": [
-                              "Default",
-                              "Blobsaw",
-                              "Buzzsaw",
-                              "Festive Buzzsaw",
-                              "Glorious Chainsaw",
-                              "Handsaws",
-                              "Surfboard"
-                    ]
-          },
-          {
                     "name": "Daggers",
-                    "category": "Melee",
-                    "icon": "⚔️",
+                    "icon": "🗡️",
                     "skins": [
                               "Default",
                               "Aces",
@@ -905,9 +646,54 @@
                     ]
           },
           {
+                    "name": "Energy Pistols",
+                    "icon": "⚡",
+                    "skins": [
+                              "Default",
+                              "Apex Pistols",
+                              "Glorious Energy Pistols",
+                              "Hacker Pistols",
+                              "Hydro Pistols",
+                              "Hyperlaser Guns",
+                              "New Year Energy Pistols",
+                              "Soul Pistols",
+                              "Void Pistols",
+                              "Water Blaster Pistols"
+                    ]
+          },
+          {
+                    "name": "Energy Rifle",
+                    "icon": "⚡",
+                    "skins": [
+                              "Default",
+                              "Apex Rifle",
+                              "Glorious Energy Rifle",
+                              "Hacker Rifle",
+                              "Hydro Rifle",
+                              "New Year Energy Rifle",
+                              "Soul Rifle",
+                              "Super Soaker Rifle",
+                              "Void Rifle"
+                    ]
+          },
+          {
+                    "name": "Exogun",
+                    "icon": "🛸",
+                    "skins": [
+                              "Default",
+                              "Exogourd",
+                              "Glorious Exogun",
+                              "Laser Pistol",
+                              "Midnight Festive Exogun",
+                              "Ray Gun",
+                              "Repulsor",
+                              "Singularity",
+                              "Wondergun"
+                    ]
+          },
+          {
                     "name": "Fists",
-                    "category": "Melee",
-                    "icon": "⚔️",
+                    "icon": "🥊",
                     "skins": [
                               "Default",
                               "Boxing Gloves",
@@ -922,8 +708,98 @@
                     ]
           },
           {
+                    "name": "Flamethrower",
+                    "icon": "🔥",
+                    "skins": [
+                              "Default",
+                              "Bubblethrower",
+                              "Extinguisher",
+                              "Glitterthrower",
+                              "Glorious Flamethrower",
+                              "Jack O'Thrower",
+                              "Keythrower",
+                              "Lamethrower",
+                              "Pixel Flamethrower",
+                              "Rainbowthrower",
+                              "Snowblower"
+                    ]
+          },
+          {
+                    "name": "Flare Gun",
+                    "icon": "✨",
+                    "skins": [
+                              "Default",
+                              "Banana Flare",
+                              "Dynamite Gun",
+                              "Firework Gun",
+                              "Glorious Flare Gun",
+                              "Squid Flare",
+                              "Vexed Flare Gun",
+                              "Wrapped Flare Gun"
+                    ]
+          },
+          {
+                    "name": "Flashbang",
+                    "icon": "💡",
+                    "skins": [
+                              "Default",
+                              "Camera",
+                              "Disco Ball",
+                              "Glorious Flashbang",
+                              "Lightbulb",
+                              "Pixel Flashbang",
+                              "Shining Star",
+                              "Skullbang",
+                              "Sol"
+                    ]
+          },
+          {
+                    "name": "Freeze Ray",
+                    "icon": "❄️",
+                    "skins": [
+                              "Default",
+                              "Bubble Ray",
+                              "Glorious Freeze Ray",
+                              "Gum Ray",
+                              "Ice Shaver",
+                              "Temporal Ray",
+                              "Wrapped Freeze Ray"
+                    ]
+          },
+          {
+                    "name": "Grenade",
+                    "icon": "💣",
+                    "skins": [
+                              "Default",
+                              "Cuddle Bomb",
+                              "Dynamite",
+                              "Fizz Bomb",
+                              "Frozen Grenade",
+                              "Glorious Grenade",
+                              "Jingle Grenade",
+                              "Keynade",
+                              "Soul Grenade",
+                              "Water Balloon",
+                              "Whoopee Cushion"
+                    ]
+          },
+          {
+                    "name": "Grenade Launcher",
+                    "icon": "💣",
+                    "skins": [
+                              "Default",
+                              "Balloon Launcher",
+                              "Beach Ball Launcher",
+                              "Gearnade Launcher",
+                              "Glorious Grenade Launcher",
+                              "Skull Launcher",
+                              "Snowball Launcher",
+                              "Swashbuckler",
+                              "Uranium Launcher"
+                    ]
+          },
+          {
                     "name": "Gunblade",
-                    "category": "Melee",
                     "icon": "⚔️",
                     "skins": [
                               "Default",
@@ -937,8 +813,38 @@
                     ]
           },
           {
+                    "name": "Handgun",
+                    "icon": "🔫",
+                    "skins": [
+                              "Default",
+                              "Blaster",
+                              "Gingerbread Handgun",
+                              "Glorious Handgun",
+                              "Gumball Handgun",
+                              "Pixel Handgun",
+                              "Pumpkin Handgun",
+                              "Stealth Handgun",
+                              "Summer Handgun",
+                              "Towerstone Handgun",
+                              "Warp Handgun"
+                    ]
+          },
+          {
+                    "name": "Jump Pad",
+                    "icon": "🚀",
+                    "skins": [
+                              "Default",
+                              "Bounce House",
+                              "Flamingo Floatie",
+                              "Glorious Jump Pad",
+                              "Jolly Man",
+                              "Shady Chicken Sandwich",
+                              "Spider Web",
+                              "Trampoline"
+                    ]
+          },
+          {
                     "name": "Katana",
-                    "category": "Melee",
                     "icon": "⚔️",
                     "skins": [
                               "Default",
@@ -960,8 +866,7 @@
           },
           {
                     "name": "Knife",
-                    "category": "Melee",
-                    "icon": "⚔️",
+                    "icon": "🔪",
                     "skins": [
                               "Default",
                               "Balisong",
@@ -980,8 +885,7 @@
           },
           {
                     "name": "Maul",
-                    "category": "Melee",
-                    "icon": "⚔️",
+                    "icon": "🔨",
                     "skins": [
                               "Default",
                               "Ban Hammer",
@@ -992,119 +896,8 @@
                     ]
           },
           {
-                    "name": "Scythe",
-                    "category": "Melee",
-                    "icon": "⚔️",
-                    "skins": [
-                              "Default",
-                              "Anchor",
-                              "Bat Scythe",
-                              "Bug Net",
-                              "Cryo Scythe",
-                              "Crystal Scythe",
-                              "Glorious Scythe",
-                              "Keythe",
-                              "Naginata",
-                              "Palm Tree",
-                              "Sakura Scythe",
-                              "Scythe of Death"
-                    ]
-          },
-          {
-                    "name": "Spear",
-                    "category": "Melee",
-                    "icon": "⚔️",
-                    "skins": [
-                              "Default",
-                              "Giant Pencil",
-                              "Glorious Spear",
-                              "Harpoon",
-                              "Studio Light"
-                    ]
-          },
-          {
-                    "name": "Flashbang",
-                    "category": "Utility",
-                    "icon": "💣",
-                    "skins": [
-                              "Default",
-                              "Camera",
-                              "Disco Ball",
-                              "Glorious Flashbang",
-                              "Lightbulb",
-                              "Pixel Flashbang",
-                              "Shining Star",
-                              "Skullbang",
-                              "Sol"
-                    ]
-          },
-          {
-                    "name": "Freeze Ray",
-                    "category": "Utility",
-                    "icon": "💣",
-                    "skins": [
-                              "Default",
-                              "Bubble Ray",
-                              "Glorious Freeze Ray",
-                              "Gum Ray",
-                              "Ice Shaver",
-                              "Temporal Ray",
-                              "Wrapped Freeze Ray"
-                    ]
-          },
-          {
-                    "name": "Grenade",
-                    "category": "Utility",
-                    "icon": "💣",
-                    "skins": [
-                              "Default",
-                              "Cuddle Bomb",
-                              "Dynamite",
-                              "Fizz Bomb",
-                              "Frozen Grenade",
-                              "Glorious Grenade",
-                              "Jingle Grenade",
-                              "Keynade",
-                              "Soul Grenade",
-                              "Water Balloon",
-                              "Whoopee Cushion"
-                    ]
-          },
-          {
-                    "name": "Grenade Launcher",
-                    "category": "Utility",
-                    "icon": "💣",
-                    "skins": [
-                              "Default",
-                              "Balloon Launcher",
-                              "Beach Ball Launcher",
-                              "Gearnade Launcher",
-                              "Glorious Grenade Launcher",
-                              "Skull Launcher",
-                              "Snowball Launcher",
-                              "Swashbuckler",
-                              "Uranium Launcher"
-                    ]
-          },
-          {
-                    "name": "Jump Pad",
-                    "category": "Utility",
-                    "icon": "💣",
-                    "skins": [
-                              "Default",
-                              "Bounce House",
-                              "Flamingo Floatie",
-                              "Glorious Jump Pad",
-                              "Jolly Man",
-                              "Shady Chicken Sandwich",
-                              "Spider Web",
-                              "Trampoline"
-                    ]
-          },
-          {
                     "name": "Medkit",
-                    "category": "Utility",
-                    "icon": "💣",
+                    "icon": "🩹",
                     "skins": [
                               "Default",
                               "Box of Chocolates",
@@ -1119,9 +912,22 @@
                     ]
           },
           {
+                    "name": "Minigun",
+                    "icon": "🔥",
+                    "skins": [
+                              "Default",
+                              "Fighter Jet",
+                              "Glorious Minigun",
+                              "Lasergun 3000",
+                              "Pixel Minigun",
+                              "Pumpkin Minigun",
+                              "Shark",
+                              "Wrapped Minigun"
+                    ]
+          },
+          {
                     "name": "Molotov",
-                    "category": "Utility",
-                    "icon": "💣",
+                    "icon": "🍾",
                     "skins": [
                               "Default",
                               "Campfire Stick",
@@ -1135,9 +941,51 @@
                     ]
           },
           {
+                    "name": "Paintball Gun",
+                    "icon": "🎨",
+                    "skins": [
+                              "Default",
+                              "Boba Gun",
+                              "Brain Gun",
+                              "Glorious Paintball Gun",
+                              "Ketchup Gun",
+                              "Paintballoon Gun",
+                              "Slime Gun",
+                              "Snowball Gun",
+                              "Water Blaster 3000"
+                    ]
+          },
+          {
+                    "name": "Revolver",
+                    "icon": "🤠",
+                    "skins": [
+                              "Default",
+                              "Boneclaw Revolver",
+                              "Desert Eagle",
+                              "Glorious Revolver",
+                              "Peppermint Sheriff",
+                              "Peppergun",
+                              "Sheriff",
+                              "Squirt Revolver"
+                    ]
+          },
+          {
+                    "name": "Riot Shield",
+                    "icon": "🛡️",
+                    "skins": [
+                              "Default",
+                              "Boogie Board",
+                              "Door",
+                              "Energy Shield",
+                              "Glorious Riot Shield",
+                              "Masterpiece",
+                              "Sled",
+                              "Tombstone Shield"
+                    ]
+          },
+          {
                     "name": "RPG",
-                    "category": "Utility",
-                    "icon": "💣",
+                    "icon": "🚀",
                     "skins": [
                               "Default",
                               "Firework Launcher",
@@ -1155,7 +1003,6 @@
           },
           {
                     "name": "Satchel",
-                    "category": "Utility",
                     "icon": "💣",
                     "skins": [
                               "Default",
@@ -1169,9 +1016,72 @@
                     ]
           },
           {
+                    "name": "Scythe",
+                    "icon": "🌾",
+                    "skins": [
+                              "Default",
+                              "Anchor",
+                              "Bat Scythe",
+                              "Bug Net",
+                              "Cryo Scythe",
+                              "Crystal Scythe",
+                              "Glorious Scythe",
+                              "Keythe",
+                              "Naginata",
+                              "Palm Tree",
+                              "Sakura Scythe",
+                              "Scythe of Death"
+                    ]
+          },
+          {
+                    "name": "Shorty",
+                    "icon": "💥",
+                    "skins": [
+                              "Default",
+                              "Balloon Shorty",
+                              "Demon Shorty",
+                              "Glorious Shorty",
+                              "Lovely Shorty",
+                              "Not So Shorty",
+                              "Squirt Pistol",
+                              "Super Shorty",
+                              "Too Shorty",
+                              "Wrapped Shorty"
+                    ]
+          },
+          {
+                    "name": "Shotgun",
+                    "icon": "💥",
+                    "skins": [
+                              "Default",
+                              "Balloon Shotgun",
+                              "Broomstick",
+                              "Cactus Shotgun",
+                              "Glorious Shotgun",
+                              "Hyper Shotgun",
+                              "Super Soaker",
+                              "Wrapped Shotgun"
+                    ]
+          },
+          {
+                    "name": "Slingshot",
+                    "icon": "🎯",
+                    "skins": [
+                              "Default",
+                              "Boneshot",
+                              "Glorious Slingshot",
+                              "Goalpost",
+                              "Harp",
+                              "Keyshot",
+                              "Lucky Horseshoe",
+                              "Palmshot",
+                              "Reindeer Slingshot",
+                              "Stick"
+                    ]
+          },
+          {
                     "name": "Smoke Grenade",
-                    "category": "Utility",
-                    "icon": "💣",
+                    "icon": "💨",
                     "skins": [
                               "Default",
                               "Balance",
@@ -1184,9 +1094,50 @@
                     ]
           },
           {
+                    "name": "Sniper",
+                    "icon": "🎯",
+                    "skins": [
+                              "Default",
+                              "Event Horizon",
+                              "Eyething Sniper",
+                              "Gingerbread Sniper",
+                              "Glorious Sniper",
+                              "Hyper Sniper",
+                              "Keyper",
+                              "Pixel Sniper",
+                              "Squirt Gun",
+                              "Umbrella Sniper"
+                    ]
+          },
+          {
+                    "name": "Spear",
+                    "icon": "🔱",
+                    "skins": [
+                              "Default",
+                              "Giant Pencil",
+                              "Glorious Spear",
+                              "Harpoon",
+                              "Studio Light"
+                    ]
+          },
+          {
+                    "name": "Spray",
+                    "icon": "💨",
+                    "skins": [
+                              "Default",
+                              "Boneclaw Spray",
+                              "Glorious Spray",
+                              "Key Spray",
+                              "Lovely Spray",
+                              "Nail Gun",
+                              "Pine Spray",
+                              "Spray Bottle",
+                              "Sunscreen Spray"
+                    ]
+          },
+          {
                     "name": "Subspace Tripmine",
-                    "category": "Utility",
-                    "icon": "💣",
+                    "icon": "💠",
                     "skins": [
                               "Default",
                               "DIY Tripmine",
@@ -1200,9 +1151,38 @@
                     ]
           },
           {
+                    "name": "Trowel",
+                    "icon": "🧱",
+                    "skins": [
+                              "Default",
+                              "Garden Shovel",
+                              "Glorious Trowel",
+                              "Paintbrush",
+                              "Plastic Shovel",
+                              "Pumpkin Carver",
+                              "Sand Shovel",
+                              "Snow Shovel"
+                    ]
+          },
+          {
+                    "name": "Uzi",
+                    "icon": "🔫",
+                    "skins": [
+                              "Default",
+                              "Arch Uzi",
+                              "Demon Uzi",
+                              "Electro Uzi",
+                              "Glorious Uzi",
+                              "Keyzi",
+                              "Money Gun",
+                              "Pine Uzi",
+                              "Super Soaker Uzi",
+                              "Water Uzi"
+                    ]
+          },
+          {
                     "name": "War Horn",
-                    "category": "Utility",
-                    "icon": "💣",
+                    "icon": "📯",
                     "skins": [
                               "Default",
                               "Air Horn",
@@ -1216,8 +1196,7 @@
           },
           {
                     "name": "Warpstone",
-                    "category": "Utility",
-                    "icon": "💣",
+                    "icon": "💎",
                     "skins": [
                               "Default",
                               "Cyber Warpstone",
@@ -1229,36 +1208,6 @@
                               "Warpbone",
                               "Warpeye",
                               "Warpstar"
-                    ]
-          },
-          {
-                    "name": "Riot Shield",
-                    "category": "Special",
-                    "icon": "🛡️",
-                    "skins": [
-                              "Default",
-                              "Boogie Board",
-                              "Door",
-                              "Energy Shield",
-                              "Glorious Riot Shield",
-                              "Masterpiece",
-                              "Sled",
-                              "Tombstone Shield"
-                    ]
-          },
-          {
-                    "name": "Trowel",
-                    "category": "Special",
-                    "icon": "🛡️",
-                    "skins": [
-                              "Default",
-                              "Garden Shovel",
-                              "Glorious Trowel",
-                              "Paintbrush",
-                              "Plastic Shovel",
-                              "Pumpkin Carver",
-                              "Sand Shovel",
-                              "Snow Shovel"
                     ]
           }
 ];
@@ -1321,7 +1270,7 @@
                 card.innerHTML = `
                     <div class="card-header">
                         <span class="weapon-name">${weapon.icon} ${weapon.name}</span>
-                        <span class="category-tag">${weapon.category}</span>
+                        
                     </div>
                     <div class="skin-preview-box" id="preview-${weapon.name.replace(/[^a-zA-Z0-9]/g, '_')}" style="background: ${visual.bg}; border-color: ${visual.color}44">
                         <img src="${visual.imgSrc}" alt="${selected}" class="skin-img-display" id="icon-${weapon.name.replace(/[^a-zA-Z0-9]/g, '_')}" onerror="this.style.display='none'; document.getElementById('fallback-${weapon.name.replace(/[^a-zA-Z0-9]/g, '_')}').style.display='block';">
@@ -1372,11 +1321,8 @@
 
             cards.forEach(card => {
                 const wName = card.dataset.name;
-                const cat = card.dataset.category;
                 const matchSearch = wName.includes(query);
-                const matchCategory = (activeCategory === "all" || cat === activeCategory);
-
-                card.style.display = (matchSearch && matchCategory) ? "flex" : "none";
+                card.style.display = matchSearch ? "flex" : "none";
             });
         }
 

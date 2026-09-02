@@ -15,65 +15,6 @@ function fetch(url) {
     });
 }
 
-const CATEGORY_MAP = {
-    "Assault Rifle": "Primary",
-    "Burst Rifle": "Primary",
-    "Sniper": "Primary",
-    "Shotgun": "Primary",
-    "Minigun": "Primary",
-    "Energy Rifle": "Primary",
-    "Exogun": "Primary",
-    "Flamethrower": "Primary",
-    "Paintball Gun": "Primary",
-    "Bow": "Primary",
-    "Uzi": "Secondary",
-    "Energy Pistols": "Secondary",
-    "Handgun": "Secondary",
-    "Revolver": "Secondary",
-    "Shorty": "Secondary",
-    "Spray": "Secondary",
-    "Flare Gun": "Secondary",
-    "Slingshot": "Secondary",
-    "Crossbow": "Secondary",
-    "Katana": "Melee",
-    "Gunblade": "Melee",
-    "Knife": "Melee",
-    "Daggers": "Melee",
-    "Scythe": "Melee",
-    "Chainsaw": "Melee",
-    "Battle Axe": "Melee",
-    "Fists": "Melee",
-    "Spear": "Melee",
-    "Maul": "Melee",
-    "Flashbang": "Utility",
-    "Molotov": "Utility",
-    "Smoke Grenade": "Utility",
-    "Satchel": "Utility",
-    "Freeze Ray": "Utility",
-    "Jump Pad": "Utility",
-    "Medkit": "Utility",
-    "War Horn": "Utility",
-    "Subspace Tripmine": "Utility",
-    "Warper": "Utility",
-    "Distortion": "Utility",
-    "Warpstone": "Utility",
-    "RPG": "Utility",
-    "Grenade": "Utility",
-    "Grenade Launcher": "Utility",
-    "Riot Shield": "Special",
-    "Permafrost": "Special",
-    "Trowel": "Special",
-    "Grappler": "Special"
-};
-
-const ICONS_MAP = {
-    "Primary": "🔫",
-    "Secondary": "⚡",
-    "Melee": "⚔️",
-    "Utility": "💣",
-    "Special": "🛡️"
-};
-
 // Temporarily disabled skins undergoing model rig fixes
 const DISABLED_SKINS = [
     "Crystal Daggers",
@@ -90,6 +31,57 @@ const DISABLED_SKINS = [
     "Festive Fists",
     "Keyvolver"
 ];
+
+const WEAPON_ICONS_DEFAULT = {
+    "Assault Rifle": "🔫",
+    "Burst Rifle": "🔫",
+    "Sniper": "🎯",
+    "Shotgun": "💥",
+    "Minigun": "🔥",
+    "Energy Rifle": "⚡",
+    "Exogun": "🛸",
+    "Flamethrower": "🔥",
+    "Paintball Gun": "🎨",
+    "Bow": "🏹",
+    "Uzi": "🔫",
+    "Energy Pistols": "⚡",
+    "Handgun": "🔫",
+    "Revolver": "🤠",
+    "Shorty": "💥",
+    "Spray": "💨",
+    "Flare Gun": "✨",
+    "Slingshot": "🎯",
+    "Crossbow": "🏹",
+    "Katana": "⚔️",
+    "Gunblade": "⚔️",
+    "Knife": "🔪",
+    "Daggers": "🗡️",
+    "Scythe": "🌾",
+    "Chainsaw": "🪚",
+    "Battle Axe": "🪓",
+    "Fists": "🥊",
+    "Spear": "🔱",
+    "Maul": "🔨",
+    "Flashbang": "💡",
+    "Molotov": "🍾",
+    "Smoke Grenade": "💨",
+    "Satchel": "💣",
+    "Freeze Ray": "❄️",
+    "Jump Pad": "🚀",
+    "Medkit": "🩹",
+    "War Horn": "📯",
+    "Subspace Tripmine": "💠",
+    "Warper": "🌀",
+    "Distortion": "🌌",
+    "Warpstone": "💎",
+    "RPG": "🚀",
+    "Grenade": "💣",
+    "Grenade Launcher": "💣",
+    "Riot Shield": "🛡️",
+    "Permafrost": "❄️",
+    "Trowel": "🧱",
+    "Grappler": "🪝"
+};
 
 async function main() {
     console.log("Fetching latest Items.lua...");
@@ -122,30 +114,24 @@ async function main() {
             }
         }
 
-        const category = CATEGORY_MAP[weaponName] || "Utility";
-        const icon = ICONS_MAP[category] || "⚔️";
+        const icon = WEAPON_ICONS_DEFAULT[weaponName] || "⚔️";
 
         allWeapons.push({
             name: weaponName,
-            category: category,
             icon: icon,
             skins: formattedSkins
         });
     }
 
-    console.log(`Parsed ${allWeapons.length} weapons (temporarily filtered out ${DISABLED_SKINS.length} WIP skins)`);
+    // Sort alphabetically A-Z
+    allWeapons.sort((a, b) => a.name.localeCompare(b.name));
 
-    const catOrder = ["Primary", "Secondary", "Melee", "Utility", "Special"];
-    allWeapons.sort((a, b) => {
-        const catA = catOrder.indexOf(a.category);
-        const catB = catOrder.indexOf(b.category);
-        if (catA !== catB) return catA - catB;
-        return a.name.localeCompare(b.name);
-    });
+    console.log(`Parsed ${allWeapons.length} weapons sorted alphabetically A-Z.`);
 
     const indexPath = path.join(__dirname, 'index.html');
     let html = fs.readFileSync(indexPath, 'utf-8');
 
+    // Replace OFFICIAL_WEAPON_DATA
     const startStr = 'const OFFICIAL_WEAPON_DATA = ';
     const endStr = ';\n\n        function getSkinVisual';
 
@@ -158,12 +144,50 @@ async function main() {
     }
 
     html = html.substring(0, startIdx + startStr.length) + JSON.stringify(allWeapons, null, 12) + html.substring(endIdx);
+
+    // Remove category filters HTML block if present
+    html = html.replace(/<div class="category-filters">[\s\S]*?<\/div>\s*<\/div>/g, '');
+    html = html.replace(/<div class="category-filters">[\s\S]*?<\/div>/g, '');
+    
+    // Remove category tag from card-header
+    html = html.replace(/<span class="category-tag">[\s\S]*?<\/span>/g, '');
+
+    // Simplify filterWeapons to only search query
+    const filterFnOld = `function filterWeapons() {
+            const query = document.getElementById("searchInput").value.toLowerCase();
+            const cards = document.querySelectorAll(".weapon-card");
+
+            cards.forEach(card => {
+                const wName = card.dataset.name;
+                const cat = card.dataset.category;
+                const matchSearch = wName.includes(query);
+                const matchCategory = (activeCategory === "all" || cat === activeCategory);
+
+                card.style.display = (matchSearch && matchCategory) ? "flex" : "none";
+            });
+        }`;
+
+    const filterFnNew = `function filterWeapons() {
+            const query = document.getElementById("searchInput").value.toLowerCase();
+            const cards = document.querySelectorAll(".weapon-card");
+
+            cards.forEach(card => {
+                const wName = card.dataset.name;
+                const matchSearch = wName.includes(query);
+                card.style.display = matchSearch ? "flex" : "none";
+            });
+        }`;
+
+    if (html.includes(filterFnOld)) {
+        html = html.replace(filterFnOld, filterFnNew);
+    }
+
     fs.writeFileSync(indexPath, html, 'utf-8');
-    console.log("Updated index.html successfully!");
+    console.log("Updated index.html successfully without categories!");
 
     console.log("Committing and pushing to GitHub...");
     execSync('git add index.html sync_full_items.js', { cwd: __dirname });
-    execSync('git commit -m "Temporarily filter out 13 WIP skins from web configurator"', { cwd: __dirname });
+    execSync('git commit -m "Remove categories for a unified alphabetical weapon list"', { cwd: __dirname });
     execSync('git push origin main', { cwd: __dirname });
     console.log("Pushed to GitHub main branch!");
 }
