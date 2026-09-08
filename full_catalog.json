@@ -3,7 +3,6 @@
     "id": "assault_rifle",
     "name": "Assault Rifle",
     "category": "Primary",
-    "icon": "assault_rifle.png",
     "skins": [
       "Standard",
       "10B Visits",
@@ -22,7 +21,6 @@
     "id": "battle_axe",
     "name": "Battle Axe",
     "category": "Melee",
-    "icon": "battle_axe.png",
     "skins": [
       "Standard",
       "Balloon Axe",
@@ -41,7 +39,6 @@
     "id": "bow",
     "name": "Bow",
     "category": "Primary",
-    "icon": "bow.png",
     "skins": [
       "Standard",
       "Balloon Bow",
@@ -60,7 +57,6 @@
     "id": "burst_rifle",
     "name": "Burst Rifle",
     "category": "Primary",
-    "icon": "burst_rifle.png",
     "skins": [
       "Standard",
       "Aqua Burst",
@@ -78,7 +74,6 @@
     "id": "chainsaw",
     "name": "Chainsaw",
     "category": "Melee",
-    "icon": "chainsaw.png",
     "skins": [
       "Standard",
       "Blobsaw",
@@ -94,7 +89,6 @@
     "id": "crossbow",
     "name": "Crossbow",
     "category": "Primary",
-    "icon": "crossbow.png",
     "skins": [
       "Standard",
       "Arch Crossbow",
@@ -111,7 +105,6 @@
     "id": "daggers",
     "name": "Daggers",
     "category": "Melee",
-    "icon": "daggers.png",
     "skins": [
       "Standard",
       "Aces",
@@ -131,7 +124,6 @@
     "id": "distortion",
     "name": "Distortion",
     "category": "Primary",
-    "icon": "distortion.png",
     "skins": [
       "Standard",
       "Bubble Distortion",
@@ -148,7 +140,6 @@
     "id": "energy_pistols",
     "name": "Energy Pistols",
     "category": "Secondary",
-    "icon": "energy_pistols.png",
     "skins": [
       "Standard",
       "Apex Pistols",
@@ -167,7 +158,6 @@
     "id": "energy_rifle",
     "name": "Energy Rifle",
     "category": "Primary",
-    "icon": "energy_rifle.png",
     "skins": [
       "Standard",
       "Apex Rifle",
@@ -185,7 +175,6 @@
     "id": "exogun",
     "name": "Exogun",
     "category": "Primary",
-    "icon": "exogun.png",
     "skins": [
       "Standard",
       "Exogourd",
@@ -202,7 +191,6 @@
     "id": "fists",
     "name": "Fists",
     "category": "Melee",
-    "icon": "fists.png",
     "skins": [
       "Standard",
       "Boxing Gloves",
@@ -221,7 +209,6 @@
     "id": "flamethrower",
     "name": "Flamethrower",
     "category": "Primary",
-    "icon": "flamethrower.png",
     "skins": [
       "Standard",
       "Bubblethrower",
@@ -240,7 +227,6 @@
     "id": "flare_gun",
     "name": "Flare Gun",
     "category": "Secondary",
-    "icon": "flare_gun.png",
     "skins": [
       "Standard",
       "Banana Flare",
@@ -256,7 +242,6 @@
     "id": "flashbang",
     "name": "Flashbang",
     "category": "Utility",
-    "icon": "flashbang.png",
     "skins": [
       "Standard",
       "Camera",
@@ -273,7 +258,6 @@
     "id": "freeze_ray",
     "name": "Freeze Ray",
     "category": "Utility",
-    "icon": "freeze_ray.png",
     "skins": [
       "Standard",
       "Bubble Ray",
@@ -289,7 +273,6 @@
     "id": "grappler",
     "name": "Grappler",
     "category": "Utility",
-    "icon": "grappler.png",
     "skins": [
       "Standard",
       "Arcade Claw",
@@ -304,7 +287,6 @@
     "id": "grenade",
     "name": "Grenade",
     "category": "Utility",
-    "icon": "grenade.png",
     "skins": [
       "Standard",
       "Cuddle Bomb",
@@ -323,7 +305,6 @@
     "id": "grenade_launcher",
     "name": "Grenade Launcher",
     "category": "Primary",
-    "icon": "grenade_launcher.png",
     "skins": [
       "Standard",
       "Balloon Launcher",
@@ -340,7 +321,6 @@
     "id": "gunblade",
     "name": "Gunblade",
     "category": "Melee",
-    "icon": "gunblade.png",
     "skins": [
       "Standard",
       "Boneblade",
@@ -357,7 +337,6 @@
     "id": "handgun",
     "name": "Handgun",
     "category": "Secondary",
-    "icon": "handgun.png",
     "skins": [
       "Standard",
       "Blaster",
@@ -377,7 +356,6 @@
     "id": "jump_pad",
     "name": "Jump Pad",
     "category": "Utility",
-    "icon": "jump_pad.png",
     "skins": [
       "Standard",
       "Bounce House",
@@ -393,7 +371,6 @@
     "id": "katana",
     "name": "Katana",
     "category": "Melee",
-    "icon": "katana.png",
     "skins": [
       "Standard",
       "Arch Katana",
@@ -416,7 +393,6 @@
     "id": "knife",
     "name": "Knife",
     "category": "Melee",
-    "icon": "knife.png",
     "skins": [
       "Standard",
       "Armature.001",
@@ -439,7 +415,6 @@
     "id": "maul",
     "name": "Maul",
     "category": "Melee",
-    "icon": "maul.png",
     "skins": [
       "Standard",
       "Ban Hammer",
@@ -456,7 +431,6 @@
     "id": "medkit",
     "name": "Medkit",
     "category": "Utility",
-    "icon": "medkit.png",
     "skins": [
       "Standard",
       "Box of Chocolates",
@@ -474,7 +448,6 @@
     "id": "minigun",
     "name": "Minigun",
     "category": "Primary",
-    "icon": "minigun.png",
     "skins": [
       "Standard",
       "Fighter Jet",
@@ -490,7 +463,6 @@
     "id": "molotov",
     "name": "Molotov",
     "category": "Utility",
-    "icon": "molotov.png",
     "skins": [
       "Standard",
       "Arch Molotov",
@@ -508,7 +480,6 @@
     "id": "paintball_gun",
     "name": "Paintball Gun",
     "category": "Primary",
-    "icon": "paintball_gun.png",
     "skins": [
       "Standard",
       "Boba Gun",
@@ -525,7 +496,6 @@
     "id": "permafrost",
     "name": "Permafrost",
     "category": "Primary",
-    "icon": "permafrost.png",
     "skins": [
       "Standard",
       "Glorious Permafrost",
@@ -541,7 +511,6 @@
     "id": "rpg",
     "name": "RPG",
     "category": "Primary",
-    "icon": "rpg.png",
     "skins": [
       "Standard",
       "Cupcake Launcher",
@@ -561,7 +530,6 @@
     "id": "revolver",
     "name": "Revolver",
     "category": "Secondary",
-    "icon": "revolver.png",
     "skins": [
       "Standard",
       "Boneclaw Revolver",
@@ -578,7 +546,6 @@
     "id": "riot_shield",
     "name": "Riot Shield",
     "category": "Utility",
-    "icon": "riot_shield.png",
     "skins": [
       "Standard",
       "Broken Surfboard",
@@ -594,7 +561,6 @@
     "id": "satchel",
     "name": "Satchel",
     "category": "Utility",
-    "icon": "satchel.png",
     "skins": [
       "Standard",
       "Advanced Satchel",
@@ -611,7 +577,6 @@
     "id": "scythe",
     "name": "Scythe",
     "category": "Melee",
-    "icon": "scythe.png",
     "skins": [
       "Standard",
       "Anchor",
@@ -631,7 +596,6 @@
     "id": "shorty",
     "name": "Shorty",
     "category": "Secondary",
-    "icon": "shorty.png",
     "skins": [
       "Standard",
       "Balloon Shorty",
@@ -649,7 +613,6 @@
     "id": "shotgun",
     "name": "Shotgun",
     "category": "Primary",
-    "icon": "shotgun.png",
     "skins": [
       "Standard",
       "Balloon Shotgun",
@@ -666,7 +629,6 @@
     "id": "slingshot",
     "name": "Slingshot",
     "category": "Secondary",
-    "icon": "slingshot.png",
     "skins": [
       "Standard",
       "Boneshot",
@@ -684,7 +646,6 @@
     "id": "smoke_grenade",
     "name": "Smoke Grenade",
     "category": "Utility",
-    "icon": "smoke_grenade.png",
     "skins": [
       "Standard",
       "Balance",
@@ -700,7 +661,6 @@
     "id": "sniper",
     "name": "Sniper",
     "category": "Primary",
-    "icon": "sniper.png",
     "skins": [
       "Standard",
       "Campfire Sniper",
@@ -719,7 +679,6 @@
     "id": "spear",
     "name": "Spear",
     "category": "Melee",
-    "icon": "spear.png",
     "skins": [
       "Standard",
       "Chark Kebab",
@@ -735,7 +694,6 @@
     "id": "spray",
     "name": "Spray",
     "category": "Secondary",
-    "icon": "spray.png",
     "skins": [
       "Standard",
       "Boneclaw Spray",
@@ -752,7 +710,6 @@
     "id": "subspace_tripmine",
     "name": "Subspace Tripmine",
     "category": "Utility",
-    "icon": "subspace_tripmine.png",
     "skins": [
       "Standard",
       "Dev-in-the-Box",
@@ -769,7 +726,6 @@
     "id": "trowel",
     "name": "Trowel",
     "category": "Utility",
-    "icon": "trowel.png",
     "skins": [
       "Standard",
       "Garden Shovel",
@@ -785,7 +741,6 @@
     "id": "uzi",
     "name": "Uzi",
     "category": "Secondary",
-    "icon": "uzi.png",
     "skins": [
       "Standard",
       "Arch Uzi",
@@ -803,7 +758,6 @@
     "id": "war_horn",
     "name": "War Horn",
     "category": "Utility",
-    "icon": "war_horn.png",
     "skins": [
       "Standard",
       "Air Horn",
@@ -819,7 +773,6 @@
     "id": "warper",
     "name": "Warper",
     "category": "Secondary",
-    "icon": "warper.png",
     "skins": [
       "Standard",
       "Arcane Warper",
@@ -836,7 +789,6 @@
     "id": "warpstone",
     "name": "Warpstone",
     "category": "Utility",
-    "icon": "warpstone.png",
     "skins": [
       "Standard",
       "Cyber Warpstone",
@@ -854,7 +806,6 @@
     "id": "wildcat",
     "name": "Wildcat",
     "category": "Primary",
-    "icon": "wildcat.png",
     "skins": [
       "Standard",
       "Glorious Wildcat",
