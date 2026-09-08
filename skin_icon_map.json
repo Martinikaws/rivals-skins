@@ -1,0 +1,2920 @@
+{
+  "Assault Rifle": {
+    "Standard": {
+      "src": "assets/images/assault-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-092e1e800488327ff1373cde65a1b135/150/150/Image/Png/noFilter",
+      "assetId": "17160682738",
+      "rarity": "Common"
+    },
+    "10B Visits": {
+      "src": "assets/images/10b-visits.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2c07c55f06fae3e58dd20ce3f9209be5/150/150/Image/Png/noFilter",
+      "assetId": "122165086598560",
+      "rarity": "Unique"
+    },
+    "AK-47": {
+      "src": "assets/images/ak-47.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-21096ba1852b2bc7c00ee2bf4812e16a/150/150/Image/Png/noFilter",
+      "assetId": "17691132793",
+      "rarity": "Rare"
+    },
+    "AKEY-47": {
+      "src": "assets/images/akey-47.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-902bf65cffc2f56b924e29ce133eccd2/150/150/Image/Png/noFilter",
+      "assetId": "80017496220683",
+      "rarity": "Mythical"
+    },
+    "Augmented Rifle": {
+      "src": "assets/images/augmented-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-48f7f286c79bf8142c086f3a72e055a8/150/150/Image/Png/noFilter",
+      "assetId": "18770192853",
+      "rarity": "Legendary"
+    },
+    "Boneclaw Rifle": {
+      "src": "assets/images/boneclaw-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-abc3972a941dd84bfd0f4ce230b891c3/150/150/Image/Png/noFilter",
+      "assetId": "100015754284323",
+      "rarity": "Rare"
+    },
+    "Drum Gun": {
+      "src": "assets/images/drum-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-44a35dedc05d9cc8d4739a1306c6c56b/150/150/Image/Png/noFilter",
+      "assetId": "111251887761435",
+      "rarity": "Legendary"
+    },
+    "Gingerbread Augmented Rifle": {
+      "src": "assets/images/gingerbread-augmented-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-565a85ee5b6e572c259711c17af197cd/150/150/Image/Png/noFilter",
+      "assetId": "85584922619813",
+      "rarity": "Legendary"
+    },
+    "Glorious Assault Rifle": {
+      "src": "assets/images/glorious-assault-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-83fdb4c7a0ec8a285f1c403f575924e8/150/150/Image/Png/noFilter",
+      "assetId": "130669996688265",
+      "rarity": "Common"
+    },
+    "Pearl Rifle": {
+      "src": "assets/images/pearl-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-5ff4b8e4d52e064e47198ceccb359934/150/150/Image/Png/noFilter",
+      "assetId": "135277426561503",
+      "rarity": "Rare"
+    },
+    "Phoenix Rifle": {
+      "src": "assets/images/phoenix-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a4d6fe27332d9e8390a89e017fc84859/150/150/Image/Png/noFilter",
+      "assetId": "140228738718621",
+      "rarity": "Common"
+    }
+  },
+  "Battle Axe": {
+    "Standard": {
+      "src": "assets/images/battle-axe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-bbbf587c8f347865ed0a737c13bc38c7/150/150/Image/Png/noFilter",
+      "assetId": "93390542043222",
+      "rarity": "Common"
+    },
+    "Balloon Axe": {
+      "src": "assets/images/balloon-axe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-4ce52be8b85d61aa27393ae4b68dbb00/150/150/Image/Png/noFilter",
+      "assetId": "102429983628211",
+      "rarity": "Legendary"
+    },
+    "Ban Axe": {
+      "src": "assets/images/ban-axe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-903eca9d25c8e0421b452bf66483f483/150/150/Image/Png/noFilter",
+      "assetId": "111046431576859",
+      "rarity": "Common"
+    },
+    "Cerulean Axe": {
+      "src": "assets/images/cerulean-axe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-dfa88df5911b1ddcdd2dae428079650f/150/150/Image/Png/noFilter",
+      "assetId": "76353832683350",
+      "rarity": "Rare"
+    },
+    "Glorious Battle Axe": {
+      "src": "assets/images/glorious-battle-axe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-6c48b2600941fd86d9365322746e75af/150/150/Image/Png/noFilter",
+      "assetId": "87227212476138",
+      "rarity": "Common"
+    },
+    "Keyttle Axe": {
+      "src": "assets/images/keyttle-axe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-5a33b8ff5fdaf021d638822dae4bacd0/150/150/Image/Png/noFilter",
+      "assetId": "122117068984402",
+      "rarity": "Mythical"
+    },
+    "Mimic Axe": {
+      "src": "assets/images/mimic-axe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-f51cae749bbf4eb96899503561364e41/150/150/Image/Png/noFilter",
+      "assetId": "111717370450373",
+      "rarity": "Legendary"
+    },
+    "Nordic Axe": {
+      "src": "assets/images/nordic-axe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-dc664715cfc1f1f0b3a13d855071d9a7/150/150/Image/Png/noFilter",
+      "assetId": "80052264197135",
+      "rarity": "Common"
+    },
+    "Street Sign": {
+      "src": "assets/images/street-sign.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-6423b827ac50ab9956f225031354bced/150/150/Image/Png/noFilter",
+      "assetId": "121743888148209",
+      "rarity": "Legendary"
+    },
+    "The Shred": {
+      "src": "assets/images/the-shred.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b2dc1c85f670168fb5619310fe5b5cc6/150/150/Image/Png/noFilter",
+      "assetId": "71234381808727",
+      "rarity": "Legendary"
+    },
+    "Tiki Axe": {
+      "src": "assets/images/tiki-axe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e0169c0eb520464be748793d9dc44784/150/150/Image/Png/noFilter",
+      "assetId": "87247443182820",
+      "rarity": "Rare"
+    }
+  },
+  "Bow": {
+    "Standard": {
+      "src": "assets/images/bow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-72acd83d9c048998dffb828a517cbe74/150/150/Image/Png/noFilter",
+      "assetId": "17160802080",
+      "rarity": "Common"
+    },
+    "Balloon Bow": {
+      "src": "assets/images/balloon-bow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-da92a2d96dbaffc75213fe495824dfb1/150/150/Image/Png/noFilter",
+      "assetId": "128957010941029",
+      "rarity": "Legendary"
+    },
+    "Bat Bow": {
+      "src": "assets/images/bat-bow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-0811543913ed939c64ebbe09ad22ea5b/150/150/Image/Png/noFilter",
+      "assetId": "108984987378619",
+      "rarity": "Rare"
+    },
+    "Beloved Bow": {
+      "src": "assets/images/beloved-bow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ece007e94825cbf44426d67d7ed4c8d8/150/150/Image/Png/noFilter",
+      "assetId": "110219131386799",
+      "rarity": "Legendary"
+    },
+    "Compound Bow": {
+      "src": "assets/images/compound-bow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d18be62ddd598d9135ff9789302a43c5/150/150/Image/Png/noFilter",
+      "assetId": "17672234242",
+      "rarity": "Common"
+    },
+    "Dream Bow": {
+      "src": "assets/images/dream-bow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-bc9bece55a2102c508926e77a0b9f915/150/150/Image/Png/noFilter",
+      "assetId": "101089313144218",
+      "rarity": "Rare"
+    },
+    "Frostbite Bow": {
+      "src": "assets/images/frostbite-bow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-9ebbc6553ebae7baa9f087a1a4a776a4/150/150/Image/Png/noFilter",
+      "assetId": "121895626623160",
+      "rarity": "Rare"
+    },
+    "Glorious Bow": {
+      "src": "assets/images/glorious-bow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3f4a3e4bf414ce3294d5b60b8e522c46/150/150/Image/Png/noFilter",
+      "assetId": "84201415206621",
+      "rarity": "Common"
+    },
+    "Key Bow": {
+      "src": "assets/images/key-bow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d50046a342bc5b20d79c381d34a8704d/150/150/Image/Png/noFilter",
+      "assetId": "122525140091212",
+      "rarity": "Mythical"
+    },
+    "Palm Bow": {
+      "src": "assets/images/palm-bow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-db7797abfaf1594ed08f0d10efcb2cc0/150/150/Image/Png/noFilter",
+      "assetId": "82899577710787",
+      "rarity": "Rare"
+    },
+    "Raven Bow": {
+      "src": "assets/images/raven-bow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-036bcd2a91fc54bffff6fd73b9b9387c/150/150/Image/Png/noFilter",
+      "assetId": "18766861627",
+      "rarity": "Rare"
+    }
+  },
+  "Burst Rifle": {
+    "Standard": {
+      "src": "assets/images/burst-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-f894e395896ec10595ae85e21c8c938d/150/150/Image/Png/noFilter",
+      "assetId": "17160801983",
+      "rarity": "Common"
+    },
+    "Aqua Burst": {
+      "src": "assets/images/aqua-burst.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-7cdf0da026b3baa065767d6eb3be8533/150/150/Image/Png/noFilter",
+      "assetId": "18837670807",
+      "rarity": "Rare"
+    },
+    "Bullpup Burst": {
+      "src": "assets/images/bullpup-burst.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-6dac8c83ddc4bd3e2e4a944d0e14aa75/150/150/Image/Png/noFilter",
+      "assetId": "74974560606812",
+      "rarity": "Legendary"
+    },
+    "Electro Rifle": {
+      "src": "assets/images/electro-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-acb2aa38dfe8a9c37f868bc4d13d31ae/150/150/Image/Png/noFilter",
+      "assetId": "132227459821018",
+      "rarity": "Legendary"
+    },
+    "Glorious Burst Rifle": {
+      "src": "assets/images/glorious-burst-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-1208d5c0ae61624c96d89fc514e557d0/150/150/Image/Png/noFilter",
+      "assetId": "78517330608597",
+      "rarity": "Common"
+    },
+    "Keyst Rifle": {
+      "src": "assets/images/keyst-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-9d90f8736ab082a8bbcba5004e5df3c6/150/150/Image/Png/noFilter",
+      "assetId": "78377522426003",
+      "rarity": "Mythical"
+    },
+    "Pine Burst": {
+      "src": "assets/images/pine-burst.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-77f2ebfaeafbb5f1c7d660ab0b85e155/150/150/Image/Png/noFilter",
+      "assetId": "132753732294083",
+      "rarity": "Common"
+    },
+    "Pixel Burst": {
+      "src": "assets/images/pixel-burst.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e8c3ba193004c5b68822f67acb8b895b/150/150/Image/Png/noFilter",
+      "assetId": "102648809593259",
+      "rarity": "Legendary"
+    },
+    "Sand Bullpup Burst": {
+      "src": "assets/images/sand-bullpup-burst.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-9818c07af753a0a5d4909fc111aa0a31/150/150/Image/Png/noFilter",
+      "assetId": "130731663986683",
+      "rarity": "Legendary"
+    },
+    "Spectral Burst": {
+      "src": "assets/images/spectral-burst.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-8674b0ae1f86bb769bade010391279d8/150/150/Image/Png/noFilter",
+      "assetId": "135012309412679",
+      "rarity": "Common"
+    }
+  },
+  "Chainsaw": {
+    "Standard": {
+      "src": "assets/images/chainsaw.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b439f1e5de8ae858d8e861481d281cab/150/150/Image/Png/noFilter",
+      "assetId": "17160801873",
+      "rarity": "Common"
+    },
+    "Blobsaw": {
+      "src": "assets/images/blobsaw.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-82799d08f0e089f63fa10c4c9fa3f3c1/150/150/Image/Png/noFilter",
+      "assetId": "17825963589",
+      "rarity": "Rare"
+    },
+    "Buzzsaw": {
+      "src": "assets/images/buzzsaw.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d15f0968906548e1e46cb5c7c3a614ee/150/150/Image/Png/noFilter",
+      "assetId": "74057448201836",
+      "rarity": "Legendary"
+    },
+    "Festive Buzzsaw": {
+      "src": "assets/images/festive-buzzsaw.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-8ca5323f854f522d41cb32eb1899810f/150/150/Image/Png/noFilter",
+      "assetId": "80811854818775",
+      "rarity": "Legendary"
+    },
+    "Glorious Chainsaw": {
+      "src": "assets/images/glorious-chainsaw.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-cd087e634d0e3693338d2986ace1f1a6/150/150/Image/Png/noFilter",
+      "assetId": "122622447397834",
+      "rarity": "Common"
+    },
+    "Handsaws": {
+      "src": "assets/images/handsaws.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-f71e0264d4e6be96adf75285b1763361/150/150/Image/Png/noFilter",
+      "assetId": "18766864583",
+      "rarity": "Legendary"
+    },
+    "Mega Drill": {
+      "src": "assets/images/mega-drill.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b27ce7d7b2e35534317b9f58b5e69227/150/150/Image/Png/noFilter",
+      "assetId": "76663867023998",
+      "rarity": "Legendary"
+    },
+    "Sharksaw": {
+      "src": "assets/images/sharksaw.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-fe3c3f16a5a020d63ecec98a3bbeaff9/150/150/Image/Png/noFilter",
+      "assetId": "136881251000627",
+      "rarity": "Common"
+    }
+  },
+  "Crossbow": {
+    "Standard": {
+      "src": "assets/images/crossbow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-8b4c3c852a2220128713d86860b051ee/150/150/Image/Png/noFilter",
+      "assetId": "140211832612284",
+      "rarity": "Common"
+    },
+    "Arch Crossbow": {
+      "src": "assets/images/arch-crossbow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-178f45731989dd32b7a1fe31e98ac0fa/150/150/Image/Png/noFilter",
+      "assetId": "94981733362451",
+      "rarity": "Mythical"
+    },
+    "Campfire Crossbow": {
+      "src": "assets/images/campfire-crossbow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-bc42b1b4df91c950495103fd812f89c6/150/150/Image/Png/noFilter",
+      "assetId": "76911697867059",
+      "rarity": "Common"
+    },
+    "Crossbone": {
+      "src": "assets/images/crossbone.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d55ca0454c38de5aff5778b16d50432f/150/150/Image/Png/noFilter",
+      "assetId": "103469183638638",
+      "rarity": "Common"
+    },
+    "Frostbite Crossbow": {
+      "src": "assets/images/frostbite-crossbow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-451f24f4bbe855a9c5889d546f954e7f/150/150/Image/Png/noFilter",
+      "assetId": "101536997945363",
+      "rarity": "Rare"
+    },
+    "Glorious Crossbow": {
+      "src": "assets/images/glorious-crossbow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-5742db373fc0385b53f61e2f660ebf24/150/150/Image/Png/noFilter",
+      "assetId": "70875146419725",
+      "rarity": "Common"
+    },
+    "Harpoon Crossbow": {
+      "src": "assets/images/harpoon-crossbow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-dc97d7bae9ac319cefd1325306f73da6/150/150/Image/Png/noFilter",
+      "assetId": "107460405492001",
+      "rarity": "Rare"
+    },
+    "Pixel Crossbow": {
+      "src": "assets/images/pixel-crossbow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-fa75381ca65e27b89da104836c896502/150/150/Image/Png/noFilter",
+      "assetId": "115931961841903",
+      "rarity": "Legendary"
+    },
+    "Violin Crossbow": {
+      "src": "assets/images/violin-crossbow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-af988149f69c16e0a920796ef6d77919/150/150/Image/Png/noFilter",
+      "assetId": "74401302514014",
+      "rarity": "Rare"
+    }
+  },
+  "Daggers": {
+    "Standard": {
+      "src": "assets/images/daggers.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-9de0a91433445ee1e8400a74ca1669dc/150/150/Image/Png/noFilter",
+      "assetId": "91885384580845",
+      "rarity": "Common"
+    },
+    "Aces": {
+      "src": "assets/images/aces.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c071c42525c06515260c82bde30006f8/150/150/Image/Png/noFilter",
+      "assetId": "139089881483398",
+      "rarity": "Rare"
+    },
+    "Bat Daggers": {
+      "src": "assets/images/bat-daggers.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-25464c0c44a805b43bf14540c331401e/150/150/Image/Png/noFilter",
+      "assetId": "92001964015225",
+      "rarity": "Rare"
+    },
+    "Broken Hearts": {
+      "src": "assets/images/broken-hearts.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e97c7d4536aec1c9abb7eae25aa8eb42/150/150/Image/Png/noFilter",
+      "assetId": "74156924296351",
+      "rarity": "Legendary"
+    },
+    "Cookies": {
+      "src": "assets/images/cookies.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-747f23b1638b5ba6a1158f7b1a2aa2a5/150/150/Image/Png/noFilter",
+      "assetId": "114482325531769",
+      "rarity": "Rare"
+    },
+    "Crystal Daggers": {
+      "src": "assets/images/crystal-daggers.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-77bf9c5f296bf86fe21ce45a909e2114/150/150/Image/Png/noFilter",
+      "assetId": "126221748659600",
+      "rarity": "Mythical"
+    },
+    "Glorious Daggers": {
+      "src": "assets/images/glorious-daggers.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2a284139718b152fc0b70de8ab90fbaf/150/150/Image/Png/noFilter",
+      "assetId": "76023189104485",
+      "rarity": "Common"
+    },
+    "Keynais": {
+      "src": "assets/images/keynais.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-bee2d9a84b8c260fdf7d6c6c4fb8db26/150/150/Image/Png/noFilter",
+      "assetId": "84562761142610",
+      "rarity": "Mythical"
+    },
+    "Paper Planes": {
+      "src": "assets/images/paper-planes.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-8027642460976341f3580cab052c7f67/150/150/Image/Png/noFilter",
+      "assetId": "84003122595879",
+      "rarity": "Common"
+    },
+    "Shurikens": {
+      "src": "assets/images/shurikens.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-48aa257173a254e91a33bceb59eff616/150/150/Image/Png/noFilter",
+      "assetId": "135574097643275",
+      "rarity": "Common"
+    },
+    "Starfish": {
+      "src": "assets/images/starfish.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-081a2b8556f96b5059d9994d553ba07f/150/150/Image/Png/noFilter",
+      "assetId": "114567820096083",
+      "rarity": "Common"
+    },
+    "Toaster": {
+      "src": "assets/images/toaster.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-df93619bcb78e7da5b7ce9306702cbcc/150/150/Image/Png/noFilter",
+      "assetId": "103344379002564",
+      "rarity": "Legendary"
+    }
+  },
+  "Distortion": {
+    "Standard": {
+      "src": "assets/images/distortion.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-12171f05e44b1dbfa91a7dc0ba4c13ac/150/150/Image/Png/noFilter",
+      "assetId": "115712150398379",
+      "rarity": "Common"
+    },
+    "Bubble Distortion": {
+      "src": "assets/images/bubble-distortion.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b092a070cf31269a1f90675e85230453/150/150/Image/Png/noFilter",
+      "assetId": "73319804282513",
+      "rarity": "Rare"
+    },
+    "Cyber Distortion": {
+      "src": "assets/images/cyber-distortion.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-4a6059bc16fd024a82792a8ac7a52d4e/150/150/Image/Png/noFilter",
+      "assetId": "88995062151276",
+      "rarity": "Common"
+    },
+    "Electropunk Distortion": {
+      "src": "assets/images/electropunk-distortion.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-f68f37d7d692318b526ac4413e38c616/150/150/Image/Png/noFilter",
+      "assetId": "109544539643046",
+      "rarity": "Rare"
+    },
+    "Experiment D15": {
+      "src": "assets/images/experiment-d15.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-31f4afc072272b22119e8ef4e2c58344/150/150/Image/Png/noFilter",
+      "assetId": "103446773933340",
+      "rarity": "Legendary"
+    },
+    "Glorious Distortion": {
+      "src": "assets/images/glorious-distortion.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-855005bad48bedea40052513e87c7b27/150/150/Image/Png/noFilter",
+      "assetId": "134722661973710",
+      "rarity": "Common"
+    },
+    "Magma Distortion": {
+      "src": "assets/images/magma-distortion.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e2d8101d7a4279452060af9c7ec9df7f/150/150/Image/Png/noFilter",
+      "assetId": "81103807698156",
+      "rarity": "Rare"
+    },
+    "Plasma Distortion": {
+      "src": "assets/images/plasma-distortion.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3a59710ceef619e9a5102fd5ccf12d1b/150/150/Image/Png/noFilter",
+      "assetId": "126813935337091",
+      "rarity": "Rare"
+    },
+    "Sleighstortion": {
+      "src": "assets/images/sleighstortion.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b1c04abe17f40f4c6b4c996d79176e2f/150/150/Image/Png/noFilter",
+      "assetId": "111242141481650",
+      "rarity": "Rare"
+    }
+  },
+  "Energy Pistols": {
+    "Standard": {
+      "src": "assets/images/energy-pistols.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-f2095db12a6c6301b9ab5a66b4f17057/150/150/Image/Png/noFilter",
+      "assetId": "79471670126710",
+      "rarity": "Common"
+    },
+    "Apex Pistols": {
+      "src": "assets/images/apex-pistols.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-4f560c4bb28c65703c2aead467f63c51/150/150/Image/Png/noFilter",
+      "assetId": "136156057859453",
+      "rarity": "Rare"
+    },
+    "Enerkey Pistols": {
+      "src": "assets/images/enerkey-pistols.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ea665dd7f4d50b5b2df4137f729a37f3/150/150/Image/Png/noFilter",
+      "assetId": "132955794587057",
+      "rarity": "Mythical"
+    },
+    "Glorious Energy Pistols": {
+      "src": "assets/images/glorious-energy-pistols.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-13f8d115e6d1e707e6f1bb67cd18af00/150/150/Image/Png/noFilter",
+      "assetId": "114418789647547",
+      "rarity": "Common"
+    },
+    "Hacker Pistols": {
+      "src": "assets/images/hacker-pistols.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-64856d6772afacbdb6e77accc431caed/150/150/Image/Png/noFilter",
+      "assetId": "140621407555872",
+      "rarity": "Rare"
+    },
+    "Hydro Pistols": {
+      "src": "assets/images/hydro-pistols.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3e343a5a10edf793df1cfc2907ad3d56/150/150/Image/Png/noFilter",
+      "assetId": "115281889984097",
+      "rarity": "Rare"
+    },
+    "Hyperlaser Guns": {
+      "src": "assets/images/hyperlaser-guns.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c359b439d11564e4806d9264bcadfbe2/150/150/Image/Png/noFilter",
+      "assetId": "106947526362970",
+      "rarity": "Legendary"
+    },
+    "New Year Energy Pistols": {
+      "src": "assets/images/new-year-energy-pistols.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-255c8cb856b7480a755227fbc2ae2a6f/150/150/Image/Png/noFilter",
+      "assetId": "126589959779039",
+      "rarity": "Rare"
+    },
+    "Sol Pistols": {
+      "src": "assets/images/sol-pistols.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ede646f476e68d08404401ff3dafd926/150/150/Image/Png/noFilter",
+      "assetId": "115012735954576",
+      "rarity": "Rare"
+    },
+    "Soul Pistols": {
+      "src": "assets/images/soul-pistols.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-69f7b1fe191b9b60fb3e6b23fd0e308e/150/150/Image/Png/noFilter",
+      "assetId": "72213738067158",
+      "rarity": "Legendary"
+    },
+    "Void Pistols": {
+      "src": "assets/images/void-pistols.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-589db0d3399d7b4dadadaca21af2f773/150/150/Image/Png/noFilter",
+      "assetId": "111278471262300",
+      "rarity": "Legendary"
+    }
+  },
+  "Energy Rifle": {
+    "Standard": {
+      "src": "assets/images/energy-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d5bb0c5f8cc71d07c5dc9412c1d65452/150/150/Image/Png/noFilter",
+      "assetId": "110259279810005",
+      "rarity": "Common"
+    },
+    "Apex Rifle": {
+      "src": "assets/images/apex-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-8038f41824372e102af883885b48ebb9/150/150/Image/Png/noFilter",
+      "assetId": "88144772234151",
+      "rarity": "Rare"
+    },
+    "Enerkey Rifle": {
+      "src": "assets/images/enerkey-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3c3fd1ff58cea397d57340a1c2f921e6/150/150/Image/Png/noFilter",
+      "assetId": "80940171527853",
+      "rarity": "Mythical"
+    },
+    "Glorious Energy Rifle": {
+      "src": "assets/images/glorious-energy-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ab8bf34daa8f306e88aa68864ad50cb7/150/150/Image/Png/noFilter",
+      "assetId": "72632815443247",
+      "rarity": "Common"
+    },
+    "Hacker Rifle": {
+      "src": "assets/images/hacker-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-4b15ccec4b9f195df89b6cf5b2527262/150/150/Image/Png/noFilter",
+      "assetId": "122816271917525",
+      "rarity": "Rare"
+    },
+    "Hydro Rifle": {
+      "src": "assets/images/hydro-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-5502618315c00854b8095e4d0e275fc4/150/150/Image/Png/noFilter",
+      "assetId": "73690448730060",
+      "rarity": "Rare"
+    },
+    "New Year Energy Rifle": {
+      "src": "assets/images/new-year-energy-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-25cd19f41afac60c93981b6b77f06059/150/150/Image/Png/noFilter",
+      "assetId": "111446782522703",
+      "rarity": "Rare"
+    },
+    "Sol Rifle": {
+      "src": "assets/images/sol-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-200c4343fad06aeca3f165c1a5f10eb6/150/150/Image/Png/noFilter",
+      "assetId": "96272849525291",
+      "rarity": "Rare"
+    },
+    "Soul Rifle": {
+      "src": "assets/images/soul-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e0b4b484e916aa3ee0d7f910413e3b43/150/150/Image/Png/noFilter",
+      "assetId": "129351366788323",
+      "rarity": "Legendary"
+    },
+    "Void Rifle": {
+      "src": "assets/images/void-rifle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-6fc74a09904738aba7c2c081e02a3218/150/150/Image/Png/noFilter",
+      "assetId": "95985016411441",
+      "rarity": "Legendary"
+    }
+  },
+  "Exogun": {
+    "Standard": {
+      "src": "assets/images/exogun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-63ec39f2410966eaea9fb82206e05cd5/150/150/Image/Png/noFilter",
+      "assetId": "17344796376",
+      "rarity": "Common"
+    },
+    "Exogourd": {
+      "src": "assets/images/exogourd.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b79675abaf6870f72854ec0dd7c708e4/150/150/Image/Png/noFilter",
+      "assetId": "137140750597688",
+      "rarity": "Rare"
+    },
+    "Glorious Exogun": {
+      "src": "assets/images/glorious-exogun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-8abd7ad342dd949dc60549418e88c5e8/150/150/Image/Png/noFilter",
+      "assetId": "129125201034206",
+      "rarity": "Common"
+    },
+    "Midnight Festive Exogun": {
+      "src": "assets/images/midnight-festive-exogun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-1c46303e91e88efe274d23d7d0a0d036/150/150/Image/Png/noFilter",
+      "assetId": "127612442529810",
+      "rarity": "Common"
+    },
+    "Pearl Exogun": {
+      "src": "assets/images/pearl-exogun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-022384014639dcf1cd5592e6c7bbd36e/150/150/Image/Png/noFilter",
+      "assetId": "77698515863000",
+      "rarity": "Rare"
+    },
+    "Ray Gun": {
+      "src": "assets/images/ray-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-8c74f0e7d5d7d8afd4a4effef0d97f3e/150/150/Image/Png/noFilter",
+      "assetId": "18766861454",
+      "rarity": "Rare"
+    },
+    "Repulsor": {
+      "src": "assets/images/repulsor.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a0cea5611cdfcd26db10fffa8049ce40/150/150/Image/Png/noFilter",
+      "assetId": "109263387714628",
+      "rarity": "Legendary"
+    },
+    "Singularity": {
+      "src": "assets/images/singularity.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b54b2985ac3fc10f1a720e5b70916d3b/150/150/Image/Png/noFilter",
+      "assetId": "17676876756",
+      "rarity": "Legendary"
+    },
+    "Wondergun": {
+      "src": "assets/images/wondergun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-769fd9f96949c905cd89011d8cc5abf0/150/150/Image/Png/noFilter",
+      "assetId": "17672060360",
+      "rarity": "Rare"
+    }
+  },
+  "Fists": {
+    "Standard": {
+      "src": "assets/images/fists.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a76e42b911dba9c1e55e9495341e4fef/150/150/Image/Png/noFilter",
+      "assetId": "17160801745",
+      "rarity": "Common"
+    },
+    "Boxing Gloves": {
+      "src": "assets/images/boxing-gloves.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-dcffea52d12e1fe9d451a719e8d970aa/150/150/Image/Png/noFilter",
+      "assetId": "17672060486",
+      "rarity": "Rare"
+    },
+    "Brass Knuckles": {
+      "src": "assets/images/brass-knuckles.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-6e122f8635e378cd3c6e7085131e4f3b/150/150/Image/Png/noFilter",
+      "assetId": "106879679389340",
+      "rarity": "Common"
+    },
+    "Crab Claws": {
+      "src": "assets/images/crab-claws.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-52318544f1c36e2706575045c258fcfc/150/150/Image/Png/noFilter",
+      "assetId": "127492118111080",
+      "rarity": "Legendary"
+    },
+    "Festive Fists": {
+      "src": "assets/images/festive-fists.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c6cf41def6dc0de100e7d3d0dbaace91/150/150/Image/Png/noFilter",
+      "assetId": "102757458529795",
+      "rarity": "Common"
+    },
+    "Fist": {
+      "src": "assets/images/fist.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ae58c4ceb72fdd913d6d87f7113234bd/150/150/Image/Png/noFilter",
+      "assetId": "109585706680035",
+      "rarity": "Legendary"
+    },
+    "Fists of Hurt": {
+      "src": "assets/images/fists-of-hurt.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-7c744699c1e09fc16e41d50f9dc53427/150/150/Image/Png/noFilter",
+      "assetId": "140103672289959",
+      "rarity": "Rare"
+    },
+    "Glorious Fists": {
+      "src": "assets/images/glorious-fists.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-0213e74ad43c137406eee19a926466e2/150/150/Image/Png/noFilter",
+      "assetId": "112839297231399",
+      "rarity": "Common"
+    },
+    "Pirate Hook": {
+      "src": "assets/images/pirate-hook.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-9bc06838a147d6a3dcfaf59e27146699/150/150/Image/Png/noFilter",
+      "assetId": "116717593932616",
+      "rarity": "Legendary"
+    },
+    "Pumpkin Claws": {
+      "src": "assets/images/pumpkin-claws.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-582edbca98de41f1254a9f21c50fed95/150/150/Image/Png/noFilter",
+      "assetId": "90996407819750",
+      "rarity": "Common"
+    },
+    "Spy Gloves": {
+      "src": "assets/images/spy-gloves.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d3293b2ea6bf32888741e72cc4d5255f/150/150/Image/Png/noFilter",
+      "assetId": "117198095640784",
+      "rarity": "Common"
+    }
+  },
+  "Flamethrower": {
+    "Standard": {
+      "src": "assets/images/flamethrower.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b80f58cf0878b8e0b0b823c663f8664b/150/150/Image/Png/noFilter",
+      "assetId": "89455038280473",
+      "rarity": "Common"
+    },
+    "Bubblethrower": {
+      "src": "assets/images/bubblethrower.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-617dbe6fa782917207a030238cdb0ead/150/150/Image/Png/noFilter",
+      "assetId": "76812523297712",
+      "rarity": "Rare"
+    },
+    "Extinguisher": {
+      "src": "assets/images/extinguisher.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a64a6b57bf72ded8ebe1f5d4d2b9131d/150/150/Image/Png/noFilter",
+      "assetId": "95815875434568",
+      "rarity": "Legendary"
+    },
+    "Glitterthrower": {
+      "src": "assets/images/glitterthrower.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-9f4c4dd60d7b4326c4df6b4856145bf2/150/150/Image/Png/noFilter",
+      "assetId": "88920581735649",
+      "rarity": "Rare"
+    },
+    "Glorious Flamethrower": {
+      "src": "assets/images/glorious-flamethrower.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-9eb9a6351b6a439582c91b7f90053e31/150/150/Image/Png/noFilter",
+      "assetId": "71676635953177",
+      "rarity": "Common"
+    },
+    "Jack O'Thrower": {
+      "src": "assets/images/jack-o-thrower.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-437f24ea5caef30615af1f1213002e6f/150/150/Image/Png/noFilter",
+      "assetId": "140280020818514",
+      "rarity": "Rare"
+    },
+    "Keythrower": {
+      "src": "assets/images/keythrower.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c8e71818fc473eaac50197d86e5ca6af/150/150/Image/Png/noFilter",
+      "assetId": "130308634220965",
+      "rarity": "Mythical"
+    },
+    "Lamethrower": {
+      "src": "assets/images/lamethrower.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-6c34e4279beeee88333bd7ab1dea21a9/150/150/Image/Png/noFilter",
+      "assetId": "18766862822",
+      "rarity": "Common"
+    },
+    "Pixel Flamethrower": {
+      "src": "assets/images/pixel-flamethrower.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-884f193edf3bfa9a937c4188cf46a04c/150/150/Image/Png/noFilter",
+      "assetId": "17771752104",
+      "rarity": "Legendary"
+    },
+    "Rainbowthrower": {
+      "src": "assets/images/rainbowthrower.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-5f049f5cc02c0a96d7b9874ece26e35f/150/150/Image/Png/noFilter",
+      "assetId": "102070206928252",
+      "rarity": "Legendary"
+    },
+    "Snowblower": {
+      "src": "assets/images/snowblower.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-be9b53c18d51a9728670d1ae44df63db/150/150/Image/Png/noFilter",
+      "assetId": "128743586418880",
+      "rarity": "Rare"
+    }
+  },
+  "Flare Gun": {
+    "Standard": {
+      "src": "assets/images/flare-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b222c292e215cb91c31e85b293e69bee/150/150/Image/Png/noFilter",
+      "assetId": "17160801627",
+      "rarity": "Common"
+    },
+    "Banana Flare": {
+      "src": "assets/images/banana-flare.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-f684fc87ddfd1226bb16b72610bc8c7d/150/150/Image/Png/noFilter",
+      "assetId": "123589213761955",
+      "rarity": "Legendary"
+    },
+    "Dynamite Gun": {
+      "src": "assets/images/dynamite-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ccc8a5526468c5dbd023dc78070ac7b8/150/150/Image/Png/noFilter",
+      "assetId": "18766865384",
+      "rarity": "Rare"
+    },
+    "Firework Gun": {
+      "src": "assets/images/firework-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-af6bbe75cc7bec0c512e19ae2143c7a6/150/150/Image/Png/noFilter",
+      "assetId": "17691132917",
+      "rarity": "Legendary"
+    },
+    "Glorious Flare Gun": {
+      "src": "assets/images/glorious-flare-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-349390ea6bc2c85d8621850115c127e6/150/150/Image/Png/noFilter",
+      "assetId": "115324763672074",
+      "rarity": "Common"
+    },
+    "Pocket Volcano": {
+      "src": "assets/images/pocket-volcano.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d6da5fe8aed9850b5b27326a900871c0/150/150/Image/Png/noFilter",
+      "assetId": "133260045254190",
+      "rarity": "Legendary"
+    },
+    "Vexed Flare Gun": {
+      "src": "assets/images/vexed-flare-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-fb1d4ec68529ecb1fa8dc14c1d2dc83d/150/150/Image/Png/noFilter",
+      "assetId": "116287930550049",
+      "rarity": "Legendary"
+    },
+    "Wrapped Flare Gun": {
+      "src": "assets/images/wrapped-flare-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3326235646557365d81ff477ea8f81b8/150/150/Image/Png/noFilter",
+      "assetId": "135638020129378",
+      "rarity": "Common"
+    }
+  },
+  "Flashbang": {
+    "Standard": {
+      "src": "assets/images/flashbang.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-7a985991a3bd6e04a1aec8385ff4a186/150/150/Image/Png/noFilter",
+      "assetId": "17160801529",
+      "rarity": "Common"
+    },
+    "Camera": {
+      "src": "assets/images/camera.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-992e6f63274978531938e13a382c9d52/150/150/Image/Png/noFilter",
+      "assetId": "18766865640",
+      "rarity": "Legendary"
+    },
+    "Disco Ball": {
+      "src": "assets/images/disco-ball.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-4884eee93075e609b5a458d68cfe0629/150/150/Image/Png/noFilter",
+      "assetId": "17672061796",
+      "rarity": "Legendary"
+    },
+    "Glorious Flashbang": {
+      "src": "assets/images/glorious-flashbang.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-0c4f52a52eefe6edb732f424e47edf60/150/150/Image/Png/noFilter",
+      "assetId": "96760506528185",
+      "rarity": "Common"
+    },
+    "Lightbulb": {
+      "src": "assets/images/lightbulb.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-90d6a131b9b92ee7b2e01a88da0a3d89/150/150/Image/Png/noFilter",
+      "assetId": "125489177573287",
+      "rarity": "Common"
+    },
+    "Pixel Flashbang": {
+      "src": "assets/images/pixel-flashbang.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-5bff78596787ab38bda90df749bf9dc3/150/150/Image/Png/noFilter",
+      "assetId": "132815625474597",
+      "rarity": "Legendary"
+    },
+    "Shining Star": {
+      "src": "assets/images/shining-star.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-50e626b6457453ff74507c7980d80313/150/150/Image/Png/noFilter",
+      "assetId": "108392227354212",
+      "rarity": "Rare"
+    },
+    "Skullbang": {
+      "src": "assets/images/skullbang.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-94780ad2af611eb546ef6290f50856dd/150/150/Image/Png/noFilter",
+      "assetId": "73796957224972",
+      "rarity": "Common"
+    },
+    "Sol": {
+      "src": "assets/images/sol.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-179286ca90d44d8b171254898d654e45/150/150/Image/Png/noFilter",
+      "assetId": "124026864365877",
+      "rarity": "Legendary"
+    }
+  },
+  "Freeze Ray": {
+    "Standard": {
+      "src": "assets/images/freeze-ray.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-553d4730ebaa1cb922e84207a42345b6/150/150/Image/Png/noFilter",
+      "assetId": "18429552328",
+      "rarity": "Common"
+    },
+    "Bubble Ray": {
+      "src": "assets/images/bubble-ray.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-1cbbe0cbd477b4d10b5edc84066f104f/150/150/Image/Png/noFilter",
+      "assetId": "18766865819",
+      "rarity": "Rare"
+    },
+    "Cooler": {
+      "src": "assets/images/cooler.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-aadbc45a014545ba8ed2aaa0e894b3b0/150/150/Image/Png/noFilter",
+      "assetId": "117258208589940",
+      "rarity": "Legendary"
+    },
+    "Glorious Freeze Ray": {
+      "src": "assets/images/glorious-freeze-ray.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-77d50382f142185d6b69025187e3a165/150/150/Image/Png/noFilter",
+      "assetId": "120211873831101",
+      "rarity": "Common"
+    },
+    "Gum Ray": {
+      "src": "assets/images/gum-ray.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c51dd25c28b4beaaf140b2eebf5b0a71/150/150/Image/Png/noFilter",
+      "assetId": "121504417727123",
+      "rarity": "Rare"
+    },
+    "Spider Ray": {
+      "src": "assets/images/spider-ray.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-acd50010dd55687a0b3bef23eb3f108e/150/150/Image/Png/noFilter",
+      "assetId": "136838810668332",
+      "rarity": "Legendary"
+    },
+    "Temporal Ray": {
+      "src": "assets/images/temporal-ray.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-19f0e68dac5ad1e26cf15e7450ccbf3e/150/150/Image/Png/noFilter",
+      "assetId": "18429552503",
+      "rarity": "Legendary"
+    },
+    "Wrapped Freeze Ray": {
+      "src": "assets/images/wrapped-freeze-ray.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-f72404d11260847a581f402cfd77b04e/150/150/Image/Png/noFilter",
+      "assetId": "76183738050112",
+      "rarity": "Common"
+    }
+  },
+  "Grappler": {
+    "Standard": {
+      "src": "assets/images/grappler.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ac207fc65834e42fbc29aaa20d8d695b/150/150/Image/Png/noFilter",
+      "assetId": "103255844976245",
+      "rarity": "Common"
+    },
+    "Arcade Claw": {
+      "src": "assets/images/arcade-claw.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2857b588db9142d7cb5f2644eadb41db/150/150/Image/Png/noFilter",
+      "assetId": "81529455948004",
+      "rarity": "Legendary"
+    },
+    "Fishing Rod": {
+      "src": "assets/images/fishing-rod.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b2973b84ece5dc5ddb10f73324979b7f/150/150/Image/Png/noFilter",
+      "assetId": "86648406311812",
+      "rarity": "Legendary"
+    },
+    "Genie Lamp": {
+      "src": "assets/images/genie-lamp.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c3cfe840bbc9d49ed802d60c3847a5b3/150/150/Image/Png/noFilter",
+      "assetId": "118514051859760",
+      "rarity": "Legendary"
+    },
+    "Glorious Grappler": {
+      "src": "assets/images/glorious-grappler.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-aa729cf954fa46be93a10a923d039551/150/150/Image/Png/noFilter",
+      "assetId": "113576961532090",
+      "rarity": "Common"
+    },
+    "Lasso": {
+      "src": "assets/images/lasso.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-963d48ba8329c68d4794b0bffc560001/150/150/Image/Png/noFilter",
+      "assetId": "77061966583531",
+      "rarity": "Legendary"
+    },
+    "Lifeguard Grappler": {
+      "src": "assets/images/lifeguard-grappler.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-608a60b50dd5ceddf8cef436c74b4e7b/150/150/Image/Png/noFilter",
+      "assetId": "91214316625102",
+      "rarity": "Common"
+    }
+  },
+  "Grenade": {
+    "Standard": {
+      "src": "assets/images/grenade.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a1e93cf8ab57cbf03fbc4608c7c5bc93/150/150/Image/Png/noFilter",
+      "assetId": "17160801411",
+      "rarity": "Common"
+    },
+    "Cuddle Bomb": {
+      "src": "assets/images/cuddle-bomb.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3530d46a3ca2c99489b4574a65ae9b94/150/150/Image/Png/noFilter",
+      "assetId": "116801887274189",
+      "rarity": "Legendary"
+    },
+    "Dynamite": {
+      "src": "assets/images/dynamite.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a6ba38c29cb9bdfa83979d30d68b7a83/150/150/Image/Png/noFilter",
+      "assetId": "119066463640901",
+      "rarity": "Common"
+    },
+    "Fizz Bomb": {
+      "src": "assets/images/fizz-bomb.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-15b67b1af3ec2d3c3f01e693f7a057ae/150/150/Image/Png/noFilter",
+      "assetId": "123256093694497",
+      "rarity": "Legendary"
+    },
+    "Frozen Grenade": {
+      "src": "assets/images/frozen-grenade.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3964714a2f7864c2eac8c85a5ee64714/150/150/Image/Png/noFilter",
+      "assetId": "96120996159611",
+      "rarity": "Common"
+    },
+    "Glorious Grenade": {
+      "src": "assets/images/glorious-grenade.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-915d119261450de5aaa65eeae4282d33/150/150/Image/Png/noFilter",
+      "assetId": "103034870490455",
+      "rarity": "Common"
+    },
+    "Jingle Grenade": {
+      "src": "assets/images/jingle-grenade.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-0561c27d98360ef7850336b9dabd2530/150/150/Image/Png/noFilter",
+      "assetId": "97646859596860",
+      "rarity": "Rare"
+    },
+    "Keynade": {
+      "src": "assets/images/keynade.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e74bfb001ec98d9473127fb57c3316c8/150/150/Image/Png/noFilter",
+      "assetId": "102785971311114",
+      "rarity": "Mythical"
+    },
+    "Soul Grenade": {
+      "src": "assets/images/soul-grenade.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-fd6307565dbf6df11aa60a188b67ea7c/150/150/Image/Png/noFilter",
+      "assetId": "85903097459179",
+      "rarity": "Legendary"
+    },
+    "Water Balloon": {
+      "src": "assets/images/water-balloon.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-1edac32c6549c89c18bde7b42402dd14/150/150/Image/Png/noFilter",
+      "assetId": "18766859819",
+      "rarity": "Rare"
+    },
+    "Whoopee Cushion": {
+      "src": "assets/images/whoopee-cushion.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3dd80c2beae45628ceb2bfdd0f4a40d4/150/150/Image/Png/noFilter",
+      "assetId": "17672062933",
+      "rarity": "Legendary"
+    }
+  },
+  "Grenade Launcher": {
+    "Standard": {
+      "src": "assets/images/grenade-launcher.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a8f139951b25cc4646fa554626680f1d/150/150/Image/Png/noFilter",
+      "assetId": "17250453814",
+      "rarity": "Common"
+    },
+    "Balloon Launcher": {
+      "src": "assets/images/balloon-launcher.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e1a8e315784f678bf599e6df04120476/150/150/Image/Png/noFilter",
+      "assetId": "137862701599991",
+      "rarity": "Legendary"
+    },
+    "Coconut Launcher": {
+      "src": "assets/images/coconut-launcher.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d7fbe21d9e21af017467c1e858484bc8/150/150/Image/Png/noFilter",
+      "assetId": "77621998397460",
+      "rarity": "Rare"
+    },
+    "Gearnade Launcher": {
+      "src": "assets/images/gearnade-launcher.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-bfbebfe4e547a92b8451a4cede786a2e/150/150/Image/Png/noFilter",
+      "assetId": "133756750612042",
+      "rarity": "Rare"
+    },
+    "Glorious Grenade Launcher": {
+      "src": "assets/images/glorious-grenade-launcher.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2f7c0a8ab96380c24e6701252f55134a/150/150/Image/Png/noFilter",
+      "assetId": "134130354519919",
+      "rarity": "Common"
+    },
+    "Skull Launcher": {
+      "src": "assets/images/skull-launcher.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d054a0889767ce73bb1723bce48ac8d8/150/150/Image/Png/noFilter",
+      "assetId": "103257281022910",
+      "rarity": "Legendary"
+    },
+    "Snowball Launcher": {
+      "src": "assets/images/snowball-launcher.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-02cfe7ff07ca6a78908220ce3688f835/150/150/Image/Png/noFilter",
+      "assetId": "112349955391111",
+      "rarity": "Rare"
+    },
+    "Swashbuckler": {
+      "src": "assets/images/swashbuckler.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-cec78d75314ec1866a639043ea799aa1/150/150/Image/Png/noFilter",
+      "assetId": "17821233828",
+      "rarity": "Legendary"
+    },
+    "Uranium Launcher": {
+      "src": "assets/images/uranium-launcher.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-7b2d1a2c40066191d6359b4b7cd2b84c/150/150/Image/Png/noFilter",
+      "assetId": "18766860114",
+      "rarity": "Rare"
+    }
+  },
+  "Gunblade": {
+    "Standard": {
+      "src": "assets/images/gunblade.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-308ab0c40b5d85dbc7380cc9cf7d7a28/150/150/Image/Png/noFilter",
+      "assetId": "131231034374465",
+      "rarity": "Common"
+    },
+    "Boneblade": {
+      "src": "assets/images/boneblade.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-75d93f06c71ded44911a9679e5f9c647/150/150/Image/Png/noFilter",
+      "assetId": "126327381608481",
+      "rarity": "Common"
+    },
+    "Crude Gunblade": {
+      "src": "assets/images/crude-gunblade.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-f0dd9e96d8c65fc64e14e809d54270a0/150/150/Image/Png/noFilter",
+      "assetId": "126996645502136",
+      "rarity": "Common"
+    },
+    "Elf's Gunblade": {
+      "src": "assets/images/elf-s-gunblade.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-4f0f4fb7a7f8cdee1d62ab8b16e7664f/150/150/Image/Png/noFilter",
+      "assetId": "114103306647123",
+      "rarity": "Common"
+    },
+    "Glorious Gunblade": {
+      "src": "assets/images/glorious-gunblade.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-1823b93fc6061c4a7cd9962527a92424/150/150/Image/Png/noFilter",
+      "assetId": "88003799126136",
+      "rarity": "Common"
+    },
+    "Gunsaw": {
+      "src": "assets/images/gunsaw.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-be3329b01fd4f9ddc61af9c43ec3a546/150/150/Image/Png/noFilter",
+      "assetId": "102700915422689",
+      "rarity": "Legendary"
+    },
+    "Hyper Gunblade": {
+      "src": "assets/images/hyper-gunblade.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d3a595016bc38be199b235a479c692c6/150/150/Image/Png/noFilter",
+      "assetId": "134415898983004",
+      "rarity": "Legendary"
+    },
+    "Keyblade": {
+      "src": "assets/images/keyblade.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b2e0b5f00d108e5336186950d8ef9fcb/150/150/Image/Png/noFilter",
+      "assetId": "117153249348040",
+      "rarity": "Mythical"
+    },
+    "Sharkbite": {
+      "src": "assets/images/sharkbite.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-203a87013864a4e7b0147662b0061a6f/150/150/Image/Png/noFilter",
+      "assetId": "85479471132931",
+      "rarity": "Common"
+    }
+  },
+  "Handgun": {
+    "Standard": {
+      "src": "assets/images/handgun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-67b2afc4664f32bf5cf85f2573f85851/150/150/Image/Png/noFilter",
+      "assetId": "17160801282",
+      "rarity": "Common"
+    },
+    "Blaster": {
+      "src": "assets/images/blaster.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d4259ae64bd4feda996f5a37d136a178/150/150/Image/Png/noFilter",
+      "assetId": "17821234554",
+      "rarity": "Rare"
+    },
+    "Gingerbread Handgun": {
+      "src": "assets/images/gingerbread-handgun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e3165603e7f1b47b8b0ed0874b32ec5e/150/150/Image/Png/noFilter",
+      "assetId": "95881238590412",
+      "rarity": "Rare"
+    },
+    "Glorious Handgun": {
+      "src": "assets/images/glorious-handgun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-6a8497937b4fd4bae095340015dd8dad/150/150/Image/Png/noFilter",
+      "assetId": "85129427786041",
+      "rarity": "Common"
+    },
+    "Gumball Handgun": {
+      "src": "assets/images/gumball-handgun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ac2ade764722e348cdec041ac9ee8e4b/150/150/Image/Png/noFilter",
+      "assetId": "106890990556815",
+      "rarity": "Common"
+    },
+    "Hand Gun": {
+      "src": "assets/images/hand-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ac6ab297c84e6c4b4fed1452fdfbde16/150/150/Image/Png/noFilter",
+      "assetId": "18837670624",
+      "rarity": "Legendary"
+    },
+    "Pixel Handgun": {
+      "src": "assets/images/pixel-handgun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3f20c232c75dbb07bdb0b5404b85a024/150/150/Image/Png/noFilter",
+      "assetId": "82199841278177",
+      "rarity": "Legendary"
+    },
+    "Pumpkin Handgun": {
+      "src": "assets/images/pumpkin-handgun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e0bd22afed996bfc33bbd009eceefd28/150/150/Image/Png/noFilter",
+      "assetId": "88495685924653",
+      "rarity": "Common"
+    },
+    "Sandgun": {
+      "src": "assets/images/sandgun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c6c13416be8e2b093a3987c695ed7604/150/150/Image/Png/noFilter",
+      "assetId": "111746039012812",
+      "rarity": "Rare"
+    },
+    "Stealth Handgun": {
+      "src": "assets/images/stealth-handgun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-311db5cacabf9be17d0bb8df59abc049/150/150/Image/Png/noFilter",
+      "assetId": "124919185835138",
+      "rarity": "Unobtainable"
+    },
+    "Towerstone Handgun": {
+      "src": "assets/images/towerstone-handgun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a33e0c193a505c4feb4c9a6493c32095/150/150/Image/Png/noFilter",
+      "assetId": "88654252790032",
+      "rarity": "Common"
+    },
+    "Warp Handgun": {
+      "src": "assets/images/warp-handgun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-8e68ecdeb9169c1a156e33744db570ce/150/150/Image/Png/noFilter",
+      "assetId": "102974911528828",
+      "rarity": "Common"
+    }
+  },
+  "Jump Pad": {
+    "Standard": {
+      "src": "assets/images/jump-pad.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-53478f1e3540493b4bf4ed439fe8eac3/150/150/Image/Png/noFilter",
+      "assetId": "79459600453621",
+      "rarity": "Common"
+    },
+    "Bounce House": {
+      "src": "assets/images/bounce-house.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ef90ea6135206731b06a02be356481a2/150/150/Image/Png/noFilter",
+      "assetId": "71226436012588",
+      "rarity": "Rare"
+    },
+    "Flamingo Floatie": {
+      "src": "assets/images/flamingo-floatie.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c4b6963b93b1c8efa19ed3f03f7635c5/150/150/Image/Png/noFilter",
+      "assetId": "127511599700842",
+      "rarity": "Common"
+    },
+    "Glorious Jump Pad": {
+      "src": "assets/images/glorious-jump-pad.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-48123643be6fd78e9c09d41b58dbef2d/150/150/Image/Png/noFilter",
+      "assetId": "71803398862947",
+      "rarity": "Common"
+    },
+    "Jolly Man": {
+      "src": "assets/images/jolly-man.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-838bfe15ddf60c2d2b35c1b35eff8853/150/150/Image/Png/noFilter",
+      "assetId": "97375473537804",
+      "rarity": "Rare"
+    },
+    "Shady Chicken Sandwich": {
+      "src": "assets/images/shady-chicken-sandwich.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-0b93a7cbdf8931fb1358135caf32527e/150/150/Image/Png/noFilter",
+      "assetId": "86361684164972",
+      "rarity": "Rare"
+    },
+    "Spider Web": {
+      "src": "assets/images/spider-web.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b817c6c1132ff1a231a0cb4ca36eab56/150/150/Image/Png/noFilter",
+      "assetId": "84204578032332",
+      "rarity": "Common"
+    },
+    "Trampoline": {
+      "src": "assets/images/trampoline.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-62151a86f928d3a42e084c32d84c2377/150/150/Image/Png/noFilter",
+      "assetId": "103567857194140",
+      "rarity": "Common"
+    }
+  },
+  "Katana": {
+    "Standard": {
+      "src": "assets/images/katana.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-bda7329940d44412d0f195c5c082b4af/150/150/Image/Png/noFilter",
+      "assetId": "17160801158",
+      "rarity": "Common"
+    },
+    "Arch Katana": {
+      "src": "assets/images/arch-katana.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-93939b7ff8c46b8301fe9b61aa53bfc2/150/150/Image/Png/noFilter",
+      "assetId": "94679283541658",
+      "rarity": "Mythical"
+    },
+    "Crystal Katana": {
+      "src": "assets/images/crystal-katana.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-dba6e67736e394d9e7e02586a9fb6854/150/150/Image/Png/noFilter",
+      "assetId": "88872493010693",
+      "rarity": "Mythical"
+    },
+    "Cutlass": {
+      "src": "assets/images/cutlass.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-89a440a7d9419a0e0050be257068ffa0/150/150/Image/Png/noFilter",
+      "assetId": "77773371747122",
+      "rarity": "Legendary"
+    },
+    "Evil Trident": {
+      "src": "assets/images/evil-trident.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-0c62ed6f65389b93df596250614f5a96/150/150/Image/Png/noFilter",
+      "assetId": "101234805269080",
+      "rarity": "Rare"
+    },
+    "Glorious Katana": {
+      "src": "assets/images/glorious-katana.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-1ea7a91750b825a4246b37abcc041e3f/150/150/Image/Png/noFilter",
+      "assetId": "75588958786035",
+      "rarity": "Common"
+    },
+    "Keytana": {
+      "src": "assets/images/keytana.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-5f095d2a52436146e2d8d7e8beae0393/150/150/Image/Png/noFilter",
+      "assetId": "118899310989170",
+      "rarity": "Mythical"
+    },
+    "Lightning Bolt": {
+      "src": "assets/images/lightning-bolt.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d1366667d51e6b85ba8d8466b738bce1/150/150/Image/Png/noFilter",
+      "assetId": "18768968241",
+      "rarity": "Rare"
+    },
+    "Linked Sword": {
+      "src": "assets/images/linked-sword.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-f9c62e530931fe957a196eef68216912/150/150/Image/Png/noFilter",
+      "assetId": "83575725004177",
+      "rarity": "Legendary"
+    },
+    "New Year Katana": {
+      "src": "assets/images/new-year-katana.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-8c7e8c8458f9c89e5defa8c593fe6b0b/150/150/Image/Png/noFilter",
+      "assetId": "102866488046710",
+      "rarity": "Rare"
+    },
+    "Pixel Katana": {
+      "src": "assets/images/pixel-katana.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-13eafc11d29900643fee71ab992e43db/150/150/Image/Png/noFilter",
+      "assetId": "127922483074145",
+      "rarity": "Legendary"
+    },
+    "Riptide Katana": {
+      "src": "assets/images/riptide-katana.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b277fadf77ab82a2ab957d0bb7c6adee/150/150/Image/Png/noFilter",
+      "assetId": "136245206320139",
+      "rarity": "Mythical"
+    },
+    "Saber": {
+      "src": "assets/images/saber.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-33f2b5f9a5eaaff095e4f4ae1a3e6410/150/150/Image/Png/noFilter",
+      "assetId": "17672062341",
+      "rarity": "Legendary"
+    },
+    "Stellar Katana": {
+      "src": "assets/images/stellar-katana.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ae4e3e2f812260325b7fb1588031cadd/150/150/Image/Png/noFilter",
+      "assetId": "72617738655198",
+      "rarity": "Rare"
+    },
+    "Swordfish": {
+      "src": "assets/images/swordfish.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b7904b1d6b30969e6a1ba904042e95ed/150/150/Image/Png/noFilter",
+      "assetId": "105748422389590",
+      "rarity": "Common"
+    }
+  },
+  "Knife": {
+    "Standard": {
+      "src": "assets/images/knife.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-dd185920455f993bccd781856c93dd59/150/150/Image/Png/noFilter",
+      "assetId": "17160800983",
+      "rarity": "Common"
+    },
+    "Armature.001": {
+      "src": "assets/images/armature-001.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-1ba2c65ecf0186343fc0335fdd8e27c1/150/150/Image/Png/noFilter",
+      "assetId": "104026327618871",
+      "rarity": "Genuine"
+    },
+    "Balisong": {
+      "src": "assets/images/balisong.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3e4e326e3a4b74fb6621373b2c98548c/150/150/Image/Png/noFilter",
+      "assetId": "93303458333011",
+      "rarity": "Legendary"
+    },
+    "Birthday Candle": {
+      "src": "assets/images/birthday-candle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a7b9bd2ba5d61fc2f4531a62c9713f6e/150/150/Image/Png/noFilter",
+      "assetId": "74148583096733",
+      "rarity": "Common"
+    },
+    "Caladbolg": {
+      "src": "assets/images/caladbolg.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-20860b3c1baec256644437b401480103/150/150/Image/Png/noFilter",
+      "assetId": "101180142582964",
+      "rarity": "Legendary"
+    },
+    "Candy Cane": {
+      "src": "assets/images/candy-cane.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-76c875563635e9746cf5cb3f95855b58/150/150/Image/Png/noFilter",
+      "assetId": "124021545052910",
+      "rarity": "Legendary"
+    },
+    "Chancla": {
+      "src": "assets/images/chancla.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-6b75c9d1a64d533d1e522a195928214c/150/150/Image/Png/noFilter",
+      "assetId": "17672060795",
+      "rarity": "Common"
+    },
+    "Glorious Knife": {
+      "src": "assets/images/glorious-knife.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ae67d6770bfd8c4e1f706a2dd62470e0/150/150/Image/Png/noFilter",
+      "assetId": "77448895595314",
+      "rarity": "Common"
+    },
+    "Karambit": {
+      "src": "assets/images/karambit.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-57103466cfcdb342144a3015509b971c/150/150/Image/Png/noFilter",
+      "assetId": "18766863586",
+      "rarity": "Legendary"
+    },
+    "Keylisong": {
+      "src": "assets/images/keylisong.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-1bea37ce2c6dd77fe2abe5db537dabcd/150/150/Image/Png/noFilter",
+      "assetId": "100084654831857",
+      "rarity": "Mythical"
+    },
+    "Keyrambit": {
+      "src": "assets/images/keyrambit.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-0211bc632a7c882e1607e123db1d4a71/150/150/Image/Png/noFilter",
+      "assetId": "108512337101248",
+      "rarity": "Mythical"
+    },
+    "Machete": {
+      "src": "assets/images/machete.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e66dc8ddae4b79339dbbd78a3be96565/150/150/Image/Png/noFilter",
+      "assetId": "84364955819899",
+      "rarity": "Common"
+    },
+    "Pencil": {
+      "src": "assets/images/pencil.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-57b04ce17e6381a84b7b2f195ac54721/150/150/Image/Png/noFilter",
+      "assetId": "131450909376802",
+      "rarity": "Legendary"
+    },
+    "Shark Tooth": {
+      "src": "assets/images/shark-tooth.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-71d9b6429316c05efbd8435625fdd796/150/150/Image/Png/noFilter",
+      "assetId": "124265657652842",
+      "rarity": "Common"
+    },
+    "Trophy Knife": {
+      "src": "assets/images/trophy-knife.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3c584193f98d3acbeb1cb05646d825ba/150/150/Image/Png/noFilter",
+      "assetId": "78822531823097",
+      "rarity": "Genuine"
+    }
+  },
+  "Maul": {
+    "Standard": {
+      "src": "assets/images/maul.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-25a71295dfb079c21786f99b86f45105/150/150/Image/Png/noFilter",
+      "assetId": "81478141693597",
+      "rarity": "Common"
+    },
+    "Ban Hammer": {
+      "src": "assets/images/ban-hammer.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-23b950b99e02cda24599266289dc822e/150/150/Image/Png/noFilter",
+      "assetId": "126491383967029",
+      "rarity": "Legendary"
+    },
+    "Clown Hammer": {
+      "src": "assets/images/clown-hammer.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ccbc76ef23c0b3cea6006fdf1cd21056/150/150/Image/Png/noFilter",
+      "assetId": "95487416883384",
+      "rarity": "Rare"
+    },
+    "Excalibur": {
+      "src": "assets/images/excalibur.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-75ffae640b34e234e0d3f8520897db91/150/150/Image/Png/noFilter",
+      "assetId": "81905348145140",
+      "rarity": "Common"
+    },
+    "Giant Popsicle": {
+      "src": "assets/images/giant-popsicle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e1cdde01a5bbd415f3ece29ca3b5af3f/150/150/Image/Png/noFilter",
+      "assetId": "91916939347642",
+      "rarity": "Common"
+    },
+    "Glorious Maul": {
+      "src": "assets/images/glorious-maul.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a41a2028ac395e0a6b68678353f1df06/150/150/Image/Png/noFilter",
+      "assetId": "125917253783002",
+      "rarity": "Common"
+    },
+    "Ice Maul": {
+      "src": "assets/images/ice-maul.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c147dabbd2085039c0f828ed911b2f3d/150/150/Image/Png/noFilter",
+      "assetId": "100001888078290",
+      "rarity": "Common"
+    },
+    "Sleigh Maul": {
+      "src": "assets/images/sleigh-maul.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-116b16208addcd863a7720409fe79397/150/150/Image/Png/noFilter",
+      "assetId": "114892026951995",
+      "rarity": "Rare"
+    },
+    "Starforge Maul": {
+      "src": "assets/images/starforge-maul.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-fe0247e63525590fedf042c1e81bb434/150/150/Image/Png/noFilter",
+      "assetId": "113691709735527",
+      "rarity": "Rare"
+    }
+  },
+  "Medkit": {
+    "Standard": {
+      "src": "assets/images/medkit.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-26559db8e77d8aba58da1d7378dfc3ff/150/150/Image/Png/noFilter",
+      "assetId": "17160800734",
+      "rarity": "Common"
+    },
+    "Box of Chocolates": {
+      "src": "assets/images/box-of-chocolates.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d204fbf9aa8a90d7783e7dd1c4a6024d/150/150/Image/Png/noFilter",
+      "assetId": "132421415091712",
+      "rarity": "Legendary"
+    },
+    "Briefcase": {
+      "src": "assets/images/briefcase.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-60d3b06f840a03f68ddcb2fe9b1214c3/150/150/Image/Png/noFilter",
+      "assetId": "18142172067",
+      "rarity": "Rare"
+    },
+    "Bucket of Candy": {
+      "src": "assets/images/bucket-of-candy.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-86d3654017b78e226556162019e4b29d/150/150/Image/Png/noFilter",
+      "assetId": "93791981490691",
+      "rarity": "Legendary"
+    },
+    "Glorious Medkit": {
+      "src": "assets/images/glorious-medkit.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-7c56c93f5a7a00928ef0af7cf5e059f0/150/150/Image/Png/noFilter",
+      "assetId": "73358160718523",
+      "rarity": "Common"
+    },
+    "Ice Cream": {
+      "src": "assets/images/ice-cream.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2f70c5ae9d2c166bcc7063d0d421adc9/150/150/Image/Png/noFilter",
+      "assetId": "131246559128209",
+      "rarity": "Legendary"
+    },
+    "Laptop": {
+      "src": "assets/images/laptop.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-698e6435731b7041d3c276772f3f1412/150/150/Image/Png/noFilter",
+      "assetId": "18770164868",
+      "rarity": "Legendary"
+    },
+    "Medkitty": {
+      "src": "assets/images/medkitty.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-94582c4014fa57cf3c2f6082722615a8/150/150/Image/Png/noFilter",
+      "assetId": "125732280509514",
+      "rarity": "Legendary"
+    },
+    "Milk & Cookies": {
+      "src": "assets/images/milk---cookies.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-6a7762c27d5e3fab4f798ec7bfd69a64/150/150/Image/Png/noFilter",
+      "assetId": "99156135330432",
+      "rarity": "Legendary"
+    },
+    "Sandwich": {
+      "src": "assets/images/sandwich.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-754667a2e48bf95ab5f4eb82f7bbe9ec/150/150/Image/Png/noFilter",
+      "assetId": "17838232333",
+      "rarity": "Legendary"
+    }
+  },
+  "Minigun": {
+    "Standard": {
+      "src": "assets/images/minigun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ec47e8f3814fce279609107597c582f4/150/150/Image/Png/noFilter",
+      "assetId": "17250458611",
+      "rarity": "Common"
+    },
+    "Fighter Jet": {
+      "src": "assets/images/fighter-jet.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2282922bdf8605129a8bda403b1cf26d/150/150/Image/Png/noFilter",
+      "assetId": "70780739230558",
+      "rarity": "Legendary"
+    },
+    "Glorious Minigun": {
+      "src": "assets/images/glorious-minigun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-43ab28792eabaa34120de5f26fc71e0b/150/150/Image/Png/noFilter",
+      "assetId": "84246894288637",
+      "rarity": "Common"
+    },
+    "Lasergun 3000": {
+      "src": "assets/images/lasergun-3000.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e7411b199ad3acc91ce20bbf17fe582e/150/150/Image/Png/noFilter",
+      "assetId": "103437974285778",
+      "rarity": "Legendary"
+    },
+    "Pixel Minigun": {
+      "src": "assets/images/pixel-minigun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-1a8b94f9b9ab69c9091e49a9872d5ea9/150/150/Image/Png/noFilter",
+      "assetId": "18766861798",
+      "rarity": "Legendary"
+    },
+    "Pumpkin Minigun": {
+      "src": "assets/images/pumpkin-minigun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ae253679fbf11a958ca336b1556d35e4/150/150/Image/Png/noFilter",
+      "assetId": "77388785880854",
+      "rarity": "Common"
+    },
+    "Shark Minigun": {
+      "src": "assets/images/shark-minigun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-433f28a081bddf8c44833f9374027bea/150/150/Image/Png/noFilter",
+      "assetId": "89295703576175",
+      "rarity": "Rare"
+    },
+    "Wrapped Minigun": {
+      "src": "assets/images/wrapped-minigun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b1df3f684c6a1e323023d03775ac33ba/150/150/Image/Png/noFilter",
+      "assetId": "127077702465909",
+      "rarity": "Common"
+    }
+  },
+  "Molotov": {
+    "Standard": {
+      "src": "assets/images/molotov.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-aae73d888f11f762b41581f5e9a7d07e/150/150/Image/Png/noFilter",
+      "assetId": "109264750627289",
+      "rarity": "Common"
+    },
+    "Arch Molotov": {
+      "src": "assets/images/arch-molotov.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-193cf2b1e05110a077428665ad7bb687/150/150/Image/Png/noFilter",
+      "assetId": "96589300342777",
+      "rarity": "Mythical"
+    },
+    "Campfire Stick": {
+      "src": "assets/images/campfire-stick.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-23557ffa551bf6e7849860d228304689/150/150/Image/Png/noFilter",
+      "assetId": "83823494489693",
+      "rarity": "Common"
+    },
+    "Coffee": {
+      "src": "assets/images/coffee.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a67f06f07e355b91cca3a6065d3552f4/150/150/Image/Png/noFilter",
+      "assetId": "17672061538",
+      "rarity": "Common"
+    },
+    "Glorious Molotov": {
+      "src": "assets/images/glorious-molotov.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-55221a141d60ed6eaf347aa5466b0ede/150/150/Image/Png/noFilter",
+      "assetId": "108930340066987",
+      "rarity": "Common"
+    },
+    "Hot Coals": {
+      "src": "assets/images/hot-coals.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c7164ad22fa98f8b442418d4f9b2086f/150/150/Image/Png/noFilter",
+      "assetId": "110423024723304",
+      "rarity": "Legendary"
+    },
+    "Lava Lamp": {
+      "src": "assets/images/lava-lamp.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c6b90ac5fdc63a9f5ad3a35204758468/150/150/Image/Png/noFilter",
+      "assetId": "79616583726432",
+      "rarity": "Rare"
+    },
+    "Ship In A Bottle": {
+      "src": "assets/images/ship-in-a-bottle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-fc97970f97ed6df500caf935b2d7ec1c/150/150/Image/Png/noFilter",
+      "assetId": "125699268308415",
+      "rarity": "Legendary"
+    },
+    "Torch": {
+      "src": "assets/images/torch.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-502f0158abc9b98b48550b6cfa10e2c2/150/150/Image/Png/noFilter",
+      "assetId": "115586189235552",
+      "rarity": "Common"
+    },
+    "Vexed Candle": {
+      "src": "assets/images/vexed-candle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-4e25d4e3fe40fdde1d8277753d71c0fb/150/150/Image/Png/noFilter",
+      "assetId": "78128648928195",
+      "rarity": "Legendary"
+    }
+  },
+  "Paintball Gun": {
+    "Standard": {
+      "src": "assets/images/paintball-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a37fb93a9a0fe4d8e7257ae4c65c7ac2/150/150/Image/Png/noFilter",
+      "assetId": "17160853798",
+      "rarity": "Common"
+    },
+    "Boba Gun": {
+      "src": "assets/images/boba-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-1148f595d32ace802047559086c72cb0/150/150/Image/Png/noFilter",
+      "assetId": "18768830660",
+      "rarity": "Legendary"
+    },
+    "Brain Gun": {
+      "src": "assets/images/brain-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-25af05cdc751022f72de9a32e96169ab/150/150/Image/Png/noFilter",
+      "assetId": "85970592668118",
+      "rarity": "Rare"
+    },
+    "Glorious Paintball Gun": {
+      "src": "assets/images/glorious-paintball-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-bfd371d34241df3dd4780bd9f04bfb79/150/150/Image/Png/noFilter",
+      "assetId": "86297318955856",
+      "rarity": "Common"
+    },
+    "Ketchup Gun": {
+      "src": "assets/images/ketchup-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-f49c5dd393aa55f0206e2ec278f25421/150/150/Image/Png/noFilter",
+      "assetId": "76083615050939",
+      "rarity": "Common"
+    },
+    "Lemonade Gun": {
+      "src": "assets/images/lemonade-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b5c292955bf6a0ea18c7b8dddd4baa07/150/150/Image/Png/noFilter",
+      "assetId": "119390099120478",
+      "rarity": "Common"
+    },
+    "Paintballoon Gun": {
+      "src": "assets/images/paintballoon-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b2ca7020e00f05405f889370c8abb058/150/150/Image/Png/noFilter",
+      "assetId": "100129918948246",
+      "rarity": "Legendary"
+    },
+    "Slime Gun": {
+      "src": "assets/images/slime-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d29a6cf9cacd24c525141a7e0986e312/150/150/Image/Png/noFilter",
+      "assetId": "17672062472",
+      "rarity": "Rare"
+    },
+    "Snowball Gun": {
+      "src": "assets/images/snowball-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-7adb04991b0cd172f9ea1ac678481754/150/150/Image/Png/noFilter",
+      "assetId": "113685354916533",
+      "rarity": "Rare"
+    }
+  },
+  "Permafrost": {
+    "Standard": {
+      "src": "assets/images/permafrost.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-9df315465fe7bb293804909a669139dd/150/150/Image/Png/noFilter",
+      "assetId": "74353733133888",
+      "rarity": "Common"
+    },
+    "Glorious Permafrost": {
+      "src": "assets/images/glorious-permafrost.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c2ab8040012c9faa77d7fe8d903661b7/150/150/Image/Png/noFilter",
+      "assetId": "119977291442329",
+      "rarity": "Common"
+    },
+    "Ice Permafrost": {
+      "src": "assets/images/ice-permafrost.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c60808c2748932b927195c17ce1f3a0d/150/150/Image/Png/noFilter",
+      "assetId": "83722160119335",
+      "rarity": "Common"
+    },
+    "Permafrost.rbxm": {
+      "src": "assets/images/permafrost-rbxm.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b5c3b6cfab712f9303a01bef3319c716/150/150/Image/Png/noFilter",
+      "assetId": "77732280270853",
+      "rarity": "Rare"
+    },
+    "Permasand": {
+      "src": "assets/images/permasand.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-be6d9a5e875506781981ae5690b3dfc9/150/150/Image/Png/noFilter",
+      "assetId": "108398272946629",
+      "rarity": "Rare"
+    },
+    "Snowman Permafrost": {
+      "src": "assets/images/snowman-permafrost.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-f4f122b24f134b754e95a865ebd4e80c/150/150/Image/Png/noFilter",
+      "assetId": "100890626643184",
+      "rarity": "Common"
+    },
+    "Starforge Permafrost": {
+      "src": "assets/images/starforge-permafrost.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-dc05ef78695468f34250e49cabea4df4/150/150/Image/Png/noFilter",
+      "assetId": "105290041968367",
+      "rarity": "Rare"
+    },
+    "Temporal Permafrost": {
+      "src": "assets/images/temporal-permafrost.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-1d8b18e44ebaa6d86c16314131d94836/150/150/Image/Png/noFilter",
+      "assetId": "124975247676715",
+      "rarity": "Legendary"
+    }
+  },
+  "RPG": {
+    "Standard": {
+      "src": "assets/images/rpg.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-9a2b6500013a1d91482fa25de55b5ddf/150/150/Image/Png/noFilter",
+      "assetId": "17160802243",
+      "rarity": "Common"
+    },
+    "Cupcake Launcher": {
+      "src": "assets/images/cupcake-launcher.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-7adbdb67a518e740f3474e235a7d3496/150/150/Image/Png/noFilter",
+      "assetId": "100541838356180",
+      "rarity": "Legendary"
+    },
+    "Firework Launcher": {
+      "src": "assets/images/firework-launcher.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ecd0593407a6bd9a05b2ddb40e2c329a/150/150/Image/Png/noFilter",
+      "assetId": "75233372670156",
+      "rarity": "Legendary"
+    },
+    "Glorious RPG": {
+      "src": "assets/images/glorious-rpg.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-aab0adfdcec29173d1c22e0257e0fae4/150/150/Image/Png/noFilter",
+      "assetId": "130506879885802",
+      "rarity": "Common"
+    },
+    "Nuke Launcher": {
+      "src": "assets/images/nuke-launcher.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-87d4df1cd3eee97a195593fe100aadd5/150/150/Image/Png/noFilter",
+      "assetId": "17672061995",
+      "rarity": "Legendary"
+    },
+    "Pencil Launcher": {
+      "src": "assets/images/pencil-launcher.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-52c9958dd7513764c1662b622d5048bf/150/150/Image/Png/noFilter",
+      "assetId": "106934516693548",
+      "rarity": "Common"
+    },
+    "Pumpkin Launcher": {
+      "src": "assets/images/pumpkin-launcher.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a525d5542030f25c2ce9ef5e455d026c/150/150/Image/Png/noFilter",
+      "assetId": "94648176067808",
+      "rarity": "Legendary"
+    },
+    "Rocket Launcher": {
+      "src": "assets/images/rocket-launcher.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c19b3109bd957c3d1e22a003882e2f73/150/150/Image/Png/noFilter",
+      "assetId": "116931956715309",
+      "rarity": "Legendary"
+    },
+    "RPKEY": {
+      "src": "assets/images/rpkey.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-454b298ecd120f5f30f0f2d5164c8d03/150/150/Image/Png/noFilter",
+      "assetId": "108438721125410",
+      "rarity": "Mythical"
+    },
+    "Spaceship Launcher": {
+      "src": "assets/images/spaceship-launcher.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-74cd103e301995d4103d9c762b6d3b04/150/150/Image/Png/noFilter",
+      "assetId": "18766860860",
+      "rarity": "Legendary"
+    },
+    "Squid Launcher": {
+      "src": "assets/images/squid-launcher.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-dd8bb94b6064d82fa88e841fc1970f91/150/150/Image/Png/noFilter",
+      "assetId": "130764310743404",
+      "rarity": "Rare"
+    },
+    "Sundae Launcher": {
+      "src": "assets/images/sundae-launcher.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b77c9778a7022e374a0acfc7b125b60a/150/150/Image/Png/noFilter",
+      "assetId": "70578055340962",
+      "rarity": "Rare"
+    }
+  },
+  "Revolver": {
+    "Standard": {
+      "src": "assets/images/revolver.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d28fab78e38d4c81bd8973cab154c8fc/150/150/Image/Png/noFilter",
+      "assetId": "17160800299",
+      "rarity": "Common"
+    },
+    "Boneclaw Revolver": {
+      "src": "assets/images/boneclaw-revolver.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-0b359f04a10958e915cd0ccbf04ca795/150/150/Image/Png/noFilter",
+      "assetId": "119174697609264",
+      "rarity": "Rare"
+    },
+    "Cruise Revolver": {
+      "src": "assets/images/cruise-revolver.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a9d8cb5d32edd7141c91285a31eb6ed5/150/150/Image/Png/noFilter",
+      "assetId": "72223124823807",
+      "rarity": "Legendary"
+    },
+    "Desert Eagle": {
+      "src": "assets/images/desert-eagle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d1609bbf12e16a6e9ed89190fc6ed393/150/150/Image/Png/noFilter",
+      "assetId": "17821234372",
+      "rarity": "Rare"
+    },
+    "Glorious Revolver": {
+      "src": "assets/images/glorious-revolver.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b6a4c9c96b333f29e46e67c98e821ef7/150/150/Image/Png/noFilter",
+      "assetId": "118135542031794",
+      "rarity": "Common"
+    },
+    "Keyvolver": {
+      "src": "assets/images/keyvolver.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-5916092975e4ef6ea5ec65d831812fd9/150/150/Image/Png/noFilter",
+      "assetId": "87974031410344",
+      "rarity": "Mythical"
+    },
+    "Peppergun": {
+      "src": "assets/images/peppergun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-fa61e6a6fc16085b179299f3108867fd/150/150/Image/Png/noFilter",
+      "assetId": "124178691056979",
+      "rarity": "Legendary"
+    },
+    "Peppermint Sheriff": {
+      "src": "assets/images/peppermint-sheriff.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-02571bd3d1f0251f5944d42b8baf67a5/150/150/Image/Png/noFilter",
+      "assetId": "95859403750768",
+      "rarity": "Legendary"
+    },
+    "Sheriff": {
+      "src": "assets/images/sheriff.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-43bcd94bce30fd7d074204726be4e5e1/150/150/Image/Png/noFilter",
+      "assetId": "18770192507",
+      "rarity": "Legendary"
+    }
+  },
+  "Riot Shield": {
+    "Standard": {
+      "src": "assets/images/riot-shield.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ae6ba57e159c087e879bb1090d24987a/150/150/Image/Png/noFilter",
+      "assetId": "121172272442833",
+      "rarity": "Common"
+    },
+    "Broken Surfboard": {
+      "src": "assets/images/broken-surfboard.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-8a6e9434f607234e37f439b9be5c1939/150/150/Image/Png/noFilter",
+      "assetId": "114987869792187",
+      "rarity": "Common"
+    },
+    "Door": {
+      "src": "assets/images/door.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ab1559ec65d2071d628756a2ea371135/150/150/Image/Png/noFilter",
+      "assetId": "79242603995428",
+      "rarity": "Common"
+    },
+    "Energy Shield": {
+      "src": "assets/images/energy-shield.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2355182c51ea50bd374e1a0eff87be3b/150/150/Image/Png/noFilter",
+      "assetId": "90215439337413",
+      "rarity": "Rare"
+    },
+    "Glorious Riot Shield": {
+      "src": "assets/images/glorious-riot-shield.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-8d23b9185c2d7607d74fe0e3b72f9974/150/150/Image/Png/noFilter",
+      "assetId": "132866851386509",
+      "rarity": "Common"
+    },
+    "Masterpiece": {
+      "src": "assets/images/masterpiece.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-02e262037eef48159fe0fe6c85aef6ae/150/150/Image/Png/noFilter",
+      "assetId": "79914271483818",
+      "rarity": "Rare"
+    },
+    "Sled": {
+      "src": "assets/images/sled.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-9454f14fa537f9cfccb385f86ca57c29/150/150/Image/Png/noFilter",
+      "assetId": "73881731607231",
+      "rarity": "Common"
+    },
+    "Tombstone Shield": {
+      "src": "assets/images/tombstone-shield.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-6cd36c85166d59276a18fdc68db9eefb/150/150/Image/Png/noFilter",
+      "assetId": "125895528641243",
+      "rarity": "Common"
+    }
+  },
+  "Satchel": {
+    "Standard": {
+      "src": "assets/images/satchel.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a53e138ae304b7d980fcbb9e3f7b18a0/150/150/Image/Png/noFilter",
+      "assetId": "82237471151891",
+      "rarity": "Common"
+    },
+    "Advanced Satchel": {
+      "src": "assets/images/advanced-satchel.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b75c5a64db1da4f1ccc2cafe530106d9/150/150/Image/Png/noFilter",
+      "assetId": "113860326910548",
+      "rarity": "Rare"
+    },
+    "Bag o' Money": {
+      "src": "assets/images/bag-o--money.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-90590cd542526991c0ba1b816266828f/150/150/Image/Png/noFilter",
+      "assetId": "129192426700659",
+      "rarity": "Common"
+    },
+    "Glorious Satchel": {
+      "src": "assets/images/glorious-satchel.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-155279c5cc7710d8e8cc29d118ff7430/150/150/Image/Png/noFilter",
+      "assetId": "100521994805910",
+      "rarity": "Common"
+    },
+    "Lifeguard Satchel": {
+      "src": "assets/images/lifeguard-satchel.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-687dffbe50a9c5614c6ed048129e0d4b/150/150/Image/Png/noFilter",
+      "assetId": "105277357472003",
+      "rarity": "Common"
+    },
+    "Notebook Satchel": {
+      "src": "assets/images/notebook-satchel.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-98db59ddfe640a193abd9a466a6e2ff8/150/150/Image/Png/noFilter",
+      "assetId": "124817464748150",
+      "rarity": "Common"
+    },
+    "Pizza Box": {
+      "src": "assets/images/pizza-box.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-07c0f7eca0880fd40fe63fb79bbe0272/150/150/Image/Png/noFilter",
+      "assetId": "99166555665247",
+      "rarity": "Legendary"
+    },
+    "Potion Satchel": {
+      "src": "assets/images/potion-satchel.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-13760d36274e74ad4b67633f7cc9c790/150/150/Image/Png/noFilter",
+      "assetId": "76787046046890",
+      "rarity": "Rare"
+    },
+    "Suspicious Gift": {
+      "src": "assets/images/suspicious-gift.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-162299b7326c09856d9917fbe36dbd7f/150/150/Image/Png/noFilter",
+      "assetId": "76209303162814",
+      "rarity": "Common"
+    }
+  },
+  "Scythe": {
+    "Standard": {
+      "src": "assets/images/scythe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-57a4092a3011b1e505a1ca331e039581/150/150/Image/Png/noFilter",
+      "assetId": "17160800186",
+      "rarity": "Common"
+    },
+    "Anchor": {
+      "src": "assets/images/anchor.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-18a1885022557d0c7a80872560c5867f/150/150/Image/Png/noFilter",
+      "assetId": "18766866743",
+      "rarity": "Rare"
+    },
+    "Bat Scythe": {
+      "src": "assets/images/bat-scythe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-f0acdfe560686a5390a73f5398f9850e/150/150/Image/Png/noFilter",
+      "assetId": "131711174838548",
+      "rarity": "Rare"
+    },
+    "Bug Net": {
+      "src": "assets/images/bug-net.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c74815e143805c457846acbceb09664b/150/150/Image/Png/noFilter",
+      "assetId": "115620701626004",
+      "rarity": "Genuine"
+    },
+    "Cryo Scythe": {
+      "src": "assets/images/cryo-scythe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-870b84eab0b8d54ee847276b10214886/150/150/Image/Png/noFilter",
+      "assetId": "119930754357379",
+      "rarity": "Rare"
+    },
+    "Crystal Scythe": {
+      "src": "assets/images/crystal-scythe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-fa5a618d8486d4a516d023c0ee003d74/150/150/Image/Png/noFilter",
+      "assetId": "73971549402646",
+      "rarity": "Mythical"
+    },
+    "Glorious Scythe": {
+      "src": "assets/images/glorious-scythe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-7bfbaf43958c4cd9afb236a96cb456d4/150/150/Image/Png/noFilter",
+      "assetId": "115811939422419",
+      "rarity": "Common"
+    },
+    "Keythe": {
+      "src": "assets/images/keythe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e50423228faa78e849dc0b4a5eef0738/150/150/Image/Png/noFilter",
+      "assetId": "114560926055433",
+      "rarity": "Mythical"
+    },
+    "Palm Scythe": {
+      "src": "assets/images/palm-scythe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-7487e6f606544d00444f1507da463e61/150/150/Image/Png/noFilter",
+      "assetId": "97379805071194",
+      "rarity": "Legendary"
+    },
+    "Plastic Flamingo": {
+      "src": "assets/images/plastic-flamingo.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-280e2a84a63df423dc82e35c078766c2/150/150/Image/Png/noFilter",
+      "assetId": "112023194890462",
+      "rarity": "Common"
+    },
+    "Sakura Scythe": {
+      "src": "assets/images/sakura-scythe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-08b4d46ef21f9dc735895f924c323d58/150/150/Image/Png/noFilter",
+      "assetId": "133811689655966",
+      "rarity": "Rare"
+    },
+    "Scythe of Death": {
+      "src": "assets/images/scythe-of-death.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-6b5407d4bc7967f0df14ecd12f91c959/150/150/Image/Png/noFilter",
+      "assetId": "17825996537",
+      "rarity": "Rare"
+    }
+  },
+  "Shorty": {
+    "Standard": {
+      "src": "assets/images/shorty.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c4a7e4accb9055e5d4dd5f9c1de654dd/150/150/Image/Png/noFilter",
+      "assetId": "17160800091",
+      "rarity": "Common"
+    },
+    "Balloon Shorty": {
+      "src": "assets/images/balloon-shorty.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b46a76f83acf62988d8851ce0c0c27fc/150/150/Image/Png/noFilter",
+      "assetId": "75590262133322",
+      "rarity": "Legendary"
+    },
+    "Bubble Shorty": {
+      "src": "assets/images/bubble-shorty.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e22c00bbfe09092ec953a59dda20f396/150/150/Image/Png/noFilter",
+      "assetId": "111294137896866",
+      "rarity": "Rare"
+    },
+    "Cannon Shorty": {
+      "src": "assets/images/cannon-shorty.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-357e570863bf699c0adc57a33b5a134b/150/150/Image/Png/noFilter",
+      "assetId": "137616738436928",
+      "rarity": "Legendary"
+    },
+    "Demon Shorty": {
+      "src": "assets/images/demon-shorty.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-0c177e1363a6b2b82d1ff9710ca618d5/150/150/Image/Png/noFilter",
+      "assetId": "116443498278384",
+      "rarity": "Rare"
+    },
+    "Glorious Shorty": {
+      "src": "assets/images/glorious-shorty.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-92b0aa54eafecaad9883e965301b6e36/150/150/Image/Png/noFilter",
+      "assetId": "105834197552222",
+      "rarity": "Common"
+    },
+    "Lovely Shorty": {
+      "src": "assets/images/lovely-shorty.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-18844b19c3e8735cf45e5b353903ee95/150/150/Image/Png/noFilter",
+      "assetId": "18766862000",
+      "rarity": "Common"
+    },
+    "Not So Shorty": {
+      "src": "assets/images/not-so-shorty.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d2203303b9d4455b40a2d64eec88690b/150/150/Image/Png/noFilter",
+      "assetId": "17672062572",
+      "rarity": "Common"
+    },
+    "Too Shorty": {
+      "src": "assets/images/too-shorty.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-8e56cbd9af529349dc01eefa2f298939/150/150/Image/Png/noFilter",
+      "assetId": "18129531276",
+      "rarity": "Common"
+    },
+    "Wrapped Shorty": {
+      "src": "assets/images/wrapped-shorty.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ce3a0f8ef3c546b64ef3990168d0c771/150/150/Image/Png/noFilter",
+      "assetId": "136522183669611",
+      "rarity": "Common"
+    }
+  },
+  "Shotgun": {
+    "Standard": {
+      "src": "assets/images/shotgun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3358ed40376727033d38345adcd92636/150/150/Image/Png/noFilter",
+      "assetId": "17160800007",
+      "rarity": "Common"
+    },
+    "Balloon Shotgun": {
+      "src": "assets/images/balloon-shotgun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-1c1a0398ec26457a576f6c3c5b198546/150/150/Image/Png/noFilter",
+      "assetId": "17821234823",
+      "rarity": "Legendary"
+    },
+    "Broomstick": {
+      "src": "assets/images/broomstick.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-9177f08dbd424fd0caf1cb882ba251bf/150/150/Image/Png/noFilter",
+      "assetId": "118061559757082",
+      "rarity": "Rare"
+    },
+    "Cactus Shotgun": {
+      "src": "assets/images/cactus-shotgun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-efc1ff1c533fb2f1b88f3bd501231f55/150/150/Image/Png/noFilter",
+      "assetId": "131606483507460",
+      "rarity": "Common"
+    },
+    "Glorious Shotgun": {
+      "src": "assets/images/glorious-shotgun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2fe969ddd3ae44f62acdb78eba48a26e/150/150/Image/Png/noFilter",
+      "assetId": "71704618059601",
+      "rarity": "Common"
+    },
+    "Hyper Shotgun": {
+      "src": "assets/images/hyper-shotgun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3eca54618548fa60aeda9d302e972897/150/150/Image/Png/noFilter",
+      "assetId": "18768968419",
+      "rarity": "Legendary"
+    },
+    "Shark Shotgun": {
+      "src": "assets/images/shark-shotgun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e6381d0fcef152a00600b6624e0a033e/150/150/Image/Png/noFilter",
+      "assetId": "116415689080224",
+      "rarity": "Legendary"
+    },
+    "Shotkey": {
+      "src": "assets/images/shotkey.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-95e98398fe6398ad225b6ab7cf50b3da/150/150/Image/Png/noFilter",
+      "assetId": "93004214983981",
+      "rarity": "Mythical"
+    },
+    "Wrapped Shotgun": {
+      "src": "assets/images/wrapped-shotgun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c2b9097f9ce0556c917e62df1a3a87a8/150/150/Image/Png/noFilter",
+      "assetId": "74894345245237",
+      "rarity": "Common"
+    }
+  },
+  "Slingshot": {
+    "Standard": {
+      "src": "assets/images/slingshot.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2e5b5eb921578399449692fdd9f8e92b/150/150/Image/Png/noFilter",
+      "assetId": "17160799888",
+      "rarity": "Common"
+    },
+    "Boneshot": {
+      "src": "assets/images/boneshot.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a1204011f45f8b6c0a5a3a0ab36ddf84/150/150/Image/Png/noFilter",
+      "assetId": "86606957688341",
+      "rarity": "Rare"
+    },
+    "Glorious Slingshot": {
+      "src": "assets/images/glorious-slingshot.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-87b89e4026a37c4bdff04e82601ef5b5/150/150/Image/Png/noFilter",
+      "assetId": "101195664167288",
+      "rarity": "Common"
+    },
+    "Goalpost": {
+      "src": "assets/images/goalpost.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-eb6afa07fc6e7e2b3638f082172f04aa/150/150/Image/Png/noFilter",
+      "assetId": "17672063165",
+      "rarity": "Common"
+    },
+    "Harp": {
+      "src": "assets/images/harp.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-9cda48492fee961f5ee8c581b56028ac/150/150/Image/Png/noFilter",
+      "assetId": "80850043664453",
+      "rarity": "Legendary"
+    },
+    "Keyshot": {
+      "src": "assets/images/keyshot.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d75004504767029cc2bbca6ccca81fee/150/150/Image/Png/noFilter",
+      "assetId": "74006265601388",
+      "rarity": "Mythical"
+    },
+    "Lucky Horseshoe": {
+      "src": "assets/images/lucky-horseshoe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-1ca8645529ee703ffbc4df25bc985d45/150/150/Image/Png/noFilter",
+      "assetId": "131242126669282",
+      "rarity": "Legendary"
+    },
+    "Palmshot": {
+      "src": "assets/images/palmshot.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-abd9821f3dae1eeff731394e8c3adcf8/150/150/Image/Png/noFilter",
+      "assetId": "109640024736812",
+      "rarity": "Common"
+    },
+    "Reindeer Slingshot": {
+      "src": "assets/images/reindeer-slingshot.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2c67ada6f62ad5a4c403d89b432abbb1/150/150/Image/Png/noFilter",
+      "assetId": "121612921203624",
+      "rarity": "Rare"
+    },
+    "Stick": {
+      "src": "assets/images/stick.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c40e7b1bfcf2752b79e2341b743594a2/150/150/Image/Png/noFilter",
+      "assetId": "17672063048",
+      "rarity": "Common"
+    }
+  },
+  "Smoke Grenade": {
+    "Standard": {
+      "src": "assets/images/smoke-grenade.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-fc4337d11eb96f9dac21030c6d428104/150/150/Image/Png/noFilter",
+      "assetId": "17160799767",
+      "rarity": "Common"
+    },
+    "Balance": {
+      "src": "assets/images/balance.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-108501c87e065211b1dd71befc75db2c/150/150/Image/Png/noFilter",
+      "assetId": "18766866168",
+      "rarity": "Common"
+    },
+    "Beach Ball": {
+      "src": "assets/images/beach-ball.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-8a2d92e33097b95f9ec8729d923ac598/150/150/Image/Png/noFilter",
+      "assetId": "98068366944697",
+      "rarity": "Common"
+    },
+    "Emoji Cloud": {
+      "src": "assets/images/emoji-cloud.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b59e90926fea596afd4e7eb1ad72e849/150/150/Image/Png/noFilter",
+      "assetId": "17821234077",
+      "rarity": "Legendary"
+    },
+    "Eyeball": {
+      "src": "assets/images/eyeball.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-9f18d03fede9001be7e384e5cc3b6a41/150/150/Image/Png/noFilter",
+      "assetId": "135911399763146",
+      "rarity": "Legendary"
+    },
+    "Glorious Smoke Grenade": {
+      "src": "assets/images/glorious-smoke-grenade.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-914382ed3746eae299fd06b9a6dca006/150/150/Image/Png/noFilter",
+      "assetId": "139714146508398",
+      "rarity": "Common"
+    },
+    "Hourglass": {
+      "src": "assets/images/hourglass.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-4aececce1e4c778c34f5f238734cdaed/150/150/Image/Png/noFilter",
+      "assetId": "108311418974073",
+      "rarity": "Rare"
+    },
+    "Snowglobe": {
+      "src": "assets/images/snowglobe.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ae626cf690d265137f9b2699b2c5e8fd/150/150/Image/Png/noFilter",
+      "assetId": "119390465944051",
+      "rarity": "Rare"
+    }
+  },
+  "Sniper": {
+    "Standard": {
+      "src": "assets/images/sniper.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a0f93ffce0844cd4d83ead3ba9488b76/150/150/Image/Png/noFilter",
+      "assetId": "17160799574",
+      "rarity": "Common"
+    },
+    "Campfire Sniper": {
+      "src": "assets/images/campfire-sniper.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2b07107485879e6f4a94bd3bd04cdeba/150/150/Image/Png/noFilter",
+      "assetId": "127790438907599",
+      "rarity": "Common"
+    },
+    "Event Horizon": {
+      "src": "assets/images/event-horizon.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2477e98ea491de8ac719b579eb48fbcb/150/150/Image/Png/noFilter",
+      "assetId": "80749667426815",
+      "rarity": "Legendary"
+    },
+    "Eyething Sniper": {
+      "src": "assets/images/eyething-sniper.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-1e5aa4cee03c804ea199ca1b6e7e6fc5/150/150/Image/Png/noFilter",
+      "assetId": "103915302076013",
+      "rarity": "Common"
+    },
+    "Gingerbread Sniper": {
+      "src": "assets/images/gingerbread-sniper.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-52aa68d80cd8ecf0a3b56b30742579c5/150/150/Image/Png/noFilter",
+      "assetId": "99943841952995",
+      "rarity": "Rare"
+    },
+    "Glorious Sniper": {
+      "src": "assets/images/glorious-sniper.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d41530db958beb1fd0419b1572f58810/150/150/Image/Png/noFilter",
+      "assetId": "118012090175286",
+      "rarity": "Common"
+    },
+    "Hyper Sniper": {
+      "src": "assets/images/hyper-sniper.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-515a7867be15bf77fbaa409a19f8b0fa/150/150/Image/Png/noFilter",
+      "assetId": "18766864081",
+      "rarity": "Legendary"
+    },
+    "Keyper": {
+      "src": "assets/images/keyper.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-775a27c2bf3791d7768ccd74229487e1/150/150/Image/Png/noFilter",
+      "assetId": "85472935605264",
+      "rarity": "Mythical"
+    },
+    "Kraken Sniper": {
+      "src": "assets/images/kraken-sniper.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2265a99e840b94129f0ff00ad5bbadca/150/150/Image/Png/noFilter",
+      "assetId": "95011666797584",
+      "rarity": "Legendary"
+    },
+    "Light Fifty": {
+      "src": "assets/images/light-fifty.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-9159d56ab0794f1e4099cade30f98d3b/150/150/Image/Png/noFilter",
+      "assetId": "138029440298487",
+      "rarity": "Legendary"
+    },
+    "Pixel Sniper": {
+      "src": "assets/images/pixel-sniper.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-0f8f3257cf04587312ac8b4d09548616/150/150/Image/Png/noFilter",
+      "assetId": "17676081196",
+      "rarity": "Legendary"
+    }
+  },
+  "Spear": {
+    "Standard": {
+      "src": "assets/images/spear.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-f23f7235d8a1e0b855ae88d0907b5d77/150/150/Image/Png/noFilter",
+      "assetId": "122801133017271",
+      "rarity": "Common"
+    },
+    "Chark Kebab": {
+      "src": "assets/images/chark-kebab.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2c7ba048d263d792f8ff4ec3b04182f0/150/150/Image/Png/noFilter",
+      "assetId": "74005839754537",
+      "rarity": "Common"
+    },
+    "Fork": {
+      "src": "assets/images/fork.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e84742a90d013b38411cf05577f9a30b/150/150/Image/Png/noFilter",
+      "assetId": "105821360943308",
+      "rarity": "Common"
+    },
+    "Giant Pencil": {
+      "src": "assets/images/giant-pencil.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-19f70a1e4347c885ae59a4b3d82d825b/150/150/Image/Png/noFilter",
+      "assetId": "107812045486260",
+      "rarity": "Common"
+    },
+    "Glorious Spear": {
+      "src": "assets/images/glorious-spear.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3e01a7ba640c66e1180738f76bcf8cc0/150/150/Image/Png/noFilter",
+      "assetId": "98259628954838",
+      "rarity": "Common"
+    },
+    "Plunger": {
+      "src": "assets/images/plunger.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2f4bebef65d21d99e6d6d75a78620d29/150/150/Image/Png/noFilter",
+      "assetId": "82393330699241",
+      "rarity": "Rare"
+    },
+    "Studio Light": {
+      "src": "assets/images/studio-light.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-67a40b3a5a54f75f13b6df6c957eb141/150/150/Image/Png/noFilter",
+      "assetId": "70443632958263",
+      "rarity": "Common"
+    },
+    "Thunderpike": {
+      "src": "assets/images/thunderpike.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-00ec3dc96f936521562b7b9e22fca3ae/150/150/Image/Png/noFilter",
+      "assetId": "137630900832105",
+      "rarity": "Rare"
+    }
+  },
+  "Spray": {
+    "Standard": {
+      "src": "assets/images/spray.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-143e1689a943e29730dc5c48f49cec14/150/150/Image/Png/noFilter",
+      "assetId": "92882887485248",
+      "rarity": "Common"
+    },
+    "Boneclaw Spray": {
+      "src": "assets/images/boneclaw-spray.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-7a4b502bd37fd73080272ee6ff1bf99e/150/150/Image/Png/noFilter",
+      "assetId": "114078818081911",
+      "rarity": "Rare"
+    },
+    "Campfire Spray": {
+      "src": "assets/images/campfire-spray.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-7399f550014edb5fa842aabbfbde1cef/150/150/Image/Png/noFilter",
+      "assetId": "129294699009828",
+      "rarity": "Legendary"
+    },
+    "Glorious Spray": {
+      "src": "assets/images/glorious-spray.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-18c1ae7c90e98760d9ba047f0c90248f/150/150/Image/Png/noFilter",
+      "assetId": "138246745001490",
+      "rarity": "Common"
+    },
+    "Key Spray": {
+      "src": "assets/images/key-spray.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-207c29cff02388c7149ab8957bcb199e/150/150/Image/Png/noFilter",
+      "assetId": "94061940442700",
+      "rarity": "Mythical"
+    },
+    "Lovely Spray": {
+      "src": "assets/images/lovely-spray.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-7c3deafb81587522e2abdf28b3cfabf3/150/150/Image/Png/noFilter",
+      "assetId": "131203015026683",
+      "rarity": "Common"
+    },
+    "Nail Gun": {
+      "src": "assets/images/nail-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-98cba4f37dbb7ae6f4da4343f34c34be/150/150/Image/Png/noFilter",
+      "assetId": "110577809934251",
+      "rarity": "Common"
+    },
+    "Pine Spray": {
+      "src": "assets/images/pine-spray.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-35bcbd63cc8b566ed70ef79e6aab2830/150/150/Image/Png/noFilter",
+      "assetId": "128285758736343",
+      "rarity": "Common"
+    },
+    "Spray Bottle": {
+      "src": "assets/images/spray-bottle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-dfa9a8aa4e4f4e7715d60975bcbabb90/150/150/Image/Png/noFilter",
+      "assetId": "137955019285700",
+      "rarity": "Legendary"
+    }
+  },
+  "Subspace Tripmine": {
+    "Standard": {
+      "src": "assets/images/subspace-tripmine.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c32cae106e98e5488262f73058609dd4/150/150/Image/Png/noFilter",
+      "assetId": "17160799418",
+      "rarity": "Common"
+    },
+    "Dev-in-the-Box": {
+      "src": "assets/images/dev-in-the-box.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-eb09e77bc23dbfd5ae824d18e91cf40c/150/150/Image/Png/noFilter",
+      "assetId": "125056115146240",
+      "rarity": "Legendary"
+    },
+    "DIY Tripmine": {
+      "src": "assets/images/diy-tripmine.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-4fd5adfd0e2dff1e0359d4562a65cc36/150/150/Image/Png/noFilter",
+      "assetId": "85747991601740",
+      "rarity": "Common"
+    },
+    "Don't Press": {
+      "src": "assets/images/don-t-press.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a28dd6f3f8559689699666266ebb87b2/150/150/Image/Png/noFilter",
+      "assetId": "17821233203",
+      "rarity": "Legendary"
+    },
+    "Glorious Subspace Tripmine": {
+      "src": "assets/images/glorious-subspace-tripmine.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2eb7c1a5a7a6c242ad4fcd3a8ceddc37/150/150/Image/Png/noFilter",
+      "assetId": "112555928142930",
+      "rarity": "Common"
+    },
+    "Hazard Sign": {
+      "src": "assets/images/hazard-sign.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-0d773c4fc8e2085d28ef35347379ba8c/150/150/Image/Png/noFilter",
+      "assetId": "73264353773454",
+      "rarity": "Legendary"
+    },
+    "Pot o' Keys": {
+      "src": "assets/images/pot-o--keys.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-1aea0f026fc8c1379d8cc2c20c8db32d/150/150/Image/Png/noFilter",
+      "assetId": "125355191847719",
+      "rarity": "Legendary"
+    },
+    "Spring": {
+      "src": "assets/images/spring.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-413a5b5506a320f92a5d29dc0229a892/150/150/Image/Png/noFilter",
+      "assetId": "18766860615",
+      "rarity": "Rare"
+    },
+    "Trick or Treat": {
+      "src": "assets/images/trick-or-treat.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-7721092474f1bfc71d8a03fc0d120c6e/150/150/Image/Png/noFilter",
+      "assetId": "101693036028491",
+      "rarity": "Common"
+    }
+  },
+  "Trowel": {
+    "Standard": {
+      "src": "assets/images/trowel.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e9e0bb238c4c60c64c1aa18bab220729/150/150/Image/Png/noFilter",
+      "assetId": "17160799172",
+      "rarity": "Common"
+    },
+    "Garden Shovel": {
+      "src": "assets/images/garden-shovel.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-f2e47ae51290fdd3a9621018ab50f431/150/150/Image/Png/noFilter",
+      "assetId": "18766864873",
+      "rarity": "Rare"
+    },
+    "Glorious Trowel": {
+      "src": "assets/images/glorious-trowel.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-37747b0f2a409976090ff53e934b12bc/150/150/Image/Png/noFilter",
+      "assetId": "100888500368219",
+      "rarity": "Common"
+    },
+    "Paintbrush": {
+      "src": "assets/images/paintbrush.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-1b582d10efe944101c837adf95e01043/150/150/Image/Png/noFilter",
+      "assetId": "84687920829755",
+      "rarity": "Rare"
+    },
+    "Plastic Shovel": {
+      "src": "assets/images/plastic-shovel.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a4848f2b65ad6f399c70ea76cdec61ea/150/150/Image/Png/noFilter",
+      "assetId": "17672062201",
+      "rarity": "Rare"
+    },
+    "Pumpkin Carver": {
+      "src": "assets/images/pumpkin-carver.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-bbf38659fabc05c1b9346c11c47aa1b3/150/150/Image/Png/noFilter",
+      "assetId": "78827307308671",
+      "rarity": "Rare"
+    },
+    "Scooper": {
+      "src": "assets/images/scooper.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-1b5c7d618e794b270b7d66a666a2ac67/150/150/Image/Png/noFilter",
+      "assetId": "100816728062854",
+      "rarity": "Rare"
+    },
+    "Snow Shovel": {
+      "src": "assets/images/snow-shovel.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e1afafa2d89a23f58efb4afb2a41fd14/150/150/Image/Png/noFilter",
+      "assetId": "78271338778848",
+      "rarity": "Rare"
+    }
+  },
+  "Uzi": {
+    "Standard": {
+      "src": "assets/images/uzi.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-be3ec3e88a6d98f35ce8b6351246fcdb/150/150/Image/Png/noFilter",
+      "assetId": "17160798908",
+      "rarity": "Common"
+    },
+    "Arch Uzi": {
+      "src": "assets/images/arch-uzi.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-8172b45542bbe72a017e504e948e02c3/150/150/Image/Png/noFilter",
+      "assetId": "139852585731073",
+      "rarity": "Mythical"
+    },
+    "Demon Uzi": {
+      "src": "assets/images/demon-uzi.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-9d32251dd09043953059e0c8a2af0dae/150/150/Image/Png/noFilter",
+      "assetId": "132973040482576",
+      "rarity": "Rare"
+    },
+    "Ducky Uzi": {
+      "src": "assets/images/ducky-uzi.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3b3155976c309f39c4e595691031c83b/150/150/Image/Png/noFilter",
+      "assetId": "133780419950894",
+      "rarity": "Common"
+    },
+    "Electro Uzi": {
+      "src": "assets/images/electro-uzi.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b9df7b5f800c8380280cdbe86224c80a/150/150/Image/Png/noFilter",
+      "assetId": "96806694653207",
+      "rarity": "Legendary"
+    },
+    "Glorious Uzi": {
+      "src": "assets/images/glorious-uzi.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-dd001cc73278517bd3385ecb99aadc4e/150/150/Image/Png/noFilter",
+      "assetId": "120045334159124",
+      "rarity": "Common"
+    },
+    "Keyzi": {
+      "src": "assets/images/keyzi.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-262f9fbf4dccfe5331c6696bfe6e449a/150/150/Image/Png/noFilter",
+      "assetId": "100392703246534",
+      "rarity": "Mythical"
+    },
+    "Money Gun": {
+      "src": "assets/images/money-gun.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a8da966f436b2b1079bd5167b2180498/150/150/Image/Png/noFilter",
+      "assetId": "100705725115757",
+      "rarity": "Legendary"
+    },
+    "Pine Uzi": {
+      "src": "assets/images/pine-uzi.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-b6497a4b261f04c574a3fc46e27de542/150/150/Image/Png/noFilter",
+      "assetId": "82545206964916",
+      "rarity": "Common"
+    },
+    "Water Uzi": {
+      "src": "assets/images/water-uzi.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-28432ee0ea36de93ac11b4ece4f692bb/150/150/Image/Png/noFilter",
+      "assetId": "17821233590",
+      "rarity": "Rare"
+    }
+  },
+  "War Horn": {
+    "Standard": {
+      "src": "assets/images/war-horn.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-96a60153c000c68438f1bc3b23bdcad4/150/150/Image/Png/noFilter",
+      "assetId": "104600246515190",
+      "rarity": "Common"
+    },
+    "Air Horn": {
+      "src": "assets/images/air-horn.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-7727867771690bd14d9cccdf0222c601/150/150/Image/Png/noFilter",
+      "assetId": "111168146142976",
+      "rarity": "Rare"
+    },
+    "Boneclaw Horn": {
+      "src": "assets/images/boneclaw-horn.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-bb94398469ef1e58f2630c40dffad799/150/150/Image/Png/noFilter",
+      "assetId": "138360812591331",
+      "rarity": "Rare"
+    },
+    "Glorious War Horn": {
+      "src": "assets/images/glorious-war-horn.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-fbc2927d069b3efd8ccd5a26397456d7/150/150/Image/Png/noFilter",
+      "assetId": "96293355496772",
+      "rarity": "Common"
+    },
+    "Lifeguard Whistle": {
+      "src": "assets/images/lifeguard-whistle.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3e19c078d79478f5a7480207a7217f1b/150/150/Image/Png/noFilter",
+      "assetId": "93791958663348",
+      "rarity": "Legendary"
+    },
+    "Mammoth Horn": {
+      "src": "assets/images/mammoth-horn.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-4a484ea8fe09f052c2f5fc8004cd24f3/150/150/Image/Png/noFilter",
+      "assetId": "93076834584542",
+      "rarity": "Common"
+    },
+    "Megaphone": {
+      "src": "assets/images/megaphone.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-be92fd3ae5b87e106a3543aa4cf40a8c/150/150/Image/Png/noFilter",
+      "assetId": "107074211847347",
+      "rarity": "Common"
+    },
+    "Trumpet": {
+      "src": "assets/images/trumpet.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-a6fb8af146abce08ca7c6de826ac52af/150/150/Image/Png/noFilter",
+      "assetId": "88975601634708",
+      "rarity": "Rare"
+    }
+  },
+  "Warper": {
+    "Standard": {
+      "src": "assets/images/warper.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-958ea3966fe1172f01a47ddab8f81269/150/150/Image/Png/noFilter",
+      "assetId": "88033795039891",
+      "rarity": "Common"
+    },
+    "Arcane Warper": {
+      "src": "assets/images/arcane-warper.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-1fb474fa113caa3c6d0e2f3efcd4220a/150/150/Image/Png/noFilter",
+      "assetId": "83632373572638",
+      "rarity": "Legendary"
+    },
+    "Bubbler": {
+      "src": "assets/images/bubbler.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-34e0d1aeecd65cebc90f6f41a0f94a76/150/150/Image/Png/noFilter",
+      "assetId": "106002684466857",
+      "rarity": "Rare"
+    },
+    "Electropunk Warper": {
+      "src": "assets/images/electropunk-warper.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-50c4b2d14510e2166117d1bda2ad5041/150/150/Image/Png/noFilter",
+      "assetId": "75386728379756",
+      "rarity": "Rare"
+    },
+    "Experiment W4": {
+      "src": "assets/images/experiment-w4.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-48e9589c1857b52346bec08ebeae5816/150/150/Image/Png/noFilter",
+      "assetId": "126884960764998",
+      "rarity": "Legendary"
+    },
+    "Frost Warper": {
+      "src": "assets/images/frost-warper.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-13f84022204094f9cb8e52b38cc982d6/150/150/Image/Png/noFilter",
+      "assetId": "70539216094396",
+      "rarity": "Rare"
+    },
+    "Glitter Warper": {
+      "src": "assets/images/glitter-warper.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-8de23c423caee90470b4802c8a0660b0/150/150/Image/Png/noFilter",
+      "assetId": "94607497565715",
+      "rarity": "Rare"
+    },
+    "Glorious Warper": {
+      "src": "assets/images/glorious-warper.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-6d46ea279e9df260b032ed08c060400e/150/150/Image/Png/noFilter",
+      "assetId": "95823647035211",
+      "rarity": "Common"
+    },
+    "Hotel Bell": {
+      "src": "assets/images/hotel-bell.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c9099f650e138aa48391add10dd6dd85/150/150/Image/Png/noFilter",
+      "assetId": "117742703173821",
+      "rarity": "Legendary"
+    }
+  },
+  "Warpstone": {
+    "Standard": {
+      "src": "assets/images/warpstone.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-ee44bdceb7c841459d3ce241303eece0/150/150/Image/Png/noFilter",
+      "assetId": "94035693279005",
+      "rarity": "Common"
+    },
+    "Cyber Warpstone": {
+      "src": "assets/images/cyber-warpstone.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c273014cc57ef82dfa8a029da1feb6c1/150/150/Image/Png/noFilter",
+      "assetId": "133002984228937",
+      "rarity": "Common"
+    },
+    "Electropunk Warpstone": {
+      "src": "assets/images/electropunk-warpstone.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-eeeb45fd7302ec2663f3f68a080d429f/150/150/Image/Png/noFilter",
+      "assetId": "75299042976369",
+      "rarity": "Rare"
+    },
+    "Glorious Warpstone": {
+      "src": "assets/images/glorious-warpstone.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2856c5523f0263bc297a4085fb69af50/150/150/Image/Png/noFilter",
+      "assetId": "137583560042806",
+      "rarity": "Common"
+    },
+    "Teleport Disc": {
+      "src": "assets/images/teleport-disc.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3447947d09129e3be91fb87ab1deef03/150/150/Image/Png/noFilter",
+      "assetId": "104608154111107",
+      "rarity": "Legendary"
+    },
+    "Unstable Warpstone": {
+      "src": "assets/images/unstable-warpstone.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-09e9f6dc5098d6949be1d584d0985642/150/150/Image/Png/noFilter",
+      "assetId": "110083777654388",
+      "rarity": "Rare"
+    },
+    "Warp Juice": {
+      "src": "assets/images/warp-juice.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-249fa6124e2bbf32812e4f76cab7a8f1/150/150/Image/Png/noFilter",
+      "assetId": "74381576761026",
+      "rarity": "Rare"
+    },
+    "Warpbone": {
+      "src": "assets/images/warpbone.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e55f2600b958a99d6bf86855f05e4692/150/150/Image/Png/noFilter",
+      "assetId": "96452209607150",
+      "rarity": "Common"
+    },
+    "Warpeye": {
+      "src": "assets/images/warpeye.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3f5550ccf5d04e3d861107e72a5f7fd1/150/150/Image/Png/noFilter",
+      "assetId": "127023603234857",
+      "rarity": "Mythical"
+    },
+    "Warpstar": {
+      "src": "assets/images/warpstar.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-d3b41f37d344fd858039e8c13b6023df/150/150/Image/Png/noFilter",
+      "assetId": "102652397897598",
+      "rarity": "Legendary"
+    }
+  },
+  "Wildcat": {
+    "Standard": {
+      "src": "assets/images/wildcat.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-db64e76ffb0a2ecf8ff50801dedfc7fd/150/150/Image/Png/noFilter",
+      "assetId": "77401164737509",
+      "rarity": "Common"
+    },
+    "Glorious Wildcat": {
+      "src": "assets/images/glorious-wildcat.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-58aa5ff30fdca897d731253812b2588f/150/150/Image/Png/noFilter",
+      "assetId": "115657943825380",
+      "rarity": "Common"
+    },
+    "Plasma Wildcat": {
+      "src": "assets/images/plasma-wildcat.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-cd2e3efdb86ae2587933032cb330358a/150/150/Image/Png/noFilter",
+      "assetId": "86238922896100",
+      "rarity": "Rare"
+    }
+  }
+}
