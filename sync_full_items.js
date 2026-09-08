@@ -79,7 +79,8 @@ const WEAPON_ICONS_DEFAULT = {
     "Riot Shield": "🛡️",
     "Permafrost": "❄️",
     "Trowel": "🧱",
-    "Grappler": "🪝"
+    "Grappler": "🪝",
+    "Wildcat": "🐾"
 };
 
 async function main() {
