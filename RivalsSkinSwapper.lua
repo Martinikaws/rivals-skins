@@ -79,7 +79,8 @@ end
 
 -- In-place ImageLabel Image string writer (safe, zero reallocations, buffer cap <= 31)
 local function writeImage(label, newAssetId)
-    if not label or not label.Address or not newAssetId then return false end
+    if not _scriptAlive or not label or not label.Address or not newAssetId then return false end
+    if not label:IsDescendantOf(game) then return false end
     local a = label.Address
     local ptr = mrd("uintptr_t", a + IMG_OFF)
     if not ptr or ptr < 0x10000000000 or ptr > 0x7FFFFFFFFFFF then return false end
@@ -961,18 +962,26 @@ local function swapTwoWay(instA, instB, parentFolder)
     local a, b = instA.Address, instB.Address
     if a == b then return false end
 
-    local slotA = findSlotAddress(instA, parentFolder)
-    local slotB = findSlotAddress(instB, parentFolder)
+    local folderA = instA.Parent or parentFolder
+    local folderB = instB.Parent or parentFolder
+
+    local slotA = findSlotAddress(instA, folderA)
+    local slotB = findSlotAddress(instB, folderB)
     local origDefNC = rd(a + OFF.NameContainer)
     local origSkinNC = rd(b + OFF.NameContainer)
     local origDefParent = rd(a + OFF.Parent)
     local origSkinParent = rd(b + OFF.Parent)
+
+    local origDefCtrl = slotA and rd(slotA + 8)
+    local origSkinCtrl = slotB and rd(slotB + 8)
 
     table.insert(memoryRestores, {
         defSlot = slotA,
         skinSlot = slotB,
         origDefInst = a,
         origSkinInst = b,
+        origDefCtrl = origDefCtrl,
+        origSkinCtrl = origSkinCtrl,
         defAddr = a,
         skinAddr = b,
         origDefNC = origDefNC,
@@ -981,8 +990,14 @@ local function swapTwoWay(instA, instB, parentFolder)
         origSkinParent = origSkinParent
     })
 
-    if slotA then wr(slotA, b) end
-    if slotB then wr(slotB, a) end
+    if slotA then
+        wr(slotA, b)
+        if origSkinCtrl then wr(slotA + 8, origSkinCtrl) end
+    end
+    if slotB then
+        wr(slotB, a)
+        if origDefCtrl then wr(slotB + 8, origDefCtrl) end
+    end
     wr(a + OFF.NameContainer, origSkinNC)
     wr(b + OFF.NameContainer, origDefNC)
     wr(a + OFF.Parent, origSkinParent)
@@ -1005,8 +1020,8 @@ local function fixCrossbowRig(m)
                 local w = c:FindFirstChild("BodyWeld") or c:FindFirstChild("SkinAttachmentWeld")
                 if not w and p.Address then
                     local existingMotor = m:FindFirstChildWhichIsA("Motor6D", true)
-                    if existingMotor and existingMotor.Address then
-                        wr(existingMotor.Address + 280, p.Address)
+                    if existingMotor then
+                        pcall(function() existingMotor.Part0 = p end)
                     end
                 end
             end
@@ -1024,8 +1039,8 @@ local function fixBowRig(m)
         if c.Name:find("String") or c.Name:find("Arrow") or c.Name:find("Limb") then
             if c:IsA("BasePart") and c.Address then
                 local m6d = m:FindFirstChild(c.Name .. "Joint") or m:FindFirstChildWhichIsA("Motor6D", true)
-                if m6d and m6d.Address then
-                    wr(m6d.Address + 280, p.Address)
+                if m6d then
+                    pcall(function() m6d.Part0 = p end)
                 end
             end
         end
@@ -1042,8 +1057,8 @@ local function fixRPGRig(m)
         if c.Name:find("Rocket") or c.Name:find("Missile") or c.Name:find("Key") then
             if c:IsA("BasePart") and c.Address then
                 local m6d = m:FindFirstChildWhichIsA("Motor6D", true)
-                if m6d and m6d.Address then
-                    wr(m6d.Address + 280, p.Address)
+                if m6d then
+                    pcall(function() m6d.Part0 = p end)
                 end
             end
         end
@@ -1059,8 +1074,8 @@ local function fixGrenadeRig(m)
         if c.Name:find("Pin") or c.Name:find("Ring") or c.Name:find("Lever") or c.Name:find("Cap") then
             if c:IsA("BasePart") and c.Address then
                 local m6d = m:FindFirstChildWhichIsA("Motor6D", true)
-                if m6d and m6d.Address then
-                    wr(m6d.Address + 280, p.Address)
+                if m6d then
+                    pcall(function() m6d.Part0 = p end)
                 end
             end
         end
@@ -1077,8 +1092,8 @@ local function fixGunbladeRig(m)
         if c.Name:find("Blade") or c.Name:find("Sheath") or c.Name:find("Key") then
             if c:IsA("BasePart") and c.Address then
                 local m6d = m:FindFirstChildWhichIsA("Motor6D", true)
-                if m6d and m6d.Address then
-                    wr(m6d.Address + 280, p.Address)
+                if m6d then
+                    pcall(function() m6d.Part0 = p end)
                 end
             end
         end
@@ -1095,8 +1110,8 @@ local function fixKatanaRig(m)
         if c.Name:find("Sheath") or c.Name:find("Blade") or c.Name:find("Handle") or c.Name:find("Wing") then
             if c:IsA("BasePart") and c.Address then
                 local m6d = m:FindFirstChildWhichIsA("Motor6D", true)
-                if m6d and m6d.Address then
-                    wr(m6d.Address + 280, p.Address)
+                if m6d then
+                    pcall(function() m6d.Part0 = p end)
                 end
             end
         end
@@ -1838,6 +1853,7 @@ local renderSteppedConn = nil
 local pgDescConn = nil
 
 local function fastSyncGui()
+    if not _scriptAlive or not game:IsLoaded() or not LP or not LP.Parent or not LP:IsDescendantOf(game) then return end
     pcall(alignWeaponWings)
     local pg = LP:FindFirstChild("PlayerGui")
     local mg = pg and pg:FindFirstChild("MainGui")
@@ -2027,14 +2043,21 @@ local function fullCleanup()
     end
     soundCallbackRestores = {}
     
-    -- Restore Viewmodel, Throwables, Projectiles, and Misc memory vectors
+    if heartbeatConn then
+        pcall(function() heartbeatConn:Disconnect() end)
+        heartbeatConn = nil
+    end
+
+    -- Restore Viewmodel, Throwables, Projectiles, and Misc memory vectors with 16-byte shared_ptr control blocks
     for _, r in ipairs(memoryRestores) do
         pcall(function()
             if r.defSlot and r.origDefInst then
                 wr(r.defSlot, r.origDefInst)
+                if r.origDefCtrl then wr(r.defSlot + 8, r.origDefCtrl) end
             end
             if r.skinSlot and r.origSkinInst then
                 wr(r.skinSlot, r.origSkinInst)
+                if r.origSkinCtrl then wr(r.skinSlot + 8, r.origSkinCtrl) end
             end
             if r.defAddr and r.origDefNC then
                 wr(r.defAddr + OFF.NameContainer, r.origDefNC)
@@ -2057,13 +2080,65 @@ end
 _G.__RIVALS_SKIN_CHANGER_ACTIVE = true
 _G.__RIVALS_SKIN_CHANGER_RESTORE = fullCleanup
 
--- Heartbeat watchdog monitor: triggers fullCleanup immediately on teleport or teardown
-task.spawn(function()
-    while _scriptAlive do
-        task.wait(0.15)
-        if not LP or not LP.Parent or not wf or not wf.Parent or not game:IsLoaded() then
+-- Automated crash prevention hooks: Trigger fullCleanup immediately on teleport, match queue, or game exit
+pcall(function()
+    LP.OnTeleport:Connect(function()
+        fullCleanup()
+    end)
+end)
+
+pcall(function()
+    local ts = game:GetService("TeleportService")
+    ts.TeleportInit:Connect(fullCleanup)
+    ts.TeleportInitFailed:Connect(fullCleanup)
+end)
+
+pcall(function()
+    game:BindToClose(fullCleanup)
+end)
+
+pcall(function()
+    game:GetService("Players").PlayerRemoving:Connect(function(player)
+        if player == LP then
             fullCleanup()
-            break
         end
+    end)
+end)
+
+pcall(function()
+    LP.AncestryChanged:Connect(function(_, parent)
+        if not parent or not LP:IsDescendantOf(game) then
+            fullCleanup()
+        end
+    end)
+end)
+
+pcall(function()
+    if wf then
+        wf.AncestryChanged:Connect(function(_, parent)
+            if not parent or not wf:IsDescendantOf(game) then
+                fullCleanup()
+            end
+        end)
     end
+end)
+
+pcall(function()
+    local gs = game:GetService("GuiService")
+    gs.ErrorMessageChanged:Connect(function()
+        fullCleanup()
+    end)
+end)
+
+-- Heartbeat watchdog monitor: ensures instant cleanup on disconnection or place transition
+pcall(function()
+    heartbeatConn = runService.Heartbeat:Connect(function()
+        if not _scriptAlive then
+            if heartbeatConn then heartbeatConn:Disconnect() end
+            return
+        end
+        if not LP or not LP.Parent or not wf or not wf.Parent or not game:IsLoaded() or not LP:IsDescendantOf(game) then
+            fullCleanup()
+        end
+    end)
 end)
