@@ -8,508 +8,262 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
+        *, *::before, *::after { box-sizing: border-box; }
         :root {
-            --bg-base: #0a0c10;
-            --bg-card: #12151e;
-            --bg-card-hover: #171b26;
-            --bg-input: #181d29;
-            --accent-cyan: #00f0ff;
-            --accent-green: #00ffa3;
-            --accent-purple: #b026ff;
-            --accent-gold: #ffd000;
-            --accent-red: #ff3366;
-            --text-main: #f0f4f8;
-            --text-muted: #8b9bb4;
-            --border-card: rgba(0, 240, 255, 0.12);
-            --border-hover: rgba(0, 240, 255, 0.45);
-            --shadow-glow: 0 0 25px rgba(0, 240, 255, 0.15);
+            --bg: #0a0c10;
+            --nav: #0d1117;
+            --card: #10141a;
+            --card-2: #141920;
+            --line: #1d232c;
+            --line-soft: #181d25;
+            --txt: #e6edf5;
+            --muted: #7e8896;
+            --muted-2: #59626e;
+            --blue: #2f6feb;
+            --blue-hi: #4a82f0;
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
+        html, body { margin: 0; padding: 0; }
         body {
-            background-color: var(--bg-base);
-            color: var(--text-main);
-            font-family: 'Inter', sans-serif;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(176, 38, 255, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(0, 240, 255, 0.08) 0%, transparent 40%),
-                linear-gradient(rgba(10, 12, 16, 0.95), rgba(10, 12, 16, 0.95));
-            min-height: 100vh;
-            padding: 24px 16px 80px;
+            background: var(--bg);
+            color: var(--txt);
+            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-size: 14px;
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 72px;
         }
+        a { color: inherit; text-decoration: none; }
 
-        header {
-            max-width: 1360px;
-            margin: 0 auto 28px;
-            text-align: center;
+        .nav {
+            position: sticky; top: 0; z-index: 60;
+            display: flex; align-items: center; gap: 18px;
+            padding: 0 16px; height: 52px;
+            background: var(--nav);
+            border-bottom: 1px solid var(--line);
+            overflow-x: auto; scrollbar-width: none;
         }
-
-        .title-badge {
-            display: inline-block;
-            padding: 6px 14px;
-            border-radius: 999px;
-            background: rgba(0, 240, 255, 0.1);
-            border: 1px solid rgba(0, 240, 255, 0.3);
-            color: var(--accent-cyan);
-            font-size: 0.8rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-bottom: 12px;
+        .nav::-webkit-scrollbar { display: none; }
+        .nav-brand {
+            display: flex; align-items: center; gap: 9px;
+            font-weight: 600; font-size: 14px; white-space: nowrap;
         }
-
-        h1 {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 3.2rem;
-            font-weight: 800;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            background: linear-gradient(135deg, #ffffff 30%, var(--accent-cyan) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
+        .nav-logo {
+            width: 22px; height: 22px; border-radius: 6px;
+            background: linear-gradient(135deg, #3b7bf0, #8b5cf6);
+            flex: none;
         }
-
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 1.05rem;
-            max-width: 720px;
-            margin: 0 auto 20px;
+        .nav-tabs { display: flex; align-items: center; gap: 4px; }
+        .nav-tab {
+            padding: 6px 12px; border-radius: 7px;
+            color: var(--muted); font-size: 13px; font-weight: 500;
+            white-space: nowrap; cursor: pointer;
+            background: none; border: 0; font-family: inherit;
         }
+        .nav-tab:hover { color: var(--txt); background: #151b23; }
+        .nav-tab.active { color: var(--txt); background: #1b2129; }
 
-        /* Action Toolbar */
-        .toolbar {
-            max-width: 1360px;
-            margin: 0 auto 24px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--bg-card);
-            border: 1px solid var(--border-card);
-            padding: 14px 18px;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        .page-wrap { max-width: 900px; margin: 0 auto; padding: 0 12px; }
+
+        .dash-top {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 12px; flex-wrap: wrap; padding: 18px 0 14px;
         }
-
-        .search-box {
-            position: relative;
-            flex: 1;
-            min-width: 240px;
+        .dash-switch {
+            display: flex; gap: 4px; padding: 3px;
+            background: var(--card); border: 1px solid var(--line);
+            border-radius: 9px;
         }
+        .dash-switch-btn {
+            padding: 6px 14px; border-radius: 6px; border: 0;
+            background: none; color: var(--muted);
+            font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+        }
+        .dash-switch-btn:hover { color: var(--txt); }
+        .dash-switch-btn.active { background: #232a34; color: var(--txt); }
+        .dash-actions { display: flex; gap: 8px; }
 
+        .btn-primary, .btn-ghost {
+            font-family: inherit; font-weight: 500; cursor: pointer;
+            border-radius: 8px; padding: 8px 14px; font-size: 13px;
+            transition: background .15s, border-color .15s;
+        }
+        .btn-primary { background: var(--blue); border: 1px solid var(--blue); color: #fff; }
+        .btn-primary:hover { background: var(--blue-hi); border-color: var(--blue-hi); }
+        .btn-ghost { background: transparent; border: 1px solid var(--line); color: var(--txt); }
+        .btn-ghost:hover { background: var(--card-2); border-color: #2b333f; }
+        .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+        .util-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding-bottom: 14px; }
+        .search-box { position: relative; flex: 1 1 220px; min-width: 180px; }
         .search-box input {
-            width: 100%;
-            background: var(--bg-input);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            padding: 10px 14px 10px 38px;
-            color: #fff;
-            font-size: 0.95rem;
-            outline: none;
-            transition: all 0.2s;
+            width: 100%; padding: 8px 12px 8px 32px;
+            background: var(--card); border: 1px solid var(--line);
+            border-radius: 8px; color: var(--txt);
+            font-family: inherit; font-size: 13px; outline: none;
         }
-
-        .search-box input:focus {
-            border-color: var(--accent-cyan);
-            box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
-        }
-
+        .search-box input::placeholder { color: var(--muted-2); }
+        .search-box input:focus { border-color: #2b3947; }
         .search-icon {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-size: 1rem;
+            position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+            font-size: 12px; opacity: .5; pointer-events: none;
         }
 
-        .btn-group {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        button {
-            cursor: pointer;
-            font-family: 'Rajdhani', sans-serif;
-            font-weight: 700;
-            font-size: 1rem;
-            letter-spacing: 0.5px;
-            padding: 10px 18px;
-            border-radius: 8px;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent-cyan), #00a6ff);
-            color: #050811;
-            box-shadow: 0 0 16px rgba(0, 240, 255, 0.35);
-        }
-
-        .btn-primary:hover {
-            box-shadow: 0 0 24px rgba(0, 240, 255, 0.6);
-            transform: translateY(-1px);
-        }
-
-        .btn-secondary {
-            background: var(--bg-input);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.12);
-        }
-
-        .btn-secondary:hover {
-            background: #23293a;
-            border-color: rgba(255,255,255,0.25);
-        }
-
-        .btn-preset {
-            background: rgba(176, 38, 255, 0.15);
-            color: #e099ff;
-            border: 1px solid rgba(176, 38, 255, 0.35);
-        }
-
-        .btn-preset:hover {
-            background: rgba(176, 38, 255, 0.3);
-            box-shadow: 0 0 14px rgba(176, 38, 255, 0.4);
-        }
-
-        /* Filter Pills */
-        .category-filters {
-            max-width: 1360px;
-            margin: 0 auto 20px;
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding-bottom: 4px;
-        }
-
-        .filter-pill {
-            padding: 6px 14px;
-            border-radius: 6px;
-            background: var(--bg-card);
-            border: 1px solid rgba(255,255,255,0.08);
-            color: var(--text-muted);
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 0.95rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .filter-pill.active, .filter-pill:hover {
-            background: rgba(0, 240, 255, 0.15);
-            color: var(--accent-cyan);
-            border-color: rgba(0, 240, 255, 0.4);
-        }
-
-        /* Grid Layout */
-        .container {
-            max-width: 1360px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-            gap: 20px;
-        }
-
+        .dash-grid { display: flex; flex-direction: column; gap: 14px; }
         .weapon-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-card);
-            border-radius: 14px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            transition: all 0.25s ease;
-            position: relative;
+            background: var(--card); border: 1px solid var(--line);
+            border-radius: 12px; overflow: hidden;
+        }
+        .card-label {
+            padding: 11px 14px 9px;
+            font-size: 10.5px; font-weight: 600; letter-spacing: .09em;
+            text-transform: uppercase; color: var(--muted);
+            border-bottom: 1px solid var(--line-soft);
+        }
+        .weapon-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 14px; cursor: pointer;
+            border-bottom: 1px solid var(--line-soft);
+            transition: background .12s;
+        }
+        .weapon-row:last-child { border-bottom: 0; }
+        .weapon-row:hover { background: var(--card-2); }
+        .weapon-icon {
+            width: 38px; height: 38px; flex: none;
+            border-radius: 8px; background: #161c24;
+            border: 1px solid var(--line);
+            display: flex; align-items: center; justify-content: center;
             overflow: hidden;
         }
-
-        .weapon-card:hover {
-            border-color: var(--border-hover);
-            background: var(--bg-card-hover);
-            box-shadow: var(--shadow-glow);
-            transform: translateY(-2px);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
+        .weapon-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .weapon-info { flex: 1; min-width: 0; }
         .weapon-name {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 1.35rem;
-            font-weight: 700;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 13.5px; font-weight: 500; color: var(--txt);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-
-        .category-tag {
-            font-size: 0.7rem;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            background: rgba(255, 255, 255, 0.06);
-            color: var(--text-muted);
+        .weapon-skin {
+            font-size: 12px; color: var(--muted); margin-top: 2px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
+        .weapon-skin.is-set { color: #9db4d8; }
+        .weapon-chevron { color: var(--muted-2); font-size: 17px; flex: none; }
 
-        /* Visual Skin Preview Thumbnail */
-        .skin-preview-box {
-            height: 145px;
-            border-radius: 10px;
-            background: radial-gradient(circle at center, #1b2130 0%, #0c0f16 100%);
-            border: 1px solid rgba(255,255,255,0.08);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s;
-        }
+        .empty-note { padding: 26px 14px; text-align: center; color: var(--muted); font-size: 13px; }
 
-        .skin-img-display {
-            max-width: 88%;
-            max-height: 82%;
-            object-fit: contain;
-            filter: drop-shadow(0 0 16px rgba(0, 240, 255, 0.45));
-            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .skin-icon-display {
-            font-size: 3.2rem;
-            filter: drop-shadow(0 0 16px rgba(0, 240, 255, 0.4));
-            transition: transform 0.25s;
-        }
-
-        .weapon-card:hover .skin-img-display {
-            transform: scale(1.12);
-        }
-
-        .skin-rarity-badge {
-            position: absolute;
-            bottom: 8px;
-            left: 10px;
-            font-size: 0.7rem;
-            font-weight: 800;
-            font-family: 'Rajdhani', sans-serif;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding: 2px 8px;
-            border-radius: 4px;
-            background: rgba(0,0,0,0.7);
-            border: 1px solid rgba(255,255,255,0.15);
-        }
-
-        .select-wrapper {
-            position: relative;
-        }
-
-        select {
-            width: 100%;
-            background: var(--bg-input);
-            border: 1px solid rgba(255,255,255,0.12);
-            color: var(--text-main);
-            padding: 11px 14px;
-            border-radius: 8px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            font-weight: 600;
-            outline: none;
-            cursor: pointer;
-            appearance: none;
-            transition: all 0.2s;
-        }
-
-        select:focus {
-            border-color: var(--accent-cyan);
-            box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
-        }
-
-        .select-arrow {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-            color: var(--accent-cyan);
-            font-size: 0.75rem;
-        }
-
-        .active-skin-badge {
-            font-size: 0.82rem;
-            color: var(--accent-cyan);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 600;
-        }
-
-        .active-skin-badge::before {
-            content: "";
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            background: var(--accent-cyan);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--accent-cyan);
-        }
-
-        /* Modal Preview */
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(5, 7, 12, 0.85);
-            backdrop-filter: blur(8px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            padding: 20px;
+            display: none; position: fixed; inset: 0; z-index: 100;
+            background: rgba(4, 6, 9, .72);
+            align-items: center; justify-content: center; padding: 16px;
         }
-
         .modal {
-            background: #11141e;
-            border: 1px solid var(--border-hover);
-            border-radius: 16px;
-            width: 100%;
-            max-width: 640px;
-            box-shadow: 0 16px 64px rgba(0,0,0,0.6), var(--shadow-glow);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            background: var(--card); border: 1px solid var(--line);
+            border-radius: 14px; width: 100%; max-width: 460px;
+            max-height: 82vh; display: flex; flex-direction: column;
+            box-shadow: 0 18px 50px rgba(0,0,0,.55);
         }
-
         .modal-header {
-            padding: 18px 24px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 16px; border-bottom: 1px solid var(--line);
         }
-
-        .modal-header h3 {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 1.4rem;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
+        .modal-header h3 { margin: 0; font-size: 14.5px; font-weight: 600; }
         .modal-close {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-size: 1.4rem;
-            cursor: pointer;
-            padding: 4px;
+            background: none; border: 0; color: var(--muted);
+            font-size: 16px; cursor: pointer; padding: 2px 6px; border-radius: 6px;
         }
-
-        .modal-close:hover {
-            color: #fff;
-        }
-
-        .modal-body {
-            padding: 20px 24px;
-        }
-
-        .code-preview {
-            background: #090b10;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            padding: 16px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.88rem;
-            color: var(--accent-green);
-            max-height: 360px;
-            overflow-y: auto;
-            white-space: pre;
-            line-height: 1.5;
-        }
-
+        .modal-close:hover { color: var(--txt); background: var(--card-2); }
+        .modal-body { padding: 8px; overflow-y: auto; }
         .modal-footer {
-            padding: 16px 24px;
-            background: rgba(0,0,0,0.2);
-            border-top: 1px solid rgba(255,255,255,0.08);
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
+            display: flex; gap: 8px; justify-content: flex-end;
+            padding: 12px 16px; border-top: 1px solid var(--line);
+        }
+        .skin-option {
+            display: flex; align-items: center; gap: 11px;
+            padding: 9px 10px; border-radius: 9px; cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .skin-option:hover { background: var(--card-2); }
+        .skin-option.active { background: #182233; border-color: #2b4a77; }
+        .skin-option-icon {
+            width: 34px; height: 34px; flex: none; border-radius: 7px;
+            background: #161c24; border: 1px solid var(--line);
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+        .skin-option-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .skin-option-name { flex: 1; font-size: 13px; }
+        .skin-option-rarity { font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; }
+        .skin-check { color: var(--blue); font-size: 13px; }
+        .code-preview {
+            font-family: "JetBrains Mono", ui-monospace, monospace;
+            font-size: 12px; line-height: 1.65; color: #b7c6da;
+            background: #0b0f14; border: 1px solid var(--line);
+            border-radius: 9px; padding: 12px; white-space: pre-wrap;
+            max-height: 46vh; overflow: auto;
         }
 
-        /* Toast Notifications */
+        .footbar {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 16px; background: var(--nav);
+            border-top: 1px solid var(--line);
+        }
+        .foot-status { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+        .foot-dot { width: 7px; height: 7px; border-radius: 50%; background: #3fb950; flex: none; }
+        .foot-spacer { flex: 1; }
+
         .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background: #151a28;
-            border: 1px solid var(--accent-cyan);
-            color: #fff;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 16px rgba(0,240,255,0.3);
-            font-size: 0.95rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 10000;
+            position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%) translateY(14px);
+            background: #182233; border: 1px solid #27384f; color: var(--txt);
+            padding: 10px 16px; border-radius: 9px; font-size: 13px;
+            opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 120;
         }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
+        @media (max-width: 560px) {
+            .dash-top { padding-top: 14px; }
+            .dash-actions { width: 100%; }
+            .dash-actions .btn-primary, .dash-actions .btn-ghost { flex: 1; }
+            .footbar .btn-ghost { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="title-badge">ROBLOX RIVALS</div>
-        <h1>Skin Swapper & Visual Configurator</h1>
-        <p class="subtitle">Official 100% verified Rivals weapon catalog with transparent in-game weapon icons. Export directly as <code>rivals_config.lua</code>.</p>
-    </header>
+    <nav class="nav">
+        <div class="nav-brand"><span class="nav-logo"></span>Skin Changer</div>
+    </nav>
 
-    <div class="toolbar">
-        <div class="search-box">
-            <span class="search-icon">🔍</span>
-            <input type="text" id="searchInput" placeholder="Search weapons or skins..." oninput="filterWeapons()">
+    <div class="page-wrap" id="dashboard">
+        <div class="dash-top">
+            <div class="dash-switch">
+                <button class="dash-switch-btn active" id="switch-skins" onclick="setDashMode('skins')">Weapon Skins</button>
+                <button class="dash-switch-btn" id="switch-wraps" onclick="setDashMode('wraps')">Wraps</button>
+            </div>
+            <div class="dash-actions">
+                <button class="btn-ghost btn-sm" onclick="openPreview()">Config Preview</button>
+                <button class="btn-primary btn-sm" onclick="downloadConfig()">Save Config</button>
+            </div>
         </div>
-        <div class="btn-group">
-            <button class="btn-preset" onclick="applyPreset('arch')">⚡ Full Arch Set</button>
-            <button class="btn-preset" onclick="applyPreset('key')">🗝️ Full Key Set</button>
-            <button class="btn-preset" onclick="applyPreset('pixel')">👾 Full Pixel Set</button>
-            <button class="btn-secondary" onclick="applyPreset('default')">🔄 Reset All</button>
-            <button class="btn-secondary" onclick="openPreview()">👁️ Preview Code</button>
-            <button class="btn-primary" onclick="downloadConfig()">💾 Download rivals_config.lua</button>
+
+        <div class="util-row">
+            <div class="search-box">
+                <span class="search-icon">&#128269;</span>
+                <input type="text" id="searchInput" placeholder="Search weapons or skins..." oninput="filterWeapons()">
+            </div>
+            <button class="btn-ghost btn-sm" onclick="applyPreset('arch')">Arch Set</button>
+            <button class="btn-ghost btn-sm" onclick="applyPreset('key')">Key Set</button>
+            <button class="btn-ghost btn-sm" onclick="applyPreset('pixel')">Pixel Set</button>
+            <button class="btn-ghost btn-sm" onclick="applyPreset('default')">Reset</button>
         </div>
+
+        <div class="dash-grid" id="dash-grid"></div>
     </div>
 
-    
-
-    <div class="container" id="weaponsGrid">
-        <!-- Weapon Cards generated dynamically -->
+    <div class="modal-overlay" id="skinModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="skinModalTitle">Select Skin</h3>
+                <button class="modal-close" onclick="closeSkinModal()">&#10005;</button>
+            </div>
+            <div class="modal-body" id="skinModalBody"></div>
+        </div>
     </div>
 
     <!-- Code Preview Modal -->
@@ -4296,6 +4050,7 @@
 
         let currentConfig = {};
         let activeCategory = "all";
+        let dashMode = "skins";
 
         function init() {
             const saved = localStorage.getItem("rivals_config_saved");
@@ -4305,87 +4060,210 @@
             renderGrid();
         }
 
-        function setCategoryFilter(category, el) {
-            activeCategory = category;
-            document.querySelectorAll(".filter-pill").forEach(p => p.classList.remove("active"));
-            el.classList.add("active");
+        const CATEGORY_ORDER = ["Primary", "Secondary", "Melee", "Utility"];
+
+        function setDashMode(mode) {
+            dashMode = mode;
+            document.getElementById("switch-skins").classList.toggle("active", mode === "skins");
+            document.getElementById("switch-wraps").classList.toggle("active", mode === "wraps");
+            renderGrid();
             filterWeapons();
         }
 
+        function isCustom(skin) {
+            return skin && skin !== "Default" && skin !== "Standard";
+        }
+
+        function makeIcon(visual, id) {
+            const img = document.createElement("img");
+            if (id) img.id = id;
+            img.alt = "";
+            img.onerror = function () {
+                if (visual.cdnUrl && this.src !== visual.cdnUrl) { this.src = visual.cdnUrl; }
+                else { this.style.display = "none"; }
+            };
+            img.src = visual.src;
+            return img;
+        }
+
         function renderGrid() {
-            const grid = document.getElementById("weaponsGrid");
+            const grid = document.getElementById("dash-grid");
             grid.innerHTML = "";
 
-            OFFICIAL_WEAPON_DATA.forEach(weapon => {
-                const selected = currentConfig[weapon.name] || "Default";
-                const visual = getSkinVisual(weapon.name, selected);
-                const safeId = weapon.name.replace(/[^a-zA-Z0-9]/g, '_');
-                
+            if (dashMode === "wraps") {
+                const c = document.createElement("div");
+                c.className = "weapon-card";
+                c.innerHTML = '<div class="empty-note">Wraps aren\'t part of rivals_config.lua yet.</div>';
+                grid.appendChild(c);
+                updateFootCount();
+                return;
+            }
+
+            CATEGORY_ORDER.forEach(function (cat) {
+                const weapons = OFFICIAL_WEAPON_DATA.filter(function (w) { return w.category === cat; });
+                if (!weapons.length) return;
+
                 const card = document.createElement("div");
                 card.className = "weapon-card";
-                card.id = "card-" + safeId;
-                card.dataset.name = weapon.name.toLowerCase();
-                card.dataset.category = weapon.category;
+                card.dataset.category = cat;
 
-                let optionsHTML = "";
-                weapon.skins.forEach(skin => {
-                    const isSelected = skin === selected ? "selected" : "";
-                    optionsHTML += `<option value="${skin}" ${isSelected}>${skin}</option>`;
+                const label = document.createElement("div");
+                label.className = "card-label";
+                label.textContent = cat;
+                card.appendChild(label);
+
+                weapons.forEach(function (weapon) {
+                    const selected = currentConfig[weapon.name] || "Default";
+                    const visual = getSkinVisual(weapon.name, selected);
+                    const safeId = weapon.name.replace(/[^a-zA-Z0-9]/g, "_");
+
+                    const row = document.createElement("div");
+                    row.className = "weapon-row";
+                    row.id = "row-" + safeId;
+                    row.dataset.name = weapon.name.toLowerCase();
+                    row.addEventListener("click", function () { openSkinModal(weapon.name); });
+
+                    const iconWrap = document.createElement("div");
+                    iconWrap.className = "weapon-icon";
+                    iconWrap.appendChild(makeIcon(visual, "icon-" + safeId));
+
+                    const info = document.createElement("div");
+                    info.className = "weapon-info";
+                    const nameEl = document.createElement("div");
+                    nameEl.className = "weapon-name";
+                    nameEl.textContent = weapon.name;
+                    const skinEl = document.createElement("div");
+                    skinEl.className = "weapon-skin" + (isCustom(selected) ? " is-set" : "");
+                    skinEl.id = "skin-" + safeId;
+                    skinEl.textContent = selected;
+                    info.appendChild(nameEl);
+                    info.appendChild(skinEl);
+
+                    const chev = document.createElement("div");
+                    chev.className = "weapon-chevron";
+                    chev.innerHTML = "&#8250;";
+
+                    row.appendChild(iconWrap);
+                    row.appendChild(info);
+                    row.appendChild(chev);
+                    card.appendChild(row);
                 });
-
-                card.innerHTML = `
-                    <div class="card-header">
-                        <span class="weapon-name">${weapon.name}</span>
-                    </div>
-                    <div class="skin-preview-box" id="preview-${safeId}" style="background: ${visual.bg}; border-color: ${visual.color}55">
-                        <img src="${visual.src}" alt="${selected}" class="skin-img-display" id="icon-${safeId}" onerror="if(this.src!=='${visual.cdnUrl}'&&'${visual.cdnUrl}'){this.src='${visual.cdnUrl}';}">
-                        <span class="skin-rarity-badge" id="rarity-${safeId}" style="color: ${visual.color}; border-color: ${visual.color}88">${visual.rarity}</span>
-                    </div>
-                    <div class="select-wrapper">
-                        <select onchange="onSkinChange('${weapon.name.replace(/'/g, "\\'")}', this.value)">
-                            ${optionsHTML}
-                        </select>
-                        <span class="select-arrow">▼</span>
-                    </div>
-                    <div class="active-skin-badge" id="badge-${safeId}">
-                        ${selected}
-                    </div>
-                `;
 
                 grid.appendChild(card);
             });
+
+            updateFootCount();
+        }
+
+        let modalWeapon = null;
+
+        function openSkinModal(weaponName) {
+            const weapon = OFFICIAL_WEAPON_DATA.find(function (w) { return w.name === weaponName; });
+            if (!weapon) return;
+            modalWeapon = weaponName;
+
+            const selected = currentConfig[weaponName] || "Default";
+            document.getElementById("skinModalTitle").textContent = weaponName;
+
+            const body = document.getElementById("skinModalBody");
+            body.innerHTML = "";
+
+            const skins = weapon.skins.slice();
+            if (skins.indexOf("Default") === -1) skins.unshift("Default");
+
+            skins.forEach(function (skin) {
+                const v = getSkinVisual(weaponName, skin);
+                const active = skin === selected;
+
+                const opt = document.createElement("div");
+                opt.className = "skin-option" + (active ? " active" : "");
+                opt.addEventListener("click", function () {
+                    onSkinChange(weaponName, skin);
+                    closeSkinModal();
+                });
+
+                const ic = document.createElement("div");
+                ic.className = "skin-option-icon";
+                ic.appendChild(makeIcon(v, null));
+
+                const nm = document.createElement("div");
+                nm.className = "skin-option-name";
+                nm.textContent = skin;
+
+                const ra = document.createElement("div");
+                ra.className = "skin-option-rarity";
+                ra.style.color = v.color;
+                ra.textContent = v.rarity;
+
+                opt.appendChild(ic);
+                opt.appendChild(nm);
+                opt.appendChild(ra);
+                if (active) {
+                    const ck = document.createElement("span");
+                    ck.className = "skin-check";
+                    ck.innerHTML = "&#10003;";
+                    opt.appendChild(ck);
+                }
+                body.appendChild(opt);
+            });
+
+            document.getElementById("skinModal").style.display = "flex";
+        }
+
+        function closeSkinModal() {
+            document.getElementById("skinModal").style.display = "none";
+            modalWeapon = null;
         }
 
         function onSkinChange(weaponName, skinName) {
             currentConfig[weaponName] = skinName;
             localStorage.setItem("rivals_config_saved", JSON.stringify(currentConfig));
 
-            const safeId = weaponName.replace(/[^a-zA-Z0-9]/g, '_');
+            const safeId = weaponName.replace(/[^a-zA-Z0-9]/g, "_");
             const visual = getSkinVisual(weaponName, skinName);
 
-            const badge = document.getElementById("badge-" + safeId);
-            if (badge) badge.innerText = skinName;
-
-            const previewBox = document.getElementById("preview-" + safeId);
-            if (previewBox) {
-                previewBox.style.background = visual.bg;
-                previewBox.style.borderColor = visual.color + "55";
-
-                previewBox.innerHTML = `
-                    <img src="${visual.src}" alt="${skinName}" class="skin-img-display" id="icon-${safeId}" onerror="if(this.src!=='${visual.cdnUrl}'&&'${visual.cdnUrl}'){this.src='${visual.cdnUrl}';}">
-                    <span class="skin-rarity-badge" id="rarity-${safeId}" style="color: ${visual.color}; border-color: ${visual.color}88">${visual.rarity}</span>
-                `;
+            const label = document.getElementById("skin-" + safeId);
+            if (label) {
+                label.textContent = skinName;
+                label.classList.toggle("is-set", isCustom(skinName));
             }
+
+            const icon = document.getElementById("icon-" + safeId);
+            if (icon) {
+                icon.style.display = "";
+                icon.onerror = function () {
+                    if (visual.cdnUrl && this.src !== visual.cdnUrl) { this.src = visual.cdnUrl; }
+                    else { this.style.display = "none"; }
+                };
+                icon.src = visual.src;
+            }
+
+            updateFootCount();
+        }
+
+        function updateFootCount() {
+            const el = document.getElementById("footCount");
+            if (!el) return;
+            let n = 0;
+            OFFICIAL_WEAPON_DATA.forEach(function (w) {
+                if (isCustom(currentConfig[w.name])) n++;
+            });
+            el.textContent = n + (n === 1 ? " skin configured" : " skins configured");
         }
 
         function filterWeapons() {
-            const query = document.getElementById("searchInput").value.toLowerCase();
-            const cards = document.querySelectorAll(".weapon-card");
-
-            cards.forEach(card => {
-                const wName = card.dataset.name;
-                const matchSearch = wName.includes(query);
-                card.style.display = matchSearch ? "flex" : "none";
+            const input = document.getElementById("searchInput");
+            const query = (input && input.value ? input.value : "").toLowerCase();
+            document.querySelectorAll("#dash-grid .weapon-card").forEach(function (card) {
+                let visible = 0;
+                card.querySelectorAll(".weapon-row").forEach(function (row) {
+                    const match = (row.dataset.name || "").indexOf(query) !== -1;
+                    row.style.display = match ? "flex" : "none";
+                    if (match) visible++;
+                });
+                if (card.querySelectorAll(".weapon-row").length) {
+                    card.style.display = visible ? "block" : "none";
+                }
             });
         }
 
@@ -4461,13 +4339,21 @@
         }
 
         window.onclick = function(event) {
-            const modal = document.getElementById("previewModal");
-            if (event.target === modal) {
-                closePreview();
-            }
+            if (event.target === document.getElementById("previewModal")) closePreview();
+            if (event.target === document.getElementById("skinModal")) closeSkinModal();
         };
+
+        document.querySelectorAll(".nav-tab[data-toast]").forEach(function (b) {
+            b.addEventListener("click", function () { showToast(b.dataset.toast + " is not wired up yet"); });
+        });
 
         init();
     </script>
+    <div class="footbar">
+        <div class="foot-status"><span class="foot-dot"></span><span id="footCount">0 skins configured</span></div>
+        <div class="foot-spacer"></div>
+        <button class="btn-ghost btn-sm" onclick="copyConfig()">Copy</button>
+        <button class="btn-primary btn-sm" onclick="downloadConfig()">Download rivals_config.lua</button>
+    </div>
 </body>
 </html>
