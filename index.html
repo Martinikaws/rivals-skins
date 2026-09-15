@@ -134,6 +134,16 @@
             overflow: hidden;
         }
         .weapon-icon img { width: 100%; height: 100%; object-fit: contain; transform: scale(1.45); }
+        .weapon-icon svg, .skin-option-icon svg { width: 100%; height: 100%; display: block; }
+        .wrap-search {
+            position: sticky; top: 0; z-index: 1;
+            width: 100%; margin-bottom: 6px; padding: 8px 12px;
+            background: var(--card-2); border: 1px solid var(--line); border-radius: 8px;
+            color: var(--txt); font-family: inherit; font-size: 13px; outline: none;
+        }
+        .wrap-search:focus { border-color: #2b3947; }
+        .skin-option-sub { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; }
+        [hidden] { display: none !important; }
         .weapon-info { flex: 1; min-width: 0; }
         .weapon-name {
             font-size: 14.5px; font-weight: 500; color: var(--txt);
@@ -227,6 +237,7 @@
     </style>
 </head>
 <body>
+    <script src="assets/wraps.js"></script>
 
     <nav class="nav">
         <div class="nav-brand"><span class="nav-logo"></span>Skin Changer</div>
@@ -249,9 +260,10 @@
                 <span class="search-icon">&#128269;</span>
                 <input type="text" id="searchInput" placeholder="Search weapons or skins..." oninput="filterWeapons()">
             </div>
-            <button class="btn-ghost btn-sm" onclick="applyPreset('arch')">Arch Set</button>
-            <button class="btn-ghost btn-sm" onclick="applyPreset('key')">Key Set</button>
-            <button class="btn-ghost btn-sm" onclick="applyPreset('pixel')">Pixel Set</button>
+            <button class="btn-ghost btn-sm skins-only" onclick="applyPreset('arch')">Arch Set</button>
+            <button class="btn-ghost btn-sm skins-only" onclick="applyPreset('key')">Key Set</button>
+            <button class="btn-ghost btn-sm skins-only" onclick="applyPreset('pixel')">Pixel Set</button>
+            <button class="btn-ghost btn-sm wraps-only" onclick="applyPreset('dev')" hidden>Dev Set</button>
             <button class="btn-ghost btn-sm" onclick="applyPreset('default')">Reset</button>
         </div>
 
@@ -272,7 +284,7 @@
     <div class="modal-overlay" id="previewModal">
         <div class="modal">
             <div class="modal-header">
-                <h3>📜 rivals_config.lua Output</h3>
+                <h3 id="previewTitle">📜 rivals_config.lua Output</h3>
                 <button class="modal-close" onclick="closePreview()">✕</button>
             </div>
             <div class="modal-body">
@@ -4059,7 +4071,10 @@
             if (saved) {
                 try { currentConfig = JSON.parse(saved); } catch(e) {}
             }
-            renderGrid();
+            try { wrapConfig = JSON.parse(localStorage.getItem("rivals_wraps_saved") || "{}") || {}; } catch (e) { wrapConfig = {}; }
+            let mode = "skins";
+            try { mode = location.hash === "#wraps" ? "wraps" : (localStorage.getItem("rivals_dash_mode") || "skins"); } catch (e) {}
+            setDashMode(mode === "wraps" ? "wraps" : "skins");
         }
 
         const CATEGORY_ORDER = ["Primary", "Secondary", "Melee", "Utility"];
@@ -4068,6 +4083,13 @@
             dashMode = mode;
             document.getElementById("switch-skins").classList.toggle("active", mode === "skins");
             document.getElementById("switch-wraps").classList.toggle("active", mode === "wraps");
+            document.querySelectorAll(".skins-only").forEach(function (b) { b.hidden = mode !== "skins"; });
+            document.querySelectorAll(".wraps-only").forEach(function (b) { b.hidden = mode !== "wraps"; });
+            const input = document.getElementById("searchInput");
+            if (input) { input.value = ""; input.placeholder = mode === "wraps" ? "Search wraps..." : "Search weapons or skins..."; }
+            const fd = document.getElementById("footDownload");
+            if (fd) fd.textContent = "Download " + configFileName();
+            try { localStorage.setItem("rivals_dash_mode", mode); } catch (e) {}
             renderGrid();
             filterWeapons();
         }
@@ -4093,10 +4115,7 @@
             grid.innerHTML = "";
 
             if (dashMode === "wraps") {
-                const c = document.createElement("div");
-                c.className = "weapon-card";
-                c.innerHTML = '<div class="empty-note">Wraps aren\'t part of rivals_config.lua yet.</div>';
-                grid.appendChild(c);
+                renderWrapGrid(grid);
                 updateFootCount();
                 return;
             }
@@ -4155,6 +4174,220 @@
             });
 
             updateFootCount();
+        }
+
+        // ---- Wraps tab ----
+        // Rows are wraps you own; the picker sets the wrap each should look
+        // like. Saved as rivals_wraps.lua, which RivalsWrapChanger.lua reads.
+        let wrapConfig = {};
+        // MISSING_WRAP is the game's placeholder, not a wrap anyone can pick.
+        const WRAP_LIST = (window.WRAPS || []).filter(function (w) { return w[0].indexOf('MISSING_') < 0; });
+        const WRAP_RARITY = window.WRAP_RARITIES || [];
+        const WRAP_BY_NAME = {};
+        WRAP_LIST.forEach(function (w) { WRAP_BY_NAME[w[0]] = w; });
+        const WRAP_TESTED = { "Glass": true, "Dark Matter": true };
+        // Game rarity colors, lifted where the raw value vanishes on the dark ground.
+        const WRAP_RARITY_TEXT = { "#000000": "#9aa3ae", "#385021": "#7fa35a", "#4044ba": "#8185f2" };
+
+        function wrapRarityName(i) { return WRAP_RARITY[i] ? WRAP_RARITY[i][0] : "Other"; }
+        function wrapRarityColor(i) { const c = WRAP_RARITY[i] ? WRAP_RARITY[i][1] : "#8b9bb4"; return WRAP_RARITY_TEXT[c] || c; }
+        function configFileName() { return dashMode === "wraps" ? "rivals_wraps.lua" : "rivals_config.lua"; }
+
+        // Shared SVG paint for the wrap previews: shading, material effects and
+        // one card gradient per rarity (black at the top, rarity color below).
+        (function () {
+            let defs = '<linearGradient id="wg-shade" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".45"/></linearGradient>'
+                + '<linearGradient id="wg-metal" x1="0" y1="0" x2="1" y2=".3"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".3" stop-color="#fff" stop-opacity=".55"/><stop offset=".38" stop-color="#fff" stop-opacity="0"/><stop offset=".8" stop-color="#fff" stop-opacity=".18"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'
+                + '<radialGradient id="wg-gloss" cx=".35" cy=".2" r=".6"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>'
+                + '<pattern id="wg-ff" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2.5" height="5" fill="#fff" fill-opacity=".35"/></pattern>'
+                + '<filter id="wg-glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+            WRAP_RARITY.forEach(function (r, i) {
+                defs += '<linearGradient id="wg-bg-' + i + '" x1="0" y1="0" x2="0" y2="1"><stop offset=".12" stop-color="#050608"/><stop offset=".72" stop-color="' + r[1] + '"/><stop offset="1" stop-color="' + r[1] + '"/></linearGradient>';
+            });
+            const holder = document.createElement("div");
+            holder.innerHTML = '<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs id="wg-defs">' + defs + '</defs></svg>';
+            document.body.appendChild(holder.firstChild);
+        })();
+
+        // The game's wrap icon is Assets.Misc.Wrap, a curled sheet shown on a
+        // rarity card: layer 1 paints the sheet and, at half brightness, its
+        // roll; layer 2 paints the band along the bottom; layer 3 isn't on it.
+        const WRAP_FACE = "M24 14C46 8 64 16 96 9L91 63C67 61 41 67 7 59Z";
+        const WRAP_BAND = "M7 59C41 67 67 61 91 63L89 82C65 80 41 86 4 78Z";
+        const WRAP_ROLL = "M24 14L7 59L4 78L11 78L14 59L30 16Z";
+        const wrapPatterns = {};
+        function wrapTexture(id) {
+            if (!wrapPatterns[id]) {
+                const ns = "http://www.w3.org/2000/svg";
+                const p = document.createElementNS(ns, "pattern");
+                p.setAttribute("id", "wt-" + id);
+                p.setAttribute("patternUnits", "userSpaceOnUse");
+                p.setAttribute("width", "36");
+                p.setAttribute("height", "36");
+                const img = document.createElementNS(ns, "image");
+                img.setAttribute("href", "assets/images/wraps/" + id + ".png");
+                img.setAttribute("width", "36");
+                img.setAttribute("height", "36");
+                img.setAttribute("preserveAspectRatio", "xMidYMid slice");
+                p.appendChild(img);
+                document.getElementById("wg-defs").appendChild(p);
+                wrapPatterns[id] = true;
+            }
+            return "url(#wt-" + id + ")";
+        }
+        function shadeHex(hex, f) {
+            const n = parseInt((hex || "#8b93a1").slice(1), 16);
+            return "#" + [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+                .map(function (v) { return ("0" + Math.round(v * f).toString(16)).slice(-2); }).join("");
+        }
+        function wrapLayer(d, g, colorOverride) {
+            const kind = g[0], color = colorOverride || g[1] || "#8b93a1", t = g[2] || 0, tex = g[3] || 0;
+            const tag = '<path d="' + d + '"';
+            let out = tag + ' fill="' + color + '"';
+            if (kind === "Glass" || t > 0) out += ' fill-opacity="' + Math.max(0.2, 1 - t).toFixed(2) + '"';
+            if (kind === "Neon") out += ' filter="url(#wg-glow)"';
+            out += "/>";
+            if (tex) out += tag + ' fill="' + wrapTexture(tex) + '" fill-opacity=".65"/>';
+            if (kind === "Metal" || kind === "DiamondPlate" || kind === "CorrodedMetal" || kind === "Foil") out += tag + ' fill="url(#wg-metal)"/>';
+            else if (kind === "ForceField") out += tag + ' fill="url(#wg-ff)"/>';
+            else if (kind === "Glass" || kind.indexOf("v:") === 0) out += tag + ' fill="url(#wg-gloss)"/>';
+            return out;
+        }
+        function wrapIconSVG(w) {
+            const g = (w && w[3]) || [];
+            const g1 = g[0] || ["SmoothPlastic", "#3a414c", 0, 0], g2 = g[1] || g1;
+            return '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">'
+                + '<rect x="1.5" y="1.5" width="97" height="97" rx="7" fill="url(#wg-bg-' + (w ? w[1] : 0) + ')" stroke="' + (WRAP_RARITY[w ? w[1] : 0] || ["", "#59626e"])[1] + '" stroke-width="3"/>'
+                + wrapLayer(WRAP_FACE, g1) + wrapLayer(WRAP_BAND, g2)
+                + '<path d="' + WRAP_FACE + '" fill="url(#wg-shade)"/>'
+                + wrapLayer(WRAP_ROLL, g1, shadeHex(g1[1], 0.5))
+                + "</svg>";
+        }
+
+        function renderWrapGrid(grid) {
+            const groups = {};
+            WRAP_LIST.forEach(function (w) { (groups[w[1]] = groups[w[1]] || []).push(w); });
+            Object.keys(groups).map(Number).sort(function (a, b) { return a - b; }).forEach(function (ri) {
+                const card = document.createElement("div");
+                card.className = "weapon-card";
+                const label = document.createElement("div");
+                label.className = "card-label";
+                label.textContent = wrapRarityName(ri) + " wraps";
+                card.appendChild(label);
+                groups[ri].forEach(function (w) {
+                    const row = document.createElement("div");
+                    row.className = "weapon-row";
+                    row.addEventListener("click", function () { openWrapModal(w[0]); });
+                    const iconWrap = document.createElement("div");
+                    iconWrap.className = "weapon-icon";
+                    const info = document.createElement("div");
+                    info.className = "weapon-info";
+                    const nameEl = document.createElement("div");
+                    nameEl.className = "weapon-name";
+                    nameEl.textContent = w[0];
+                    const sub = document.createElement("div");
+                    sub.className = "weapon-skin";
+                    info.appendChild(nameEl);
+                    info.appendChild(sub);
+                    const chev = document.createElement("div");
+                    chev.className = "weapon-chevron";
+                    chev.innerHTML = "&#8250;";
+                    row.appendChild(iconWrap);
+                    row.appendChild(info);
+                    row.appendChild(chev);
+                    card.appendChild(row);
+                    paintWrapRow(row, w[0]);
+                });
+                grid.appendChild(card);
+            });
+        }
+
+        function paintWrapRow(row, name) {
+            const target = wrapConfig[name];
+            row.querySelector(".weapon-icon").innerHTML = wrapIconSVG(WRAP_BY_NAME[target] || WRAP_BY_NAME[name]);
+            const sub = row.querySelector(".weapon-skin");
+            sub.textContent = target ? "Looks like " + target : "Default";
+            sub.classList.toggle("is-set", !!target);
+            row.dataset.name = (name + " " + (target || "")).toLowerCase();
+            row.dataset.wrap = name;
+        }
+
+        function openWrapModal(name) {
+            modalWeapon = name;
+            document.getElementById("skinModalTitle").textContent = name + " looks like...";
+            const body = document.getElementById("skinModalBody");
+            body.innerHTML = "";
+            const search = document.createElement("input");
+            search.type = "text";
+            search.className = "wrap-search";
+            search.placeholder = "Search wraps...";
+            search.setAttribute("aria-label", "Search wraps to show");
+            body.appendChild(search);
+            const current = wrapConfig[name] || null;
+            const options = [];
+            function addOption(label, subText, w, rarityIdx, target) {
+                const active = target === current;
+                const opt = document.createElement("div");
+                opt.className = "skin-option" + (active ? " active" : "");
+                opt.dataset.name = label.toLowerCase();
+                opt.addEventListener("click", function () { onWrapChange(name, target); closeSkinModal(); });
+                const ic = document.createElement("div");
+                ic.className = "skin-option-icon";
+                ic.innerHTML = wrapIconSVG(w);
+                const nm = document.createElement("div");
+                nm.className = "skin-option-name";
+                nm.textContent = label;
+                const st = document.createElement("span");
+                st.className = "skin-option-sub";
+                st.textContent = subText;
+                if (subText === "Tested in game") st.style.color = "#3fb950";
+                nm.appendChild(st);
+                opt.appendChild(ic);
+                opt.appendChild(nm);
+                if (rarityIdx !== null) {
+                    const ra = document.createElement("div");
+                    ra.className = "skin-option-rarity";
+                    ra.style.color = wrapRarityColor(rarityIdx);
+                    ra.textContent = wrapRarityName(rarityIdx);
+                    opt.appendChild(ra);
+                }
+                if (active) {
+                    const ck = document.createElement("span");
+                    ck.className = "skin-check";
+                    ck.innerHTML = "&#10003;";
+                    opt.appendChild(ck);
+                }
+                body.appendChild(opt);
+                options.push(opt);
+            }
+            addOption("Default", "Keep " + name + "'s own look", WRAP_BY_NAME[name], null, null);
+            WRAP_LIST.slice().sort(function (a, b) { return b[1] - a[1] || a[0].localeCompare(b[0]); }).forEach(function (w) {
+                if (w[0] !== name) addOption(w[0], WRAP_TESTED[w[0]] ? "Tested in game" : "", w, w[1], w[0]);
+            });
+            search.addEventListener("input", function () {
+                const q = search.value.trim().toLowerCase();
+                options.forEach(function (o) { o.style.display = !q || o.dataset.name.indexOf(q) !== -1 ? "flex" : "none"; });
+            });
+            document.getElementById("skinModal").style.display = "flex";
+            search.focus();
+        }
+
+        function onWrapChange(name, target) {
+            if (target) wrapConfig[name] = target; else delete wrapConfig[name];
+            localStorage.setItem("rivals_wraps_saved", JSON.stringify(wrapConfig));
+            document.querySelectorAll("#dash-grid .weapon-row").forEach(function (row) {
+                if (row.dataset.wrap === name) paintWrapRow(row, name);
+            });
+            updateFootCount();
+            showToast(target ? name + " now looks like " + target : name + " is back to Default");
+        }
+
+        function generateWrapConfig() {
+            const keys = Object.keys(wrapConfig).sort();
+            if (!keys.length) return "";
+            return ["-- Rivals Wrap Changer config: one line per wrap, OwnedWrap=TargetWrap",
+                    "-- Equip OwnedWrap on a weapon and it will look like TargetWrap."]
+                .concat(keys.map(function (k) { return k + "=" + wrapConfig[k]; })).join("\n");
         }
 
         let modalWeapon = null;
@@ -4246,6 +4479,11 @@
         function updateFootCount() {
             const el = document.getElementById("footCount");
             if (!el) return;
+            if (dashMode === "wraps") {
+                const k = Object.keys(wrapConfig).length;
+                el.textContent = k + (k === 1 ? " wrap swapped" : " wraps swapped");
+                return;
+            }
             let n = 0;
             OFFICIAL_WEAPON_DATA.forEach(function (w) {
                 if (isCustom(currentConfig[w.name])) n++;
@@ -4270,6 +4508,7 @@
         }
 
         function generateLuaCode() {
+            if (dashMode === "wraps") return generateWrapConfig();
             let lines = [];
             OFFICIAL_WEAPON_DATA.forEach(w => {
                 const skin = currentConfig[w.name] || "Default";
@@ -4281,6 +4520,14 @@
         }
 
         function applyPreset(presetType) {
+            if (dashMode === "wraps") {
+                wrapConfig = presetType === "dev" ? { "Blue": "Glass", "Yellow": "Dark Matter" } : {};
+                localStorage.setItem("rivals_wraps_saved", JSON.stringify(wrapConfig));
+                renderGrid();
+                filterWeapons();
+                showToast(presetType === "dev" ? "Applied Dev Set: Blue looks like Glass, Yellow like Dark Matter" : "All wraps back to Default");
+                return;
+            }
             OFFICIAL_WEAPON_DATA.forEach(w => {
                 if (presetType === "default") {
                     currentConfig[w.name] = "Default";
@@ -4304,7 +4551,8 @@
 
         function openPreview() {
             const code = generateLuaCode();
-            document.getElementById("codeText").innerText = code || "-- No custom skins selected (All Default)";
+            document.getElementById("previewTitle").textContent = "📜 " + configFileName() + " Output";
+            document.getElementById("codeText").innerText = code || (dashMode === "wraps" ? "-- No wraps swapped (all Default)" : "-- No custom skins selected (All Default)");
             document.getElementById("previewModal").style.display = "flex";
         }
 
@@ -4325,12 +4573,12 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = "rivals_config.lua";
+            a.download = configFileName();
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            showToast("💾 rivals_config.lua downloaded!");
+            showToast("💾 " + configFileName() + " downloaded!");
         }
 
         function showToast(msg) {
@@ -4349,13 +4597,14 @@
             b.addEventListener("click", function () { showToast(b.dataset.toast + " is not wired up yet"); });
         });
 
-        init();
+        // The footbar comes after this script; wait for it before the first render.
+        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
     </script>
     <div class="footbar">
         <div class="foot-status"><span class="foot-dot"></span><span id="footCount">0 skins configured</span></div>
         <div class="foot-spacer"></div>
         <button class="btn-ghost btn-sm" onclick="copyConfig()">Copy</button>
-        <button class="btn-primary btn-sm" onclick="downloadConfig()">Download rivals_config.lua</button>
+        <button class="btn-primary btn-sm" id="footDownload" onclick="downloadConfig()">Download rivals_config.lua</button>
     </div>
 </body>
 </html>
