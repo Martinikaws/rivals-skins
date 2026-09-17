@@ -96,6 +96,26 @@
         .adv-note { flex-basis: 100%; font-size: 12.5px; color: #8b9bb4; padding-top: 2px; }
         .skin-option-remove { color: #e07b7b; }
         .skin-option-taken { opacity: .38; }
+        .sky-card { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-bottom: 1px solid var(--line); cursor: pointer; }
+        .sky-card:last-child { border-bottom: 0; }
+        .sky-card:hover { background: var(--card-2); }
+        .sky-card.active { background: var(--card-2); }
+        .sky-thumb { width: 54px; height: 54px; border-radius: 8px; object-fit: cover; background: var(--card-2); flex: 0 0 auto; }
+        .sky-name { font-size: 14px; font-weight: 600; }
+        .sky-sub { font-size: 12px; color: #8b9bb4; }
+        .sky-custom input { width: 220px; background: var(--card-2); border: 1px solid var(--line); border-radius: 8px; color: inherit; padding: 8px 10px; font-size: 13px; }
+        .sky-six { flex-wrap: wrap; }
+        .sky-six-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+        .sky-face { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #8b9bb4; }
+        .sky-face input { width: 108px; background: var(--card-2); border: 1px solid var(--line); border-radius: 8px; color: #e6edf6; padding: 7px 9px; font-size: 12.5px; }
+        @media (max-width: 640px) { .sky-six-grid { margin-left: 0; } .sky-face input { width: 92px; } }
+        .sky-thumb-fallback { width: 54px; height: 54px; border-radius: 8px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+            font-size: 18px; font-weight: 700; color: #cfe0fa; background: linear-gradient(150deg, #2b3550, #171d2b); border: 1px solid var(--line); }
+        .sky-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+        .sky-mini { background: transparent; border: 1px solid var(--line); color: #8b9bb4; border-radius: 7px; padding: 5px 9px; font-size: 12px; cursor: pointer; }
+        .sky-mini:hover { color: #e6edf6; border-color: #4a5570; }
+        .sky-add { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+        .sky-add input { width: 150px; background: var(--card-2); border: 1px solid var(--line); border-radius: 8px; color: #e6edf6; padding: 7px 9px; font-size: 12.5px; }
         .util-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding-bottom: 14px; }
         .search-box { position: relative; flex: 1 1 220px; min-width: 180px; }
         .search-box input {
@@ -252,6 +272,7 @@
             <div class="dash-switch">
                 <button class="dash-switch-btn active" id="switch-skins" onclick="setDashMode('skins')">Weapon Skins</button>
                 <button class="dash-switch-btn" id="switch-wraps" onclick="setDashMode('wraps')">Wraps</button>
+                <button class="dash-switch-btn" id="switch-skybox" onclick="setDashMode('skybox')">Skybox</button>
             </div>
             <div class="dash-actions">
                 <button class="btn-ghost btn-sm" onclick="openPreview()">Config Preview</button>
@@ -4081,16 +4102,20 @@
             try { advConfig = JSON.parse(localStorage.getItem("rivals_skinswaps_saved") || "{}") || {}; } catch (e) { advConfig = {}; }
             let mode = "skins";
             try { mode = location.hash === "#wraps" ? "wraps" : (localStorage.getItem("rivals_dash_mode") || "skins"); } catch (e) {}
-            setDashMode(mode === "wraps" || mode === "advanced" ? mode : "skins");
+            try { skyConfig = JSON.parse(localStorage.getItem("rivals_skybox_saved") || "{}") || {}; } catch (e) { skyConfig = {}; }
+            loadCustomSkies();
+            loadSharedSkies();
+            setDashMode(["wraps", "advanced", "skybox"].indexOf(mode) >= 0 ? mode : "skins");
         }
 
         const CATEGORY_ORDER = ["Primary", "Secondary", "Melee", "Utility"];
 
         function setDashMode(mode) {
             dashMode = mode;
-            document.getElementById("switch-skins").classList.toggle("active", mode !== "wraps");
+            document.getElementById("switch-skins").classList.toggle("active", mode === "skins" || mode === "advanced");
             document.getElementById("advToggle").classList.toggle("active", mode === "advanced");
-            document.getElementById("advToggle").hidden = mode === "wraps";
+            document.getElementById("switch-skybox").classList.toggle("active", mode === "skybox");
+            document.getElementById("advToggle").hidden = mode !== "skins" && mode !== "advanced";
             document.querySelectorAll(".adv-only").forEach(function (b) { b.hidden = mode !== "advanced"; });
             document.getElementById("switch-wraps").classList.toggle("active", mode === "wraps");
             document.querySelectorAll(".skins-only").forEach(function (b) { b.hidden = mode !== "skins"; });
@@ -4126,6 +4151,11 @@
 
             if (dashMode === "wraps") {
                 renderWrapGrid(grid);
+                updateFootCount();
+                return;
+            }
+            if (dashMode === "skybox") {
+                renderSkyGrid(grid);
                 updateFootCount();
                 return;
             }
@@ -4531,6 +4561,322 @@
             return lines;
         }
 
+        // ---- Skybox tab ----
+        // The game builds the sky in Lighting from a Sky template per map
+        // (PlayerScripts...LightingProfiles) and rebuilds it whenever the area
+        // changes. The changer rewrites those templates, so the new sky shows on
+        // the next map or area load - not instantly.
+        const SKYBOXES = [
+            {id: "blue", name: "Blue Clouds", sub: "The game's default sky", face: "14147882761"},
+            {id: "space", name: "Space", sub: "Dimension and the spooky lobby", face: "10196550367"},
+            {id: "graveyard", name: "Graveyard", sub: "Graveyard and Zombie Tower", face: "135908632589654"},
+            {id: "sudden death", name: "Sudden Death", sub: "Sudden Death and the final floor", face: "84214501374682"},
+            {id: "station", name: "Station", sub: "Station and Big Station", face: "2108482231"},
+            {id: "westown", name: "Westown", sub: "The Westown sky", face: "12261809766"},
+            {id: "black", name: "Black", sub: "Museum at night - a flat black sky", face: "91612392386438"},
+            {id: "classic", name: "Classic Roblox", sub: "The old built-in sky, shipped with the client", face: "classic"}
+        ];
+        let skyConfig = {};
+
+        function saveSkyConfig() {
+            try { localStorage.setItem("rivals_skybox_saved", JSON.stringify(skyConfig)); } catch (e) {}
+        }
+
+        // Local copies of each sky's front face, with Roblox's thumbnail
+        // endpoint as the fallback when one is missing.
+        function skyThumb(assetId) {
+            return "assets/images/skies/" + assetId + ".png";
+        }
+        function skyThumbCdn(assetId) {
+            return "https://www.roblox.com/asset-thumbnail/image?assetId=" + assetId + "&width=150&height=150&format=png";
+        }
+
+        // Skyboxes you add yourself: six asset ids under a name, kept in this
+        // browser. Roblox's thumbnail endpoint is tried for a preview and the
+        // card falls back to a plain tile when it refuses (it blocks some
+        // browsers and every cross-origin fetch).
+        let customSkies = [];
+
+        function loadCustomSkies() {
+            try { customSkies = JSON.parse(localStorage.getItem("rivals_skyboxes_custom") || "[]") || []; } catch (e) { customSkies = []; }
+        }
+
+        // Skyboxes shared with everyone, from assets/skyboxes.json in the site's
+        // repo - no backend, and anyone can add one with a pull request. Roblox
+        // only loads its own assets, so these are ids, never image links.
+        let sharedSkies = [];
+
+        function loadSharedSkies() {
+            fetch("assets/skyboxes.json", {cache: "no-cache"}).then(function (r) { return r.json(); }).then(function (d) {
+                sharedSkies = (d && d.skyboxes || []).filter(function (s) {
+                    return s && s.name && s.faces && SKY_FACE_ORDER.every(function (k) { return s.faces[k]; });
+                });
+                if (sharedSkies.length && dashMode === "skybox") renderGrid();
+            }).catch(function () { sharedSkies = []; });
+        }
+
+        function saveCustomSkies() {
+            try { localStorage.setItem("rivals_skyboxes_custom", JSON.stringify(customSkies)); } catch (e) {}
+        }
+
+        const SKY_FACE_ORDER = ["ft", "bk", "lf", "rt", "up", "dn"];
+
+        // "Name: ft,bk,lf,rt,up,dn" - what the Copy button puts on the clipboard
+        // and what Import reads, so a set can be passed to someone else.
+        function skySetToText(sky) {
+            return sky.name + ": " + SKY_FACE_ORDER.map(function (k) { return sky.faces[k] || ""; }).join(",");
+        }
+
+        function skySetFromText(text) {
+            const at = text.indexOf(":");
+            if (at < 0) return null;
+            const name = text.slice(0, at).trim();
+            const ids = text.slice(at + 1).split(",").map(function (v) { return v.replace(/[^0-9]/g, ""); });
+            if (!name || ids.length < 6 || ids.filter(Boolean).length < 6) return null;
+            const faces = {};
+            SKY_FACE_ORDER.forEach(function (k, i) { faces[k] = ids[i]; });
+            return {name: name, faces: faces};
+        }
+
+        function sameFaces(a, b) {
+            if (!a || !b) return false;
+            return SKY_FACE_ORDER.every(function (k) { return (a[k] || "") === (b[k] || ""); });
+        }
+
+        function addCustomSky(name, faces) {
+            customSkies = customSkies.filter(function (s) { return s.name !== name; });
+            customSkies.push({name: name, faces: faces});
+            saveCustomSkies();
+            onSkyChange({faces: faces, name: name});
+        }
+
+        function removeCustomSky(name) {
+            customSkies = customSkies.filter(function (s) { return s.name !== name; });
+            saveCustomSkies();
+            if (skyConfig.name === name) { onSkyChange({}); } else { renderGrid(); }
+        }
+
+        function skyCardThumb(faceId, fallbackText) {
+            const img = document.createElement("img");
+            img.className = "sky-thumb";
+            img.alt = "";
+            img.src = skyThumbCdn(faceId);
+            img.onerror = function () {
+                const tile = document.createElement("div");
+                tile.className = "sky-thumb-fallback";
+                tile.textContent = (fallbackText || "?").slice(0, 1).toUpperCase();
+                if (this.parentNode) this.parentNode.replaceChild(tile, this);
+            };
+            return img;
+        }
+
+        function renderCustomSkies(card) {
+            sharedSkies.forEach(function (sky) {
+                const row = document.createElement("div");
+                row.className = "sky-card" + (sameFaces(skyConfig.faces, sky.faces) ? " active" : "");
+                row.dataset.name = (sky.name + " " + (sky.by || "")).toLowerCase();
+                row.appendChild(skyCardThumb(sky.faces.ft, sky.name));
+                const info = document.createElement("div");
+                info.innerHTML = '<div class="sky-name"></div><div class="sky-sub"></div>';
+                info.querySelector(".sky-name").textContent = sky.name;
+                info.querySelector(".sky-sub").textContent = sky.by ? "Shared - by " + sky.by : "Shared";
+                row.appendChild(info);
+                row.addEventListener("click", function () { onSkyChange({faces: sky.faces, name: sky.name}); });
+                card.appendChild(row);
+            });
+
+            customSkies.forEach(function (sky) {
+                const row = document.createElement("div");
+                row.className = "sky-card" + (sameFaces(skyConfig.faces, sky.faces) ? " active" : "");
+                row.dataset.name = sky.name.toLowerCase();
+                row.appendChild(skyCardThumb(sky.faces.ft || sky.faces.bk, sky.name));
+                const info = document.createElement("div");
+                info.innerHTML = '<div class="sky-name"></div><div class="sky-sub">Yours - 6 faces</div>';
+                info.querySelector(".sky-name").textContent = sky.name;
+                row.appendChild(info);
+                const actions = document.createElement("div");
+                actions.className = "sky-actions";
+                const copy = document.createElement("button");
+                copy.className = "sky-mini";
+                copy.textContent = "Copy";
+                copy.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                    navigator.clipboard.writeText(skySetToText(sky));
+                    showToast("Copied - paste it to share this skybox");
+                });
+                const del = document.createElement("button");
+                del.className = "sky-mini";
+                del.textContent = "Remove";
+                del.addEventListener("click", function (e) { e.stopPropagation(); removeCustomSky(sky.name); });
+                actions.appendChild(copy);
+                actions.appendChild(del);
+                row.appendChild(actions);
+                row.addEventListener("click", function () { onSkyChange({faces: sky.faces, name: sky.name}); });
+                card.appendChild(row);
+            });
+        }
+
+        function renderSkyAdd(card) {
+            const row = document.createElement("div");
+            row.className = "sky-card";
+            row.dataset.name = "add save skybox import";
+            const info = document.createElement("div");
+            info.innerHTML = '<div class="sky-name">Save the six above</div><div class="sky-sub">Keeps it here so you can switch back any time</div>';
+            row.appendChild(info);
+            const box = document.createElement("div");
+            box.className = "sky-add";
+            const name = document.createElement("input");
+            name.placeholder = "Name it";
+            const save = document.createElement("button");
+            save.className = "sky-mini";
+            save.textContent = "Save";
+            save.addEventListener("click", function () {
+                const faces = skyConfig.faces || {};
+                if (SKY_FACE_ORDER.some(function (k) { return !faces[k]; })) { showToast("Fill all six faces first"); return; }
+                const n = (name.value || "").trim();
+                if (!n) { showToast("Give it a name"); return; }
+                addCustomSky(n, faces);
+                showToast('Saved "' + n + '"');
+            });
+            const paste = document.createElement("button");
+            paste.className = "sky-mini";
+            paste.textContent = "Import";
+            paste.addEventListener("click", function () {
+                const text = prompt("Paste a skybox someone shared\n(Name: ft,bk,lf,rt,up,dn)");
+                if (!text) return;
+                const set = skySetFromText(text);
+                if (!set) { showToast("That doesn't look like a skybox line"); return; }
+                addCustomSky(set.name, set.faces);
+                showToast('Imported "' + set.name + '"');
+            });
+            box.appendChild(name);
+            box.appendChild(save);
+            box.appendChild(paste);
+            row.appendChild(box);
+            card.appendChild(row);
+        }
+
+        function renderSkyGrid(grid) {
+            const card = document.createElement("div");
+            card.className = "weapon-card";
+            const label = document.createElement("div");
+            label.className = "card-label";
+            label.textContent = "Skybox";
+            card.appendChild(label);
+
+            SKYBOXES.forEach(function (sky) {
+                const row = document.createElement("div");
+                row.className = "sky-card" + (skyConfig.preset === sky.id && !skyConfig.all ? " active" : "");
+                row.dataset.name = sky.name.toLowerCase();
+                const img = document.createElement("img");
+                img.className = "sky-thumb";
+                img.alt = "";
+                img.src = skyThumb(sky.face);
+                img.onerror = function () {
+                    const cdn = skyThumbCdn(sky.face);
+                    if (this.src !== cdn) { this.src = cdn; } else { this.style.visibility = "hidden"; }
+                };
+                const info = document.createElement("div");
+                const nm = document.createElement("div");
+                nm.className = "sky-name";
+                nm.textContent = sky.name;
+                const sb = document.createElement("div");
+                sb.className = "sky-sub";
+                sb.textContent = sky.sub;
+                info.appendChild(nm);
+                info.appendChild(sb);
+                row.appendChild(img);
+                row.appendChild(info);
+                row.addEventListener("click", function () { onSkyChange({preset: sky.id}); });
+                card.appendChild(row);
+            });
+
+            // Any Roblox image asset, on all six faces.
+            const custom = document.createElement("div");
+            custom.className = "sky-card sky-custom" + (skyConfig.all ? " active" : "");
+            custom.dataset.name = "custom asset id";
+            const cinfo = document.createElement("div");
+            cinfo.innerHTML = '<div class="sky-name">Custom asset</div><div class="sky-sub">One image id on all six faces</div>';
+            const input = document.createElement("input");
+            input.placeholder = "e.g. 10196550367";
+            input.value = skyConfig.all || "";
+            input.addEventListener("click", function (e) { e.stopPropagation(); });
+            input.addEventListener("change", function () {
+                const v = input.value.replace(/[^0-9]/g, "");
+                onSkyChange(v ? {all: v} : {});
+            });
+            custom.appendChild(cinfo);
+            custom.appendChild(input);
+            card.appendChild(custom);
+
+            renderCustomSkies(card);
+
+            // A skybox of your own: six ids, one per face, the way the toolbox
+            // sells them. Leaving a face empty keeps that face as it is.
+            const faces = skyConfig.faces || {};
+            const six = document.createElement("div");
+            six.className = "sky-card sky-six" + (Object.keys(faces).length ? " active" : "");
+            six.dataset.name = "custom skybox six faces own";
+            const sinfo = document.createElement("div");
+            sinfo.innerHTML = '<div class="sky-name">Your own skybox</div><div class="sky-sub">Six image ids, one per face</div>';
+            six.appendChild(sinfo);
+            const grid6 = document.createElement("div");
+            grid6.className = "sky-six-grid";
+            [["ft", "Front"], ["bk", "Back"], ["lf", "Left"], ["rt", "Right"], ["up", "Up"], ["dn", "Down"]].forEach(function (f) {
+                const wrap = document.createElement("label");
+                wrap.className = "sky-face";
+                const cap = document.createElement("span");
+                cap.textContent = f[1];
+                const inp = document.createElement("input");
+                inp.placeholder = "id";
+                inp.value = faces[f[0]] || "";
+                inp.addEventListener("click", function (e) { e.stopPropagation(); });
+                inp.addEventListener("change", function () {
+                    const next = Object.assign({}, skyConfig.faces || {});
+                    const v = inp.value.replace(/[^0-9]/g, "");
+                    if (v) { next[f[0]] = v; } else { delete next[f[0]]; }
+                    onSkyChange(Object.keys(next).length ? {faces: next} : {});
+                });
+                wrap.appendChild(cap);
+                wrap.appendChild(inp);
+                grid6.appendChild(wrap);
+            });
+            six.appendChild(grid6);
+            card.appendChild(six);
+            renderSkyAdd(card);
+
+            const none = document.createElement("div");
+            none.className = "sky-card" + (!skyConfig.preset && !skyConfig.all && !skyConfig.faces ? " active" : "");
+            none.dataset.name = "off unchanged";
+            none.innerHTML = '<div><div class="sky-name">Off</div><div class="sky-sub">Leave every map\'s own sky alone</div></div>';
+            none.addEventListener("click", function () { onSkyChange({}); });
+            card.appendChild(none);
+
+            grid.appendChild(card);
+        }
+
+        function onSkyChange(conf) {
+            skyConfig = conf || {};
+            saveSkyConfig();
+            renderGrid();
+            filterWeapons();
+            const picked = SKYBOXES.filter(function (s) { return s.id === skyConfig.preset; })[0];
+            const faceCount = Object.keys(skyConfig.faces || {}).length;
+            showToast(picked ? picked.name + " sky selected - it shows on the next map load"
+                : (skyConfig.all ? "Custom sky set - it shows on the next map load"
+                : (faceCount ? faceCount + "/6 faces set - it shows on the next map load" : "Skybox left unchanged")));
+        }
+
+        function generateSkyLines() {
+            if (skyConfig.all) return ["", "[Skybox]", "-- One image on all six faces. Shows on the next map or area load.", "All=" + skyConfig.all];
+            if (skyConfig.preset) return ["", "[Skybox]", "-- Shows on the next map or area load.", "Preset=" + skyConfig.preset];
+            const faces = skyConfig.faces || {};
+            const keys = ["bk", "dn", "ft", "lf", "rt", "up"].filter(function (k) { return faces[k]; });
+            if (!keys.length) return [];
+            return ["", "[Skybox]", "-- One image id per face. Shows on the next map or area load."]
+                .concat(keys.map(function (k) { return k.toUpperCase() + "=" + faces[k]; }));
+        }
+
         let modalWeapon = null;
 
         function openSkinModal(weaponName) {
@@ -4625,6 +4971,15 @@
                 el.textContent = k + (k === 1 ? " wrap swapped" : " wraps swapped");
                 return;
             }
+            if (dashMode === "skybox") {
+                const picked = SKYBOXES.filter(function (s) { return s.id === skyConfig.preset; })[0];
+                const nFaces = Object.keys(skyConfig.faces || {}).length;
+                el.textContent = picked ? picked.name + " sky"
+                    : (skyConfig.all ? "Custom sky " + skyConfig.all
+                    : (skyConfig.name ? skyConfig.name + " sky"
+                    : (nFaces ? "Custom sky, " + nFaces + "/6 faces" : "Skybox unchanged")));
+                return;
+            }
             if (dashMode === "advanced") {
                 const k = swapCount();
                 el.textContent = k + (k === 1 ? " skin swap" : " skin swaps");
@@ -4642,12 +4997,12 @@
             const query = (input && input.value ? input.value : "").toLowerCase();
             document.querySelectorAll("#dash-grid .weapon-card").forEach(function (card) {
                 let visible = 0;
-                card.querySelectorAll(".weapon-row").forEach(function (row) {
+                card.querySelectorAll(".weapon-row, .sky-card").forEach(function (row) {
                     const match = (row.dataset.name || "").indexOf(query) !== -1;
                     row.style.display = match ? "flex" : "none";
                     if (match) visible++;
                 });
-                if (card.querySelectorAll(".weapon-row").length) {
+                if (card.querySelectorAll(".weapon-row, .sky-card").length) {
                     card.style.display = visible ? "block" : "none";
                 }
             });
@@ -4666,7 +5021,7 @@
                 lines.push("-- Skin swaps: Weapon | OwnedSkin > TargetSkin (equip OwnedSkin, it looks like TargetSkin)");
                 lines = lines.concat(swapLines);
             }
-            return lines.concat(generateWrapLines()).join("\n");
+            return lines.concat(generateWrapLines()).concat(generateSkyLines()).join("\n");
         }
 
         function applyPreset(presetType) {
@@ -4680,6 +5035,10 @@
             }
             if (dashMode === "advanced") {
                 if (presetType === "default") { advConfig = {}; saveAdvConfig(); renderGrid(); filterWeapons(); showToast("All skin swaps removed"); }
+                return;
+            }
+            if (dashMode === "skybox") {
+                if (presetType === "default") onSkyChange({});
                 return;
             }
             OFFICIAL_WEAPON_DATA.forEach(w => {

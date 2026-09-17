@@ -1,0 +1,4 @@
+{
+  "comment": "Skyboxes shared with everyone on the site. Each entry needs a name and six Roblox image asset ids, one per face: ft, bk, lf, rt, up, dn. An rbxasset:// path shipped with the Roblox client works too. Roblox only loads its own assets, so an image hosted anywhere else has to be uploaded to Roblox first. Add yours with a pull request.",
+  "skyboxes": []
+}
