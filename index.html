@@ -4105,6 +4105,7 @@
             try { skyConfig = JSON.parse(localStorage.getItem("rivals_skybox_saved") || "{}") || {}; } catch (e) { skyConfig = {}; }
             loadCustomSkies();
             loadSharedSkies();
+            try { lightConfig = JSON.parse(localStorage.getItem("rivals_lighting_saved") || "{}") || {}; } catch (e) { lightConfig = {}; }
             setDashMode(["wraps", "advanced", "skybox"].indexOf(mode) >= 0 ? mode : "skins");
         }
 
@@ -4756,6 +4757,60 @@
             card.appendChild(row);
         }
 
+        // Lighting sits with the skybox because that is what it is for: a black
+        // sky under the game's default brightness still looks like daytime.
+        // Unlike the sky it applies the moment the script runs.
+        let lightConfig = {};
+
+        function saveLightConfig() {
+            try { localStorage.setItem("rivals_lighting_saved", JSON.stringify(lightConfig)); } catch (e) {}
+        }
+
+        function onLightChange(conf) {
+            lightConfig = conf || {};
+            saveLightConfig();
+            renderGrid();
+            showToast(lightConfig.preset ? "Darker lighting on" : "Lighting left as the game has it");
+        }
+
+        function generateLightLines() {
+            if (!lightConfig.preset) return [];
+            const lines = ["", "[Lighting]", "-- Applied right away and kept across map changes.", "Preset=" + lightConfig.preset];
+            if (lightConfig.exposure !== undefined && lightConfig.exposure !== "") lines.push("Exposure=" + lightConfig.exposure);
+            return lines;
+        }
+
+        function renderLightingRow(card) {
+            const row = document.createElement("div");
+            row.className = "sky-card" + (lightConfig.preset ? " active" : "");
+            row.dataset.name = "lighting darker night exposure";
+            const info = document.createElement("div");
+            info.innerHTML = '<div class="sky-name">Darker lighting</div><div class="sky-sub">Night-style brightness and ambient - pairs with the Black sky</div>';
+            row.appendChild(info);
+            const box = document.createElement("div");
+            box.className = "sky-add";
+            const exp = document.createElement("input");
+            exp.placeholder = "exposure -1.3";
+            exp.value = lightConfig.exposure !== undefined ? lightConfig.exposure : "";
+            exp.title = "Lower is darker. Leave empty for the preset's -1.3.";
+            exp.addEventListener("click", function (e) { e.stopPropagation(); });
+            exp.addEventListener("change", function () {
+                const v = exp.value.trim();
+                onLightChange(Object.assign({}, lightConfig, {preset: "dark", exposure: v === "" ? undefined : v}));
+            });
+            const toggle = document.createElement("button");
+            toggle.className = "sky-mini";
+            toggle.textContent = lightConfig.preset ? "On" : "Off";
+            toggle.addEventListener("click", function (e) {
+                e.stopPropagation();
+                onLightChange(lightConfig.preset ? {} : {preset: "dark"});
+            });
+            box.appendChild(exp);
+            box.appendChild(toggle);
+            row.appendChild(box);
+            card.appendChild(row);
+        }
+
         function renderSkyGrid(grid) {
             const card = document.createElement("div");
             card.className = "weapon-card";
@@ -4844,6 +4899,7 @@
             six.appendChild(grid6);
             card.appendChild(six);
             renderSkyAdd(card);
+            renderLightingRow(card);
 
             const none = document.createElement("div");
             none.className = "sky-card" + (!skyConfig.preset && !skyConfig.all && !skyConfig.faces ? " active" : "");
@@ -5021,7 +5077,7 @@
                 lines.push("-- Skin swaps: Weapon | OwnedSkin > TargetSkin (equip OwnedSkin, it looks like TargetSkin)");
                 lines = lines.concat(swapLines);
             }
-            return lines.concat(generateWrapLines()).concat(generateSkyLines()).join("\n");
+            return lines.concat(generateWrapLines()).concat(generateSkyLines()).concat(generateLightLines()).join("\n");
         }
 
         function applyPreset(presetType) {
@@ -5038,7 +5094,7 @@
                 return;
             }
             if (dashMode === "skybox") {
-                if (presetType === "default") onSkyChange({});
+                if (presetType === "default") { lightConfig = {}; saveLightConfig(); onSkyChange({}); }
                 return;
             }
             OFFICIAL_WEAPON_DATA.forEach(w => {
