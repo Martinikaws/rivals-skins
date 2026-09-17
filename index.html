@@ -92,6 +92,10 @@
         .btn-ghost:hover { background: var(--card-2); border-color: #2b333f; }
         .btn-sm { padding: 6px 12px; font-size: 12.5px; }
 
+        .adv-toggle.active { border-color: #9db4d8; color: #cfe0fa; }
+        .adv-note { flex-basis: 100%; font-size: 12.5px; color: #8b9bb4; padding-top: 2px; }
+        .skin-option-remove { color: #e07b7b; }
+        .skin-option-taken { opacity: .38; }
         .util-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding-bottom: 14px; }
         .search-box { position: relative; flex: 1 1 220px; min-width: 180px; }
         .search-box input {
@@ -263,8 +267,10 @@
             <button class="btn-ghost btn-sm skins-only" onclick="applyPreset('arch')">Arch Set</button>
             <button class="btn-ghost btn-sm skins-only" onclick="applyPreset('key')">Key Set</button>
             <button class="btn-ghost btn-sm skins-only" onclick="applyPreset('pixel')">Pixel Set</button>
+            <button class="btn-ghost btn-sm adv-toggle" id="advToggle" onclick="setDashMode(dashMode === 'advanced' ? 'skins' : 'advanced')">Advanced</button>
             <button class="btn-ghost btn-sm wraps-only" onclick="applyPreset('dev')" hidden>Dev Set</button>
             <button class="btn-ghost btn-sm" onclick="applyPreset('default')">Reset</button>
+            <div class="adv-note adv-only" hidden>Equip a skin you own and it looks like another skin of the same weapon. Saved into rivals_config.lua with your other skins.</div>
         </div>
 
         <div class="dash-grid" id="dash-grid"></div>
@@ -4072,21 +4078,25 @@
                 try { currentConfig = JSON.parse(saved); } catch(e) {}
             }
             try { wrapConfig = JSON.parse(localStorage.getItem("rivals_wraps_saved") || "{}") || {}; } catch (e) { wrapConfig = {}; }
+            try { advConfig = JSON.parse(localStorage.getItem("rivals_skinswaps_saved") || "{}") || {}; } catch (e) { advConfig = {}; }
             let mode = "skins";
             try { mode = location.hash === "#wraps" ? "wraps" : (localStorage.getItem("rivals_dash_mode") || "skins"); } catch (e) {}
-            setDashMode(mode === "wraps" ? "wraps" : "skins");
+            setDashMode(mode === "wraps" || mode === "advanced" ? mode : "skins");
         }
 
         const CATEGORY_ORDER = ["Primary", "Secondary", "Melee", "Utility"];
 
         function setDashMode(mode) {
             dashMode = mode;
-            document.getElementById("switch-skins").classList.toggle("active", mode === "skins");
+            document.getElementById("switch-skins").classList.toggle("active", mode !== "wraps");
+            document.getElementById("advToggle").classList.toggle("active", mode === "advanced");
+            document.getElementById("advToggle").hidden = mode === "wraps";
+            document.querySelectorAll(".adv-only").forEach(function (b) { b.hidden = mode !== "advanced"; });
             document.getElementById("switch-wraps").classList.toggle("active", mode === "wraps");
             document.querySelectorAll(".skins-only").forEach(function (b) { b.hidden = mode !== "skins"; });
             document.querySelectorAll(".wraps-only").forEach(function (b) { b.hidden = mode !== "wraps"; });
             const input = document.getElementById("searchInput");
-            if (input) { input.value = ""; input.placeholder = mode === "wraps" ? "Search wraps..." : "Search weapons or skins..."; }
+            if (input) { input.value = ""; input.placeholder = mode === "wraps" ? "Search wraps..." : (mode === "advanced" ? "Search weapons..." : "Search weapons or skins..."); }
             const fd = document.getElementById("footDownload");
             if (fd) fd.textContent = "Download " + configFileName();
             try { localStorage.setItem("rivals_dash_mode", mode); } catch (e) {}
@@ -4119,6 +4129,7 @@
                 updateFootCount();
                 return;
             }
+            const adv = dashMode === "advanced";
 
             CATEGORY_ORDER.forEach(function (cat) {
                 const weapons = OFFICIAL_WEAPON_DATA.filter(function (w) { return w.category === cat; });
@@ -4134,7 +4145,9 @@
                 card.appendChild(label);
 
                 weapons.forEach(function (weapon) {
-                    const selected = currentConfig[weapon.name] || "Default";
+                    const swaps = advConfig[weapon.name] || {};
+                    const firstOwned = Object.keys(swaps)[0];
+                    const selected = adv ? (firstOwned ? swaps[firstOwned] : "Default") : (currentConfig[weapon.name] || "Default");
                     const visual = getSkinVisual(weapon.name, selected);
                     const safeId = weapon.name.replace(/[^a-zA-Z0-9]/g, "_");
 
@@ -4142,7 +4155,7 @@
                     row.className = "weapon-row";
                     row.id = "row-" + safeId;
                     row.dataset.name = weapon.name.toLowerCase();
-                    row.addEventListener("click", function () { openSkinModal(weapon.name); });
+                    row.addEventListener("click", function () { if (adv) openSwapModal(weapon.name); else openSkinModal(weapon.name); });
 
                     const iconWrap = document.createElement("div");
                     iconWrap.className = "weapon-icon";
@@ -4156,7 +4169,7 @@
                     const skinEl = document.createElement("div");
                     skinEl.className = "weapon-skin" + (isCustom(selected) ? " is-set" : "");
                     skinEl.id = "skin-" + safeId;
-                    skinEl.textContent = selected;
+                    skinEl.textContent = adv ? swapSummary(weapon.name) : selected;
                     info.appendChild(nameEl);
                     info.appendChild(skinEl);
 
@@ -4191,7 +4204,8 @@
 
         function wrapRarityName(i) { return WRAP_RARITY[i] ? WRAP_RARITY[i][0] : "Other"; }
         function wrapRarityColor(i) { const c = WRAP_RARITY[i] ? WRAP_RARITY[i][1] : "#8b9bb4"; return WRAP_RARITY_TEXT[c] || c; }
-        function configFileName() { return dashMode === "wraps" ? "rivals_wraps.lua" : "rivals_config.lua"; }
+        // Skins, skin swaps and wraps all save into one rivals_config.lua.
+        function configFileName() { return "rivals_config.lua"; }
 
         // Shared SVG paint for the wrap previews: shading, material effects and
         // one card gradient per rarity (black at the top, rarity color below).
@@ -4382,12 +4396,139 @@
             showToast(target ? name + " now looks like " + target : name + " is back to Default");
         }
 
-        function generateWrapConfig() {
+        function generateWrapLines() {
             const keys = Object.keys(wrapConfig).sort();
-            if (!keys.length) return "";
-            return ["-- Rivals Wrap Changer config: one line per wrap, OwnedWrap=TargetWrap",
-                    "-- Equip OwnedWrap on a weapon and it will look like TargetWrap."]
-                .concat(keys.map(function (k) { return k + "=" + wrapConfig[k]; })).join("\n");
+            if (!keys.length) return [];
+            return ["", "[Wraps]",
+                    "-- One line per wrap, OwnedWrap=TargetWrap: equip OwnedWrap on any",
+                    "-- weapon and it looks like TargetWrap."]
+                .concat(keys.map(function (k) { return k + "=" + wrapConfig[k]; }));
+        }
+
+        // ---- Advanced: owned-skin swaps ----
+        // advConfig[weapon][ownedSkin] = targetSkin. Written into rivals_config.lua
+        // as "Weapon | OwnedSkin > TargetSkin" lines, which the skin changer reads
+        // after the Weapon=Skin lines (older builds skip them).
+        let advConfig = {};
+
+        function swapSummary(weaponName) {
+            const swaps = advConfig[weaponName] || {};
+            const keys = Object.keys(swaps);
+            if (!keys.length) return "No swaps";
+            return keys.map(function (k) { return k + " \u2192 " + swaps[k]; }).join(", ");
+        }
+
+        function swapCount() {
+            let n = 0;
+            Object.keys(advConfig).forEach(function (w) { n += Object.keys(advConfig[w] || {}).length; });
+            return n;
+        }
+
+        function saveAdvConfig() {
+            Object.keys(advConfig).forEach(function (w) { if (!Object.keys(advConfig[w] || {}).length) delete advConfig[w]; });
+            try { localStorage.setItem("rivals_skinswaps_saved", JSON.stringify(advConfig)); } catch (e) {}
+        }
+
+        function skinPickerOption(weaponName, skin, active, extraClass, onPick) {
+            const v = getSkinVisual(weaponName, skin);
+            const opt = document.createElement("div");
+            opt.className = "skin-option" + (active ? " active" : "") + (extraClass ? " " + extraClass : "");
+            opt.addEventListener("click", onPick);
+            const ic = document.createElement("div");
+            ic.className = "skin-option-icon";
+            ic.appendChild(makeIcon(v, null));
+            const nm = document.createElement("div");
+            nm.className = "skin-option-name";
+            nm.textContent = skin;
+            const ra = document.createElement("div");
+            ra.className = "skin-option-rarity";
+            ra.style.color = v.color;
+            ra.textContent = v.rarity;
+            opt.appendChild(ic);
+            opt.appendChild(nm);
+            opt.appendChild(ra);
+            if (active) {
+                const ck = document.createElement("span");
+                ck.className = "skin-check";
+                ck.innerHTML = "&#10003;";
+                opt.appendChild(ck);
+            }
+            return opt;
+        }
+
+        function realSkins(weapon) {
+            return weapon.skins.filter(function (s) { return isCustom(s); });
+        }
+
+        // Step 1: the skin you own.
+        function openSwapModal(weaponName) {
+            const weapon = OFFICIAL_WEAPON_DATA.find(function (w) { return w.name === weaponName; });
+            if (!weapon) return;
+            const swaps = advConfig[weaponName] || {};
+            document.getElementById("skinModalTitle").textContent = weaponName + " \u2014 skin you own";
+            const body = document.getElementById("skinModalBody");
+            body.innerHTML = "";
+            realSkins(weapon).forEach(function (skin) {
+                const opt = skinPickerOption(weaponName, skin, !!swaps[skin], null, function () { openSwapTargetModal(weaponName, skin); });
+                if (swaps[skin]) opt.querySelector(".skin-option-rarity").textContent = "\u2192 " + swaps[skin];
+                body.appendChild(opt);
+            });
+            document.getElementById("skinModal").style.display = "flex";
+            body.scrollTop = 0;
+        }
+
+        // Step 2: the skin it should look like.
+        function openSwapTargetModal(weaponName, owned) {
+            const weapon = OFFICIAL_WEAPON_DATA.find(function (w) { return w.name === weaponName; });
+            if (!weapon) return;
+            const current = (advConfig[weaponName] || {})[owned];
+            document.getElementById("skinModalTitle").textContent = owned + " looks like...";
+            const body = document.getElementById("skinModalBody");
+            body.innerHTML = "";
+            if (current) {
+                const rm = document.createElement("div");
+                rm.className = "skin-option skin-option-remove";
+                rm.textContent = "Remove swap (" + owned + " \u2192 " + current + ")";
+                rm.addEventListener("click", function () { onSwapChange(weaponName, owned, null); });
+                body.appendChild(rm);
+            }
+            // A skin's model is moved, not copied, so it can only stand in for one
+            // owned skin: a target already taken here or by the weapon's own skin
+            // line would be skipped by the changer.
+            const swaps = advConfig[weaponName] || {};
+            const taken = {};
+            Object.keys(swaps).forEach(function (o) { if (o !== owned) { taken[swaps[o]] = o; taken[o] = o; } });
+            if (isCustom(currentConfig[weaponName])) taken[currentConfig[weaponName]] = weaponName + "'s skin";
+            realSkins(weapon).forEach(function (skin) {
+                if (skin === owned) return;
+                const by = taken[skin];
+                const opt = skinPickerOption(weaponName, skin, skin === current, by ? "skin-option-taken" : null, function () {
+                    if (by) { showToast(skin + " is already used by " + by); return; }
+                    onSwapChange(weaponName, owned, skin);
+                });
+                if (by) opt.querySelector(".skin-option-rarity").textContent = "in use";
+                body.appendChild(opt);
+            });
+            body.scrollTop = 0;
+        }
+
+        function onSwapChange(weaponName, owned, target) {
+            advConfig[weaponName] = advConfig[weaponName] || {};
+            if (target) advConfig[weaponName][owned] = target; else delete advConfig[weaponName][owned];
+            saveAdvConfig();
+            closeSkinModal();
+            renderGrid();
+            filterWeapons();
+            showToast(target ? owned + " now looks like " + target : owned + " swap removed");
+        }
+
+        function generateSwapLines() {
+            const lines = [];
+            OFFICIAL_WEAPON_DATA.forEach(function (w) {
+                const swaps = advConfig[w.name] || {};
+                Object.keys(swaps).sort().forEach(function (owned) { lines.push(w.name + " | " + owned + " > " + swaps[owned]); });
+            });
+            return lines;
         }
 
         let modalWeapon = null;
@@ -4484,6 +4625,11 @@
                 el.textContent = k + (k === 1 ? " wrap swapped" : " wraps swapped");
                 return;
             }
+            if (dashMode === "advanced") {
+                const k = swapCount();
+                el.textContent = k + (k === 1 ? " skin swap" : " skin swaps");
+                return;
+            }
             let n = 0;
             OFFICIAL_WEAPON_DATA.forEach(function (w) {
                 if (isCustom(currentConfig[w.name])) n++;
@@ -4508,7 +4654,6 @@
         }
 
         function generateLuaCode() {
-            if (dashMode === "wraps") return generateWrapConfig();
             let lines = [];
             OFFICIAL_WEAPON_DATA.forEach(w => {
                 const skin = currentConfig[w.name] || "Default";
@@ -4516,7 +4661,12 @@
                     lines.push(`${w.name}=${skin}`);
                 }
             });
-            return lines.join("\n");
+            const swapLines = generateSwapLines();
+            if (swapLines.length) {
+                lines.push("-- Skin swaps: Weapon | OwnedSkin > TargetSkin (equip OwnedSkin, it looks like TargetSkin)");
+                lines = lines.concat(swapLines);
+            }
+            return lines.concat(generateWrapLines()).join("\n");
         }
 
         function applyPreset(presetType) {
@@ -4526,6 +4676,10 @@
                 renderGrid();
                 filterWeapons();
                 showToast(presetType === "dev" ? "Applied Dev Set: Blue looks like Glass, Yellow like Dark Matter" : "All wraps back to Default");
+                return;
+            }
+            if (dashMode === "advanced") {
+                if (presetType === "default") { advConfig = {}; saveAdvConfig(); renderGrid(); filterWeapons(); showToast("All skin swaps removed"); }
                 return;
             }
             OFFICIAL_WEAPON_DATA.forEach(w => {
@@ -4552,7 +4706,7 @@
         function openPreview() {
             const code = generateLuaCode();
             document.getElementById("previewTitle").textContent = "📜 " + configFileName() + " Output";
-            document.getElementById("codeText").innerText = code || (dashMode === "wraps" ? "-- No wraps swapped (all Default)" : "-- No custom skins selected (All Default)");
+            document.getElementById("codeText").innerText = code || "-- Nothing configured yet (all Default)";
             document.getElementById("previewModal").style.display = "flex";
         }
 
