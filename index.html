@@ -159,6 +159,10 @@
         }
         .weapon-icon img { width: 100%; height: 100%; object-fit: contain; transform: scale(1.45); }
         .weapon-icon svg, .skin-option-icon svg { width: 100%; height: 100%; display: block; }
+        .cos-icon img { width: 100%; height: 100%; object-fit: contain; transform: none; }
+        .cos-tile { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; font-weight: 700; color: #cfe0fa; background: linear-gradient(150deg, #2b3550, #171d2b);
+            border: 2px solid var(--line); border-radius: 8px; }
         .wrap-search {
             position: sticky; top: 0; z-index: 1;
             width: 100%; margin-bottom: 6px; padding: 8px 12px;
@@ -262,6 +266,7 @@
 </head>
 <body>
     <script src="assets/wraps.js"></script>
+    <script src="assets/cosmetics.js"></script>
 
     <nav class="nav">
         <div class="nav-brand"><span class="nav-logo"></span>Skin Changer</div>
@@ -272,6 +277,8 @@
             <div class="dash-switch">
                 <button class="dash-switch-btn active" id="switch-skins" onclick="setDashMode('skins')">Weapon Skins</button>
                 <button class="dash-switch-btn" id="switch-wraps" onclick="setDashMode('wraps')">Wraps</button>
+                <button class="dash-switch-btn" id="switch-finishers" onclick="setDashMode('finishers')">Finishers</button>
+                <button class="dash-switch-btn" id="switch-charms" onclick="setDashMode('charms')">Charms</button>
                 <button class="dash-switch-btn" id="switch-skybox" onclick="setDashMode('skybox')">Skybox</button>
             </div>
             <div class="dash-actions">
@@ -4106,7 +4113,8 @@
             loadCustomSkies();
             loadSharedSkies();
             try { lightConfig = JSON.parse(localStorage.getItem("rivals_lighting_saved") || "{}") || {}; } catch (e) { lightConfig = {}; }
-            setDashMode(["wraps", "advanced", "skybox"].indexOf(mode) >= 0 ? mode : "skins");
+            loadCosmeticConfigs();
+            setDashMode(["wraps", "advanced", "skybox", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
         }
 
         const CATEGORY_ORDER = ["Primary", "Secondary", "Melee", "Utility"];
@@ -4116,13 +4124,15 @@
             document.getElementById("switch-skins").classList.toggle("active", mode === "skins" || mode === "advanced");
             document.getElementById("advToggle").classList.toggle("active", mode === "advanced");
             document.getElementById("switch-skybox").classList.toggle("active", mode === "skybox");
+            document.getElementById("switch-finishers").classList.toggle("active", mode === "finishers");
+            document.getElementById("switch-charms").classList.toggle("active", mode === "charms");
             document.getElementById("advToggle").hidden = mode !== "skins" && mode !== "advanced";
             document.querySelectorAll(".adv-only").forEach(function (b) { b.hidden = mode !== "advanced"; });
             document.getElementById("switch-wraps").classList.toggle("active", mode === "wraps");
             document.querySelectorAll(".skins-only").forEach(function (b) { b.hidden = mode !== "skins"; });
             document.querySelectorAll(".wraps-only").forEach(function (b) { b.hidden = mode !== "wraps"; });
             const input = document.getElementById("searchInput");
-            if (input) { input.value = ""; input.placeholder = mode === "wraps" ? "Search wraps..." : (mode === "advanced" ? "Search weapons..." : "Search weapons or skins..."); }
+            if (input) { input.value = ""; input.placeholder = COS_KINDS[mode] ? "Search " + COS_KINDS[mode].plural + "..." : (mode === "wraps" ? "Search wraps..." : (mode === "advanced" ? "Search weapons..." : "Search weapons or skins...")); }
             const fd = document.getElementById("footDownload");
             if (fd) fd.textContent = "Download " + configFileName();
             try { localStorage.setItem("rivals_dash_mode", mode); } catch (e) {}
@@ -4157,6 +4167,11 @@
             }
             if (dashMode === "skybox") {
                 renderSkyGrid(grid);
+                updateFootCount();
+                return;
+            }
+            if (COS_KINDS[dashMode]) {
+                renderCosmeticGrid(dashMode, grid);
                 updateFootCount();
                 return;
             }
@@ -4933,6 +4948,254 @@
                 .concat(keys.map(function (k) { return k.toUpperCase() + "=" + faces[k]; }));
         }
 
+        // ---- Finishers and Charms tabs ----
+        // Rows are the ones you own; the picker sets what each should look like.
+        // Saved as [Finishers] / [Charms] sections of rivals_config.lua, which
+        // the skin changer reads like everything else.
+        const COS_RARITY_ORDER = ["Common", "Rare", "Legendary", "Mythical", "Unique", "Genuine", "Unobtainable", "Unreleased"];
+        const COS_KINDS = {
+            finishers: {list: window.FINISHERS || [], label: "finisher", plural: "finishers", section: "Finishers",
+                        dir: "assets/images/finishers/", store: "rivals_finishers_saved", config: {}},
+            charms: {list: window.CHARMS || [], label: "charm", plural: "charms", section: "Charms",
+                     dir: "assets/images/charms/", store: "rivals_charms_saved", config: {}}
+        };
+        Object.keys(COS_KINDS).forEach(function (k) {
+            const kind = COS_KINDS[k];
+            kind.byName = {};
+            kind.list.forEach(function (item) { kind.byName[item[0]] = item; });
+        });
+
+        // Season rank charms hold every rank; swapped onto another charm the game
+        // would show them all, so one is picked and saved as "Season 3 Archnemesis".
+        const COS_SEASON_RANKS = ["Archnemesis", "Nemesis", "Onyx 3", "Onyx 2", "Onyx 1", "Diamond 3", "Diamond 2", "Diamond 1",
+            "Platinum 3", "Platinum 2", "Platinum 1", "Gold 3", "Gold 2", "Gold 1", "Silver 3", "Silver 2", "Silver 1",
+            "Bronze 3", "Bronze 2", "Bronze 1", "Unranked"];
+        function isSeasonCharm(name) { return /^Season \d+$/.test(name || ""); }
+        function cosBaseName(target) {
+            const m = /^(Season \d+) (.+)$/.exec(target || "");
+            return m && COS_SEASON_RANKS.indexOf(m[2]) >= 0 ? m[1] : target;
+        }
+
+        function cosRarityColor(rarity) {
+            // Not a game rarity: shipped in the files, not released yet.
+            if (rarity === "Unreleased") return "#d6a2ff";
+            for (let i = 0; i < WRAP_RARITY.length; i++) {
+                if (WRAP_RARITY[i][0] === rarity) return wrapRarityColor(i);
+            }
+            return "#8b9bb4";
+        }
+
+        function loadCosmeticConfigs() {
+            Object.keys(COS_KINDS).forEach(function (k) {
+                try { COS_KINDS[k].config = JSON.parse(localStorage.getItem(COS_KINDS[k].store) || "{}") || {}; }
+                catch (e) { COS_KINDS[k].config = {}; }
+            });
+        }
+
+        function saveCosmeticConfig(k) {
+            try { localStorage.setItem(COS_KINDS[k].store, JSON.stringify(COS_KINDS[k].config)); } catch (e) {}
+        }
+
+        // The item's picture, or a lettered tile in its rarity colour when there
+        // is none (35 charms have no picture anywhere yet).
+        function cosIcon(k, item) {
+            const wrap = document.createElement("div");
+            wrap.className = "cos-icon";
+            wrap.style.width = "100%";
+            wrap.style.height = "100%";
+            function tile() {
+                const t = document.createElement("div");
+                t.className = "cos-tile";
+                t.textContent = (item ? item[0] : "?").replace(/[^A-Za-z0-9]/g, "").slice(0, 1).toUpperCase() || "?";
+                if (item) { t.style.borderColor = cosRarityColor(item[1]); t.style.color = cosRarityColor(item[1]); }
+                return t;
+            }
+            if (item && item[2]) {
+                const img = document.createElement("img");
+                img.alt = "";
+                img.loading = "lazy";
+                img.src = COS_KINDS[k].dir + item[2];
+                img.onerror = function () { if (this.parentNode) this.parentNode.replaceChild(tile(), this); };
+                wrap.appendChild(img);
+            } else {
+                wrap.appendChild(tile());
+            }
+            return wrap;
+        }
+
+        function renderCosmeticGrid(k, grid) {
+            const kind = COS_KINDS[k];
+            COS_RARITY_ORDER.forEach(function (rarity) {
+                const items = kind.list.filter(function (x) { return x[1] === rarity; })
+                    .sort(function (a, b) { return a[0].localeCompare(b[0], undefined, {numeric: true}); });
+                if (!items.length) return;
+                const card = document.createElement("div");
+                card.className = "weapon-card";
+                const label = document.createElement("div");
+                label.className = "card-label";
+                label.textContent = rarity + " " + kind.plural;
+                label.style.color = cosRarityColor(rarity);
+                card.appendChild(label);
+                items.forEach(function (item) {
+                    const row = document.createElement("div");
+                    row.className = "weapon-row";
+                    row.addEventListener("click", function () { openCosmeticModal(k, item[0]); });
+                    const iconWrap = document.createElement("div");
+                    iconWrap.className = "weapon-icon";
+                    const info = document.createElement("div");
+                    info.className = "weapon-info";
+                    const nameEl = document.createElement("div");
+                    nameEl.className = "weapon-name";
+                    nameEl.textContent = item[0];
+                    const sub = document.createElement("div");
+                    sub.className = "weapon-skin";
+                    info.appendChild(nameEl);
+                    info.appendChild(sub);
+                    const chev = document.createElement("div");
+                    chev.className = "weapon-chevron";
+                    chev.innerHTML = "&#8250;";
+                    row.appendChild(iconWrap);
+                    row.appendChild(info);
+                    row.appendChild(chev);
+                    card.appendChild(row);
+                    paintCosmeticRow(k, row, item[0]);
+                });
+                grid.appendChild(card);
+            });
+        }
+
+        function paintCosmeticRow(k, row, name) {
+            const kind = COS_KINDS[k];
+            const target = kind.config[name];
+            const iconWrap = row.querySelector(".weapon-icon");
+            iconWrap.innerHTML = "";
+            iconWrap.appendChild(cosIcon(k, kind.byName[cosBaseName(target)] || kind.byName[name]));
+            const sub = row.querySelector(".weapon-skin");
+            sub.textContent = target ? "Looks like " + target : "Default";
+            sub.classList.toggle("is-set", !!target);
+            row.dataset.name = (name + " " + (target || "")).toLowerCase();
+            row.dataset.cos = name;
+        }
+
+        function openCosmeticModal(k, name) {
+            const kind = COS_KINDS[k];
+            modalWeapon = name;
+            document.getElementById("skinModalTitle").textContent = name + " looks like...";
+            const body = document.getElementById("skinModalBody");
+            body.innerHTML = "";
+            const search = document.createElement("input");
+            search.type = "text";
+            search.className = "wrap-search";
+            search.placeholder = "Search " + kind.plural + "...";
+            search.setAttribute("aria-label", "Search " + kind.plural);
+            body.appendChild(search);
+            const current = kind.config[name] || null;
+            // A target already standing in for another owned one would be swapped
+            // back by the changer; it can only be used once.
+            const taken = {};
+            Object.keys(kind.config).forEach(function (o) { if (o !== name) { taken[cosBaseName(kind.config[o])] = o; taken[o] = o; } });
+            const options = [];
+            function addOption(label, subText, item, target) {
+                const active = target === cosBaseName(current);
+                const by = target && taken[target];
+                const opt = document.createElement("div");
+                opt.className = "skin-option" + (active ? " active" : "") + (by ? " skin-option-taken" : "");
+                // Season charms are found by their rank names too ("nemesis", "onyx").
+                opt.dataset.name = (label + (k === "charms" && isSeasonCharm(target) ? " ranked " + COS_SEASON_RANKS.join(" ") : "")).toLowerCase();
+                opt.addEventListener("click", function () {
+                    if (by) { showToast(target + " is already used by " + by); return; }
+                    if (k === "charms" && isSeasonCharm(target)) { openRankModal(k, name, target); return; }
+                    onCosmeticChange(k, name, target);
+                    closeSkinModal();
+                });
+                const ic = document.createElement("div");
+                ic.className = "skin-option-icon";
+                ic.appendChild(cosIcon(k, item));
+                const nm = document.createElement("div");
+                nm.className = "skin-option-name";
+                nm.textContent = label;
+                if (subText) {
+                    const st = document.createElement("span");
+                    st.className = "skin-option-sub";
+                    st.textContent = subText;
+                    nm.appendChild(st);
+                }
+                opt.appendChild(ic);
+                opt.appendChild(nm);
+                if (item && target) {
+                    const ra = document.createElement("div");
+                    ra.className = "skin-option-rarity";
+                    ra.style.color = cosRarityColor(item[1]);
+                    ra.textContent = by ? "in use" : item[1];
+                    opt.appendChild(ra);
+                }
+                if (active) {
+                    const ck = document.createElement("span");
+                    ck.className = "skin-check";
+                    ck.innerHTML = "&#10003;";
+                    opt.appendChild(ck);
+                }
+                body.appendChild(opt);
+                options.push(opt);
+            }
+            addOption("Default", "Keep " + name + "'s own look", kind.byName[name], null);
+            kind.list.slice().sort(function (a, b) {
+                return COS_RARITY_ORDER.indexOf(b[1]) - COS_RARITY_ORDER.indexOf(a[1]) || a[0].localeCompare(b[0], undefined, {numeric: true});
+            }).forEach(function (item) {
+                if (item[0] !== name) addOption(item[0], k === "charms" && isSeasonCharm(item[0]) ? "Ranked - pick a rank next" : "", item, item[0]);
+            });
+            search.addEventListener("input", function () {
+                const q = search.value.trim().toLowerCase();
+                options.forEach(function (o) { o.style.display = !q || o.dataset.name.indexOf(q) !== -1 ? "flex" : "none"; });
+            });
+            document.getElementById("skinModal").style.display = "flex";
+            search.focus();
+        }
+
+        function openRankModal(k, name, season) {
+            const kind = COS_KINDS[k];
+            const current = kind.config[name] || "";
+            document.getElementById("skinModalTitle").textContent = name + " looks like " + season + "... which rank?";
+            const body = document.getElementById("skinModalBody");
+            body.innerHTML = "";
+            COS_SEASON_RANKS.forEach(function (rank) {
+                const target = season + " " + rank;
+                const opt = document.createElement("div");
+                opt.className = "skin-option" + (current === target ? " active" : "");
+                opt.addEventListener("click", function () { onCosmeticChange(k, name, target); closeSkinModal(); });
+                const ic = document.createElement("div");
+                ic.className = "skin-option-icon";
+                ic.appendChild(cosIcon(k, kind.byName[season]));
+                const nm = document.createElement("div");
+                nm.className = "skin-option-name";
+                nm.textContent = rank;
+                opt.appendChild(ic);
+                opt.appendChild(nm);
+                body.appendChild(opt);
+            });
+            body.scrollTop = 0;
+        }
+
+        function onCosmeticChange(k, name, target) {
+            const kind = COS_KINDS[k];
+            if (target) kind.config[name] = target; else delete kind.config[name];
+            saveCosmeticConfig(k);
+            document.querySelectorAll("#dash-grid .weapon-row").forEach(function (row) {
+                if (row.dataset.cos === name) paintCosmeticRow(k, row, name);
+            });
+            updateFootCount();
+            showToast(target ? name + " now looks like " + target : name + " is back to Default");
+        }
+
+        function generateCosmeticLines(k) {
+            const kind = COS_KINDS[k];
+            const keys = Object.keys(kind.config).sort();
+            if (!keys.length) return [];
+            return ["", "[" + kind.section + "]",
+                    "-- Owned" + kind.section.slice(0, -1) + "=Target" + kind.section.slice(0, -1)]
+                .concat(keys.map(function (x) { return x + "=" + kind.config[x]; }));
+        }
+
         let modalWeapon = null;
 
         function openSkinModal(weaponName) {
@@ -5027,6 +5290,12 @@
                 el.textContent = k + (k === 1 ? " wrap swapped" : " wraps swapped");
                 return;
             }
+            if (COS_KINDS[dashMode]) {
+                const kind = COS_KINDS[dashMode];
+                const k = Object.keys(kind.config).length;
+                el.textContent = k + " " + (k === 1 ? kind.label : kind.plural) + " swapped";
+                return;
+            }
             if (dashMode === "skybox") {
                 const picked = SKYBOXES.filter(function (s) { return s.id === skyConfig.preset; })[0];
                 const nFaces = Object.keys(skyConfig.faces || {}).length;
@@ -5077,7 +5346,8 @@
                 lines.push("-- Skin swaps: Weapon | OwnedSkin > TargetSkin (equip OwnedSkin, it looks like TargetSkin)");
                 lines = lines.concat(swapLines);
             }
-            return lines.concat(generateWrapLines()).concat(generateSkyLines()).concat(generateLightLines()).join("\n");
+            return lines.concat(generateWrapLines()).concat(generateSkyLines()).concat(generateLightLines())
+                .concat(generateCosmeticLines("finishers")).concat(generateCosmeticLines("charms")).join("\n");
         }
 
         function applyPreset(presetType) {
@@ -5095,6 +5365,16 @@
             }
             if (dashMode === "skybox") {
                 if (presetType === "default") { lightConfig = {}; saveLightConfig(); onSkyChange({}); }
+                return;
+            }
+            if (COS_KINDS[dashMode]) {
+                if (presetType === "default") {
+                    COS_KINDS[dashMode].config = {};
+                    saveCosmeticConfig(dashMode);
+                    renderGrid();
+                    filterWeapons();
+                    showToast("All " + COS_KINDS[dashMode].plural + " back to Default");
+                }
                 return;
             }
             OFFICIAL_WEAPON_DATA.forEach(w => {
