@@ -5125,7 +5125,7 @@
 
         function renderLightingRow(card) {
             const row = document.createElement("div");
-            row.className = "sky-card" + (lightConfig.preset ? " active" : "");
+            row.className = "sky-card" + (lightConfig.preset === "dark" ? " active" : "");
             row.dataset.name = "lighting darker night exposure";
             const info = document.createElement("div");
             info.innerHTML = '<div class="sky-name">Darker lighting</div><div class="sky-sub">Night-style brightness and ambient - pairs with the Black sky</div>';
@@ -5143,15 +5143,34 @@
             });
             const toggle = document.createElement("button");
             toggle.className = "sky-mini";
-            toggle.textContent = lightConfig.preset ? "On" : "Off";
+            toggle.textContent = lightConfig.preset === "dark" ? "On" : "Off";
             toggle.addEventListener("click", function (e) {
                 e.stopPropagation();
-                onLightChange(lightConfig.preset ? {} : {preset: "dark"});
+                onLightChange(lightConfig.preset === "dark" ? {} : {preset: "dark"});
             });
             box.appendChild(exp);
             box.appendChild(toggle);
             row.appendChild(box);
             card.appendChild(row);
+
+            // Lighting made for each shared sky, from that sky's own colours.
+            const match = document.createElement("div");
+            match.className = "sky-card" + (lightConfig.preset === "match" ? " active" : "");
+            match.dataset.name = "lighting match sky colours";
+            const minfo = document.createElement("div");
+            minfo.innerHTML = '<div class="sky-name">Lighting that matches the sky</div><div class="sky-sub">Tints and dims the map to fit whichever sky you picked</div>';
+            match.appendChild(minfo);
+            const mbox = document.createElement("div");
+            mbox.className = "sky-add";
+            const mtoggle = document.createElement("button");
+            mtoggle.className = "sky-mini";
+            mtoggle.textContent = lightConfig.preset === "match" ? "On" : "Off";
+            mbox.appendChild(mtoggle);
+            match.appendChild(mbox);
+            match.addEventListener("click", function () {
+                onLightChange(lightConfig.preset === "match" ? {} : {preset: "match"});
+            });
+            card.appendChild(match);
         }
 
         function renderSkyGrid(grid) {
@@ -5236,6 +5255,10 @@
         function generateSkyLines() {
             if (skyConfig.all) return ["", "[Skybox]", "-- One image on all six faces. Shows on the next map or area load.", "All=" + skyConfig.all];
             if (skyConfig.preset) return ["", "[Skybox]", "-- Shows on the next map or area load.", "Preset=" + skyConfig.preset];
+            // Shared skies are built into the changer by name, which also lets
+            // "match" lighting find the lighting made for them.
+            const shared = sharedSkies.filter(function (s) { return s.name === skyConfig.name && sameFaces(s.faces, skyConfig.faces); })[0];
+            if (shared) return ["", "[Skybox]", "-- Shows on the next map or area load.", "Preset=" + shared.name.toLowerCase()];
             const faces = skyConfig.faces || {};
             const keys = ["bk", "dn", "ft", "lf", "rt", "up"].filter(function (k) { return faces[k]; });
             if (!keys.length) return [];

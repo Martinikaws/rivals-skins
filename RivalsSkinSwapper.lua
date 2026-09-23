@@ -2717,7 +2717,47 @@ local LIGHTING_FIELDS = {
     fogcolor = {off = 0xe4, key = "FogColor", color = true}
 }
 local LIGHTING_PRESETS = {
-    ["dark"] = {brightness = 0.35, exposure = -1.3, diffuse = 0.15, specular = 0.2, ambient = 0.02, outdoor = 0.03, fogcolor = 0.02}
+    ["dark"] = {brightness = 0.35, exposure = -1.3, diffuse = 0.15, specular = 0.2, ambient = 0.02, outdoor = 0.03, fogcolor = 0.02},
+    -- The game's own skies, tuned by hand to each sky's colours.
+    ["blue"] = {brightness = 2.2, exposure = 0.1, diffuse = 1, specular = 1, ambient = "#4a4f58", outdoor = "#8a93a3", fogcolor = "#bfd2e8"},
+    ["classic"] = {brightness = 2, exposure = 0, diffuse = 1, specular = 1, ambient = "#4c5058", outdoor = "#8c96a8", fogcolor = "#c0d0e8"},
+    ["space"] = {brightness = 0.6, exposure = -0.5, diffuse = 1, specular = 1, ambient = "#1c1630", outdoor = "#3a2f5c", fogcolor = "#0c0918"},
+    ["graveyard"] = {brightness = 0.8, exposure = -0.4, diffuse = 1, specular = 1, ambient = "#26302a", outdoor = "#46584c", fogcolor = "#3b4a40"},
+    ["sudden death"] = {brightness = 1.2, exposure = -0.2, diffuse = 1, specular = 1, ambient = "#3a1c1c", outdoor = "#6e3434", fogcolor = "#7a2e2a"},
+    ["station"] = {brightness = 1.8, exposure = 0, diffuse = 1, specular = 1, ambient = "#4a3a36", outdoor = "#8a6e66", fogcolor = "#d19a86"},
+    ["westown"] = {brightness = 2.4, exposure = 0.15, diffuse = 1, specular = 1, ambient = "#554536", outdoor = "#9c8466", fogcolor = "#e0c29a"},
+    ["black"] = {brightness = 0.35, exposure = -1.3, diffuse = 0.15, specular = 0.2, ambient = 0.02, outdoor = 0.03, fogcolor = 0.02},
+    ["gray"] = {brightness = 1.6, exposure = -0.05, diffuse = 1, specular = 1, ambient = "#4a4a4a", outdoor = "#808080", fogcolor = "#9a9a9a"},
+    -- One per uploaded sky, from its colours (tools/skies/lighting_from_skies.py).
+    -- "Preset=match" picks the one named like the current skybox.
+    ["cloudy 01"] = {brightness = 1.85, exposure = 0.05, diffuse = 1, specular = 1, ambient = "#443b39", outdoor = "#767278", fogcolor = "#aa8782"},
+    ["cloudy 02"] = {brightness = 2.73, exposure = 0.3, diffuse = 1, specular = 1, ambient = "#565149", outdoor = "#908c83", fogcolor = "#c9b89b"},
+    ["cloudy 03"] = {brightness = 2.28, exposure = 0.27, diffuse = 1, specular = 1, ambient = "#4f4745", outdoor = "#908680", fogcolor = "#ac938b"},
+    ["cloudy 04"] = {brightness = 2.52, exposure = 0.3, diffuse = 1, specular = 1, ambient = "#4b5153", outdoor = "#7f8ea4", fogcolor = "#d7f0fd"},
+    ["cloudy 05"] = {brightness = 2.41, exposure = 0.3, diffuse = 1, specular = 1, ambient = "#484e51", outdoor = "#7d8ea7", fogcolor = "#cde8fa"},
+    ["cloudy 06"] = {brightness = 1.95, exposure = 0.1, diffuse = 1, specular = 1, ambient = "#3b4045", outdoor = "#67799d", fogcolor = "#c7e4fb"},
+    ["cloudy 07"] = {brightness = 2.12, exposure = 0.19, diffuse = 1, specular = 1, ambient = "#48434a", outdoor = "#847d91", fogcolor = "#cdb8d5"},
+    ["cloudy 08"] = {brightness = 2.29, exposure = 0.27, diffuse = 1, specular = 1, ambient = "#494948", outdoor = "#838992", fogcolor = "#c7c8c3"},
+    ["cloudy 09"] = {brightness = 2.01, exposure = 0.13, diffuse = 1, specular = 1, ambient = "#48412c", outdoor = "#7d7b76", fogcolor = "#b0994b"},
+    ["cloudy 10"] = {brightness = 1.8, exposure = 0.03, diffuse = 1, specular = 1, ambient = "#3a3c3b", outdoor = "#6c7273", fogcolor = "#6c736f"},
+    ["cloudy 11"] = {brightness = 1.21, exposure = -0.27, diffuse = 1, specular = 1, ambient = "#2e2842", outdoor = "#595073", fogcolor = "#5b4a97"},
+    ["cloudy 12"] = {brightness = 1.05, exposure = -0.35, diffuse = 1, specular = 1, ambient = "#28262a", outdoor = "#4e4b5f", fogcolor = "#655b6c"},
+    ["cloudy 13"] = {brightness = 1.83, exposure = 0.04, diffuse = 1, specular = 1, ambient = "#423b36", outdoor = "#7d7067", fogcolor = "#c2a692"},
+    ["cloudy 14"] = {brightness = 2.01, exposure = 0.13, diffuse = 1, specular = 1, ambient = "#374539", outdoor = "#678271", fogcolor = "#8ccd96"},
+    ["cloudy 15"] = {brightness = 0.91, exposure = -0.42, diffuse = 1, specular = 1, ambient = "#232229", outdoor = "#4c4544", fogcolor = "#3b374b"},
+    ["cloudy 16"] = {brightness = 2.02, exposure = 0.14, diffuse = 1, specular = 1, ambient = "#41414d", outdoor = "#787a94", fogcolor = "#a9aadc"},
+    ["cloudy 17"] = {brightness = 1.54, exposure = -0.1, diffuse = 1, specular = 1, ambient = "#433031", outdoor = "#72606c", fogcolor = "#ab696a"},
+    ["cloudy 18"] = {brightness = 1.54, exposure = -0.1, diffuse = 1, specular = 1, ambient = "#353435", outdoor = "#60656f", fogcolor = "#928f93"},
+    ["cloudy 19"] = {brightness = 1.55, exposure = -0.1, diffuse = 1, specular = 1, ambient = "#4a2f2d", outdoor = "#8b5b56", fogcolor = "#ac5753"},
+    ["cloudy 20"] = {brightness = 2.44, exposure = 0.3, diffuse = 1, specular = 1, ambient = "#4c4d55", outdoor = "#8b8c97", fogcolor = "#9597af"},
+    ["cloudy 21"] = {brightness = 1.65, exposure = -0.05, diffuse = 1, specular = 1, ambient = "#4f3221", outdoor = "#856540", fogcolor = "#ab5928"},
+    ["cloudy 22"] = {brightness = 1.23, exposure = -0.26, diffuse = 1, specular = 1, ambient = "#41271e", outdoor = "#744f3f", fogcolor = "#b05335"},
+    ["cloudy 23"] = {brightness = 2.0, exposure = 0.13, diffuse = 1, specular = 1, ambient = "#493f41", outdoor = "#8f747d", fogcolor = "#c39aa4"},
+    ["cloudy 24"] = {brightness = 2.3, exposure = 0.28, diffuse = 1, specular = 1, ambient = "#4c4947", outdoor = "#918787", fogcolor = "#9e938e"},
+    ["cloudy 25"] = {brightness = 1.74, exposure = -0.0, diffuse = 1, specular = 1, ambient = "#3b393f", outdoor = "#706c7b", fogcolor = "#9791a6"},
+    ["galaxy"] = {brightness = 0.5, exposure = -0.62, diffuse = 1, specular = 1, ambient = "#1b0f5b", outdoor = "#432493", fogcolor = "#07031f"},
+    ["blue nebula"] = {brightness = 0.52, exposure = -0.61, diffuse = 1, specular = 1, ambient = "#101923", outdoor = "#23364b", fogcolor = "#060c12"},
+    ["gold nebula"] = {brightness = 0.63, exposure = -0.56, diffuse = 1, specular = 1, ambient = "#211a13", outdoor = "#463728", fogcolor = "#130d07"},
 }
 local COLOR3_FLOATS = 16
 
@@ -2732,7 +2772,13 @@ end
 
 local function applyLighting(conf, cache)
     local values = {}
-    local preset = conf.preset and LIGHTING_PRESETS[tostring(conf.preset):lower()]
+    local name = conf.preset and tostring(conf.preset):lower()
+    if name == "match" then
+        local sky = configSkybox.preset or configSkybox.skybox or configSkybox.name
+        name = sky and tostring(sky):lower()
+        if not (name and LIGHTING_PRESETS[name]) then return 0, "no lighting preset matches this skybox - left as it is" end
+    end
+    local preset = name and LIGHTING_PRESETS[name]
     if conf.preset and not preset then return 0, "unknown lighting preset '" .. tostring(conf.preset) .. "'" end
     for k, v in pairs(preset or {}) do values[k] = v end
     for k in pairs(LIGHTING_FIELDS) do
