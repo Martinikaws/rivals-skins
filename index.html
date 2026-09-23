@@ -4915,6 +4915,7 @@
             {id: "station", name: "Station", sub: "Station and Big Station", face: "2108482231"},
             {id: "westown", name: "Westown", sub: "The Westown sky", face: "12261809766"},
             {id: "black", name: "Black", sub: "Museum at night - a flat black sky", face: "91612392386438"},
+            {id: "gray", name: "Gray", sub: "A flat gray sky on every map, shows straight away (Roblox FFlag)", face: "gray"},
             {id: "classic", name: "Classic Roblox", sub: "The old built-in sky, shipped with the client", face: "classic"}
         ];
         let skyConfig = {};
@@ -5001,8 +5002,10 @@
             const img = document.createElement("img");
             img.className = "sky-thumb";
             img.alt = "";
-            img.src = skyThumbCdn(faceId);
+            img.src = skyThumb(faceId);
             img.onerror = function () {
+                const cdn = skyThumbCdn(faceId);
+                if (this.src.indexOf(cdn) < 0) { this.src = cdn; return; }
                 const tile = document.createElement("div");
                 tile.className = "sky-thumb-fallback";
                 tile.textContent = (fallbackText || "?").slice(0, 1).toUpperCase();
@@ -5020,7 +5023,7 @@
                 const info = document.createElement("div");
                 info.innerHTML = '<div class="sky-name"></div><div class="sky-sub"></div>';
                 info.querySelector(".sky-name").textContent = sky.name;
-                info.querySelector(".sky-sub").textContent = sky.by ? "Shared - by " + sky.by : "Shared";
+                info.querySelector(".sky-sub").textContent = "Shared by opengameart.org (All credits go to their respective owners)";
                 row.appendChild(info);
                 row.addEventListener("click", function () { onSkyChange({faces: sky.faces, name: sky.name}); });
                 card.appendChild(row);
@@ -5206,39 +5209,6 @@
 
             renderCustomSkies(card);
 
-            // A skybox of your own: six ids, one per face, the way the toolbox
-            // sells them. Leaving a face empty keeps that face as it is.
-            const faces = skyConfig.faces || {};
-            const six = document.createElement("div");
-            six.className = "sky-card sky-six" + (Object.keys(faces).length ? " active" : "");
-            six.dataset.name = "custom skybox six faces own";
-            const sinfo = document.createElement("div");
-            sinfo.innerHTML = '<div class="sky-name">Your own skybox</div><div class="sky-sub">Six image ids, one per face</div>';
-            six.appendChild(sinfo);
-            const grid6 = document.createElement("div");
-            grid6.className = "sky-six-grid";
-            [["ft", "Front"], ["bk", "Back"], ["lf", "Left"], ["rt", "Right"], ["up", "Up"], ["dn", "Down"]].forEach(function (f) {
-                const wrap = document.createElement("label");
-                wrap.className = "sky-face";
-                const cap = document.createElement("span");
-                cap.textContent = f[1];
-                const inp = document.createElement("input");
-                inp.placeholder = "id";
-                inp.value = faces[f[0]] || "";
-                inp.addEventListener("click", function (e) { e.stopPropagation(); });
-                inp.addEventListener("change", function () {
-                    const next = Object.assign({}, skyConfig.faces || {});
-                    const v = inp.value.replace(/[^0-9]/g, "");
-                    if (v) { next[f[0]] = v; } else { delete next[f[0]]; }
-                    onSkyChange(Object.keys(next).length ? {faces: next} : {});
-                });
-                wrap.appendChild(cap);
-                wrap.appendChild(inp);
-                grid6.appendChild(wrap);
-            });
-            six.appendChild(grid6);
-            card.appendChild(six);
-            renderSkyAdd(card);
             renderLightingRow(card);
 
             const none = document.createElement("div");
