@@ -1077,6 +1077,7 @@ local skinDataPairs = {}
 local configWrapPairs = {}
 
 local configSkybox = {}
+local configSounds = {}
 
 local configLighting = {}
 
@@ -2086,7 +2087,8 @@ local function applySkinSwapper()
 
             section = h:find("wrap") and "wraps" or (h:find("sky") and "skybox"
                 or (h:find("light") and "lighting" or (h:find("finisher") and "finishers"
-                or (h:find("charm") and "charms" or (h:find("skin") and "skins" or "other")))))
+                or (h:find("charm") and "charms" or (h:find("sound") and "sounds"
+                or (h:find("skin") and "skins" or "other"))))))
         elseif section == "other" then
 
         elseif section == "finishers" or section == "charms" then
@@ -2101,6 +2103,9 @@ local function applySkinSwapper()
         elseif section == "skybox" then
             local key, value = parseConfigLine(rawLine)
             if key and value then configSkybox[key:lower()] = value end
+        elseif section == "sounds" then
+            local key, value = parseConfigLine(rawLine)
+            if key and value then configSounds[key:lower()] = value end
         elseif section == "lighting" then
             local key, value = parseConfigLine(rawLine)
             if key and value then configLighting[key:lower()] = value end
@@ -2705,6 +2710,107 @@ local function applySkybox(conf)
     return patched, (skipped > 0) and (skipped .. " sky templates were left alone (id too long for the game's buffer)") or nil
 end
 
+-- Hit, headshot and kill sounds
+-- ClientViewModel.PlayHitmarkerSound hands plain string constants to
+-- CreateSound: "...13110130082" on a body hit, "...16537449730" layered with
+-- "...16537337310" on a headshot. Kill sounds come from
+-- SoundLibrary.EliminationSounds. Luau interns strings, so each id is a
+-- single object, and SoundLibrary lists all of them (AlwaysPreload,
+-- EliminationSounds) - that is how they are found. Rewriting an object's
+-- text changes what the next CreateSound plays. Each sits in a 56-byte
+-- block: text at +24, length at +20, room for 31 characters.
+local SOUND_TARGETS = {
+    ["rbxassetid://13110130082"] = "hit",
+    ["rbxassetid://16537449730"] = "critical",
+    ["rbxassetid://16537337310"] = "criticallayer",
+    ["rbxassetid://16530229616"] = "kill",
+    ["rbxassetid://16530229541"] = "kill",
+    ["rbxassetid://16530229695"] = "kill",
+}
+local SOUND_TEXT_MAX, SOUND_LEN, TAG_STRING = 31, 20, 6
+
+-- nil = keep the game's sound, "" = silence, false = not usable.
+local function soundText(v)
+    v = tostring(v):match("^%s*(.-)%s*$")
+    local low = v:lower()
+    if low == "" or low == "default" then return nil end
+    if low == "none" or low == "mute" or low == "off" then return "" end
+    local id = skyboxAssetId(v)
+    if id and #id <= SOUND_TEXT_MAX then return id end
+    return false
+end
+
+local function writeLuaString(ts, text)
+    if #text > SOUND_TEXT_MAX then return false end
+    for i = 1, #text do mwr("byte", ts + STRING_DATA + i - 1, string.byte(text, i)) end
+    mwr("byte", ts + STRING_DATA + #text, 0)
+    mwr("int", ts + SOUND_LEN, #text)
+    return true
+end
+
+local function collectSoundStrings(out, tbl, depth)
+    local size, arr = rint(tbl + 8), rd(tbl + ROUTE.array)
+    if not size or not arr or size < 1 or size > 256 or arr < 0x10000 then return end
+    for i = 0, size - 1 do
+        local v = arr + i * 16
+        local tag, p = rint(v + 12), rd(v)
+        if tag == TAG_STRING and p and p > 0x10000 then
+            local ok, s = pcall(mrd, "string", p + STRING_DATA)
+            if ok and SOUND_TARGETS[s] then out[s] = p end
+        elseif tag == TAG_TABLE and depth > 0 and p and p > 0x10000 then
+            collectSoundStrings(out, p, depth - 1)
+        end
+    end
+end
+
+local function applySounds(conf)
+    -- Put back the text the last run wrote, where it is still ours.
+    local prev = _G.__RIVALS_SOUND_STATE
+    _G.__RIVALS_SOUND_STATE = nil
+    for _, r in ipairs(type(prev) == "table" and prev.restores or {}) do
+        local ok, now = pcall(mrd, "string", r[1] + STRING_DATA)
+        if ok and now == r[3] then writeLuaString(r[1], r[2]) end
+    end
+
+    local want, bad = {}, {}
+    for key, value in pairs(conf) do
+        if key == "hit" or key == "critical" or key == "kill" then
+            local text = soundText(value)
+            if text == false then
+                bad[#bad + 1] = key .. "=" .. tostring(value)
+            elseif text then
+                want[key] = text
+            end
+        end
+    end
+    -- A custom headshot replaces the layered pair, so its second layer goes quiet.
+    if want.critical then want.criticallayer = "" end
+    if not next(want) then return 0, (#bad > 0) and ("not an audio id: " .. table.concat(bad, ", ")) or nil end
+
+    local modules = game:GetService("ReplicatedStorage"):FindFirstChild("Modules")
+    local f = nodesOf(moduleTable(modules and modules:FindFirstChild("SoundLibrary")), 64,
+        {AlwaysPreload = true, EliminationSounds = true})
+    local found = {}
+    for _, node in pairs(f or {}) do
+        local t = rd(node)
+        if t and t > 0x10000 then collectSoundStrings(found, t, 1) end
+    end
+
+    local restores, changed = {}, 0
+    for original, ts in pairs(found) do
+        local text = want[SOUND_TARGETS[original]]
+        if text and writeLuaString(ts, text) then
+            restores[#restores + 1] = {ts, original, text}
+            changed = changed + 1
+        end
+    end
+    _G.__RIVALS_SOUND_STATE = {restores = restores}
+    if changed == 0 then
+        return 0, "sounds not found - rejoin if an earlier run already changed them"
+    end
+    return changed, (#bad > 0) and ("not an audio id: " .. table.concat(bad, ", ")) or nil
+end
+
 -- Lighting
 local LIGHTING_FIELDS = {
     brightness = {off = 0x108, key = "Brightness"},
@@ -2949,6 +3055,18 @@ do
         print("[RivalsSkinChanger] Skybox: " .. tostring(skyNote))
     elseif not okSky then
         print("[RivalsSkinChanger] Skybox error: " .. tostring(patched))
+    end
+end
+
+do
+    local okS, changed, soundNote = pcall(applySounds, configSounds)
+    if okS and (changed or 0) > 0 then
+        print("[RivalsSkinChanger] Sounds: " .. tostring(changed) .. " replaced - heard from the next hit"
+            .. (soundNote and (" (" .. soundNote .. ")") or ""))
+    elseif okS and soundNote then
+        print("[RivalsSkinChanger] Sounds: " .. tostring(soundNote))
+    elseif not okS then
+        print("[RivalsSkinChanger] Sounds error: " .. tostring(changed))
     end
 end
 

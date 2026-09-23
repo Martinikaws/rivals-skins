@@ -303,6 +303,8 @@
         .sky-mini { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 9px; padding: 6px 10px; font-size: 12px; cursor: pointer; transition: color .18s, border-color .18s; }
         .sky-mini:hover { color: var(--txt); border-color: #45547a; }
         .sky-add { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+        .sound-pick { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; color: var(--txt); padding: 8px 10px; font: inherit; font-size: 12.5px; }
+        .sky-mini:disabled { opacity: .4; cursor: default; }
         .sky-add input { width: 150px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; color: var(--txt); padding: 8px 10px; font-size: 12.5px; }
         @media (max-width: 640px) { .sky-six-grid { margin-left: 0; } .sky-face input { width: 92px; } }
 
@@ -557,6 +559,7 @@
                 <button class="dash-switch-btn" id="switch-finishers" onclick="setDashMode('finishers')">Finishers</button>
                 <button class="dash-switch-btn" id="switch-charms" onclick="setDashMode('charms')">Charms</button>
                 <button class="dash-switch-btn" id="switch-skybox" onclick="setDashMode('skybox')">Skybox</button>
+                <button class="dash-switch-btn" id="switch-sounds" onclick="setDashMode('sounds')">Sounds</button>
             </div>
             <div class="dash-actions">
                 <button class="btn-ghost btn-sm" onclick="openPreview()">Config Preview</button>
@@ -4413,8 +4416,9 @@
             loadCustomSkies();
             loadSharedSkies();
             try { lightConfig = JSON.parse(localStorage.getItem("rivals_lighting_saved") || "{}") || {}; } catch (e) { lightConfig = {}; }
+            try { soundConfig = JSON.parse(localStorage.getItem("rivals_sounds_saved") || "{}") || {}; } catch (e) { soundConfig = {}; }
             loadCosmeticConfigs();
-            setDashMode(["wraps", "advanced", "skybox", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
+            setDashMode(["wraps", "advanced", "skybox", "sounds", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
         }
 
         const CATEGORY_ORDER = ["Primary", "Secondary", "Melee", "Utility"];
@@ -4424,6 +4428,7 @@
             document.getElementById("switch-skins").classList.toggle("active", mode === "skins" || mode === "advanced");
             document.getElementById("advToggle").classList.toggle("active", mode === "advanced");
             document.getElementById("switch-skybox").classList.toggle("active", mode === "skybox");
+            document.getElementById("switch-sounds").classList.toggle("active", mode === "sounds");
             document.getElementById("switch-finishers").classList.toggle("active", mode === "finishers");
             document.getElementById("switch-charms").classList.toggle("active", mode === "charms");
             document.getElementById("advToggle").hidden = mode !== "skins" && mode !== "advanced";
@@ -4468,6 +4473,11 @@
             }
             if (dashMode === "skybox") {
                 renderSkyGrid(grid);
+                updateFootCount();
+                return;
+            }
+            if (dashMode === "sounds") {
+                renderSoundGrid(grid);
                 updateFootCount();
                 return;
             }
@@ -5113,7 +5123,119 @@
             lightConfig = conf || {};
             saveLightConfig();
             renderGrid();
-            showToast(lightConfig.preset ? "Darker lighting on" : "Lighting left as the game has it");
+            showToast(lightConfig.preset === "match" ? "Lighting now matches the sky"
+                : (lightConfig.preset ? "Darker lighting on" : "Lighting left as the game has it"));
+        }
+
+        // ---- Sounds tab ----
+        // Rivals passes its hit sounds to CreateSound as plain ids; the changer
+        // rewrites those ids in memory. "none" mutes, an empty box keeps the game's.
+        let soundConfig = {};
+        const SOUND_SLOTS = [
+            {key: "Hit", name: "Body hit", sub: "Every hit that isn't a headshot"},
+            {key: "Critical", name: "Headshot", sub: "Replaces the layered headshot crack"},
+            {key: "Kill", name: "Kill", sub: "When you eliminate someone"}
+        ];
+        // Rivals and Roblox sounds always play; community uploads are public but
+        // their owners can remove them.
+        const SOUND_LIBRARY = [{"name": "Rivals", "sounds": [["Hitmarker tick", "13110130082"], ["Headshot crack", "16537449730"], ["Elimination 1", "16530229616"], ["Elimination 2", "16530229541"], ["Elimination 3", "16530229695"], ["Target shatter", "14441658101"], ["RPG explosion", "13455969017"], ["Equip click", "13158735106"], ["Landing", "16736552001"], ["Jump", "16736552098"], ["Duel timer tick", "17826390328"], ["Click", "177266782"]]}, {"name": "Roblox", "sounds": [["Classic hit", "12222046"], ["Button", "12221967"], ["Electronic ping", "12221990"], ["Glass break", "12222005"], ["Kerplunk", "12222054"], ["Fast click", "12221976"], ["Bright click", "15675059323"], ["Cute pop", "15675055424"], ["Notification", "17208361335"], ["Coin", "127645268874265"], ["Pinball bell", "16480570986"], ["8-bit blip", "16480580213"], ["Metal click", "16480551554"], ["Sparkle ding", "9126073001"], ["Cannon blast", "3149249837"]]}, {"name": "Hit sounds", "sounds": [["Undertale critical hit", "140181868959125"], ["Hit sound", "139520673393967"], ["Undertale attack hit", "140721035016341"], ["Fist hit", "140604838213617"], ["TF2 critical hit", "137392628136734"], ["AvA punch", "138208560796742"], ["Rock hit", "82708037443413"], ["Spear hit", "135278368445325"], ["Persona 5 hit", "140706017778464"], ["Energy sword hit", "139503070303020"], ["Stone hit", "3581383408"], ["8-bit impact", "109598434966968"], ["Minecraft hit", "73369656122118"], ["Car hit", "1897654568"], ["Beam hit", "103134129110384"]]}, {"name": "Community", "sounds": [["CoD hitmarker", "138832207290954"], ["Quake hitmarker", "1455817260"], ["GameSense hitmarker", "4817809188"], ["Minecraft hitmarker", "127091812835195"], ["Minecraft bow ding", "135478009117226"], ["MLG hitmarker", "121351852050830"], ["Head hitmarker", "17724154662"], ["TF2 hitsound", "138901307926331"], ["osu! hitsound", "123941247147792"], ["Bubble pop", "119697580657161"], ["CS:GO headshot", "133002449941130"], ["Arsenal headshot", "18513634637"], ["Fortnite headshot", "2513174484"], ["Rust headshot", "128633263668964"], ["Battlefield headshot", "70528023820006"], ["PHIGHTING headshot", "138549196892842"], ["TF2 kill", "124543461907751"], ["Among Us kill", "130456049552264"], ["MM2 knife kill", "97347330766907"], ["Double kill", "116907610084760"]]}];
+        const GAME_SOUNDS = SOUND_LIBRARY.reduce(function (all, g) { return all.concat(g.sounds); }, []);
+
+        function saveSoundConfig() {
+            try { localStorage.setItem("rivals_sounds_saved", JSON.stringify(soundConfig)); } catch (e) {}
+        }
+
+        function cleanSoundValue(v) {
+            v = String(v || "").trim();
+            if (/^none$|^mute$|^off$/i.test(v)) return "none";
+            const digits = v.replace(/^rbxassetid:\/\//i, "");
+            return /^\d{3,19}$/.test(digits) ? digits : "";
+        }
+
+        function setSound(key, value) {
+            const v = cleanSoundValue(value);
+            if (v) soundConfig[key] = v; else delete soundConfig[key];
+            saveSoundConfig();
+            renderGrid();
+        }
+
+        function renderSoundGrid(grid) {
+            const card = document.createElement("div");
+            card.className = "weapon-card";
+            const label = document.createElement("div");
+            label.className = "card-label";
+            label.textContent = "Sounds";
+            card.appendChild(label);
+
+            SOUND_SLOTS.forEach(function (slot) {
+                const row = document.createElement("div");
+                row.className = "sky-card sky-custom" + (soundConfig[slot.key] ? " active" : "");
+                row.dataset.name = (slot.name + " sound").toLowerCase();
+                const info = document.createElement("div");
+                info.innerHTML = '<div class="sky-name"></div><div class="sky-sub"></div>';
+                info.querySelector(".sky-name").textContent = slot.name;
+                info.querySelector(".sky-sub").textContent = slot.sub;
+                row.appendChild(info);
+
+                const box = document.createElement("div");
+                box.className = "sky-add";
+                const pick = document.createElement("select");
+                pick.className = "sound-pick";
+                pick.innerHTML = '<option value="">Game default</option><option value="none">Mute</option>'
+                    + SOUND_LIBRARY.map(function (grp) {
+                        return '<optgroup label="' + grp.name + '">' + grp.sounds.map(function (g) {
+                            return '<option value="' + g[1] + '">' + g[0] + '</option>'; }).join("") + '</optgroup>';
+                    }).join("")
+                    + '<option value="custom">Custom id...</option>';
+                const current = soundConfig[slot.key] || "";
+                const known = current === "" || current === "none" || GAME_SOUNDS.some(function (g) { return g[1] === current; });
+                pick.value = known ? current : "custom";
+                const input = document.createElement("input");
+                input.placeholder = "Audio id";
+                input.value = current === "none" ? "" : current;
+                input.hidden = pick.value !== "custom";
+                input.addEventListener("click", function (e) { e.stopPropagation(); });
+                input.addEventListener("change", function () { setSound(slot.key, input.value); });
+                pick.addEventListener("click", function (e) { e.stopPropagation(); });
+                pick.addEventListener("change", function () {
+                    if (pick.value === "custom") { input.hidden = false; input.value = ""; input.focus(); return; }
+                    setSound(slot.key, pick.value);
+                });
+                const listen = document.createElement("button");
+                listen.className = "sky-mini";
+                listen.textContent = "Listen";
+                listen.title = "Opens the sound on Roblox, where you can play it (sign in to Roblox)";
+                listen.disabled = !/^\d+$/.test(current);
+                listen.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                    // Roblox only serves most audio to signed-in users, so the store page
+                    // (which has a play button) opens in a small window instead of the site playing it.
+                    if (/^\d+$/.test(current)) window.open("https://create.roblox.com/store/asset/" + current, "rivals_listen", "popup,width=980,height=760");
+                });
+                box.appendChild(pick);
+                box.appendChild(input);
+                box.appendChild(listen);
+                row.appendChild(box);
+                card.appendChild(row);
+            });
+
+            const note = document.createElement("div");
+            note.className = "sky-card";
+            note.dataset.name = "sounds upload custom audio";
+            note.innerHTML = '<div><div class="sky-name">Using your own sound</div><div class="sky-sub">'
+                + 'Upload it to Roblox as Audio (.mp3, .ogg, .wav or .flac), then paste its id. '
+                + 'Roblox only plays audio in Rivals if it is public on the Creator Store, or if you give Rivals '
+                + 'access in the audio\'s Permissions (Rivals experience id 6035872082). '
+                + 'Rivals sets the volume, so trim silence and level the file first.</div></div>';
+            card.appendChild(note);
+            grid.appendChild(card);
+        }
+
+        function generateSoundLines() {
+            const keys = SOUND_SLOTS.map(function (s) { return s.key; }).filter(function (k) { return soundConfig[k]; });
+            if (!keys.length) return [];
+            return ["", "[Sounds]", "-- Roblox audio ids; none mutes. Heard from the next hit."]
+                .concat(keys.map(function (k) { return k + "=" + soundConfig[k]; }));
         }
 
         function generateLightLines() {
@@ -5625,6 +5747,11 @@
                     : (nFaces ? "Custom sky, " + nFaces + "/6 faces" : "Skybox unchanged")));
                 return;
             }
+            if (dashMode === "sounds") {
+                const k = Object.keys(soundConfig).length;
+                el.textContent = k ? k + (k === 1 ? " sound changed" : " sounds changed") : "Sounds unchanged";
+                return;
+            }
             if (dashMode === "advanced") {
                 const k = swapCount();
                 el.textContent = k + (k === 1 ? " skin swap" : " skin swaps");
@@ -5700,7 +5827,7 @@
                 lines.push("-- Skin swaps: Weapon | OwnedSkin > TargetSkin (equip OwnedSkin, it looks like TargetSkin)");
                 lines = lines.concat(swapLines);
             }
-            return lines.concat(generateWrapLines()).concat(generateSkyLines()).concat(generateLightLines())
+            return lines.concat(generateWrapLines()).concat(generateSkyLines()).concat(generateLightLines()).concat(generateSoundLines())
                 .concat(generateCosmeticLines("finishers")).concat(generateCosmeticLines("charms")).join("\n");
         }
 
@@ -5719,6 +5846,10 @@
             }
             if (dashMode === "skybox") {
                 if (presetType === "default") { lightConfig = {}; saveLightConfig(); onSkyChange({}); }
+                return;
+            }
+            if (dashMode === "sounds") {
+                if (presetType === "default") { soundConfig = {}; saveSoundConfig(); renderGrid(); showToast("All sounds back to the game's"); }
                 return;
             }
             if (COS_KINDS[dashMode]) {
