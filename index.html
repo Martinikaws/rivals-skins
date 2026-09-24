@@ -4435,7 +4435,12 @@
             document.querySelectorAll(".adv-only").forEach(function (b) { b.hidden = mode !== "advanced"; });
             document.getElementById("switch-wraps").classList.toggle("active", mode === "wraps");
             document.querySelectorAll(".skins-only").forEach(function (b) { b.hidden = mode !== "skins"; });
-            document.querySelectorAll(".weapons-only").forEach(function (b) { b.hidden = mode !== "skins" && mode !== "advanced"; });
+            const weaponTab = mode === "skins" || mode === "advanced";
+            const swapTab = weaponTab || mode === "wraps" || !!COS_KINDS[mode];
+            document.querySelectorAll(".weapons-only").forEach(function (b) { b.hidden = !swapTab; });
+            const sw = document.querySelector('.pill[data-filter="switched"]');
+            if (sw) sw.hidden = !weaponTab;
+            if (!weaponTab && weaponFilter === "switched") setWeaponFilter("all");
             document.querySelectorAll(".wraps-only").forEach(function (b) { b.hidden = mode !== "wraps"; });
             const input = document.getElementById("searchInput");
             if (input) { input.value = ""; input.placeholder = COS_KINDS[mode] ? "Search " + COS_KINDS[mode].plural + "..." : (mode === "wraps" ? "Search wraps..." : (mode === "advanced" ? "Search weapons..." : "Search weapons or skins...")); }
@@ -4672,6 +4677,9 @@
                 groups[ri].forEach(function (w) {
                     const row = document.createElement("div");
                     row.className = "weapon-row";
+                    // Rows carry the same flags as weapon rows so the filter works here too.
+                    row.dataset.switched = "";
+                    row.dataset.swapped = wrapConfig[w[0]] ? "1" : "";
                     row.addEventListener("click", function () { openWrapModal(w[0]); });
                     const iconWrap = document.createElement("div");
                     iconWrap.className = "weapon-icon";
@@ -5483,6 +5491,8 @@
                 items.forEach(function (item) {
                     const row = document.createElement("div");
                     row.className = "weapon-row";
+                    row.dataset.switched = "";
+                    row.dataset.swapped = kind.config[item[0]] ? "1" : "";
                     row.addEventListener("click", function () { openCosmeticModal(k, item[0]); });
                     const iconWrap = document.createElement("div");
                     iconWrap.className = "weapon-icon";
@@ -5780,7 +5790,7 @@
         function filterWeapons() {
             const input = document.getElementById("searchInput");
             const query = (input && input.value ? input.value : "").toLowerCase().trim();
-            const weaponMode = dashMode === "skins" || dashMode === "advanced";
+            const weaponMode = dashMode === "skins" || dashMode === "advanced" || dashMode === "wraps" || !!COS_KINDS[dashMode];
             const rows = document.querySelectorAll("#dash-grid .weapon-row[data-switched]");
             const cs = document.getElementById("count-switched"), cw = document.getElementById("count-swapped");
             if (cs) cs.textContent = Array.prototype.filter.call(rows, function (r) { return r.dataset.switched; }).length;
@@ -5810,7 +5820,9 @@
                     empty.className = "empty-note";
                 }
                 empty.textContent = weaponFilter === "switched" ? "Nothing switched yet: pick a skin for a default weapon."
-                    : weaponFilter === "swapped" ? "Nothing swapped yet: open Advanced and pick a skin you own."
+                    : weaponFilter === "swapped" ? (dashMode === "wraps" || COS_KINDS[dashMode]
+                        ? "Nothing swapped here yet: pick one you own and what it should look like."
+                        : "Nothing swapped yet: switch to “Swap a skin you own” and pick one.")
                     : "No weapons match that search.";
                 grid.appendChild(empty);
             } else if (empty) {
