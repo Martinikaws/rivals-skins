@@ -36,12 +36,12 @@ def call(method, url, key, body=None, headers=None):
         raise RuntimeError("HTTP %d: %s" % (e.code, detail)) from None
 
 
-def upload(path, name, key, user):
+def upload(path, name, key, user, asset_type="Image"):
     boundary = uuid.uuid4().hex
     meta = {
-        "assetType": "Image",
+        "assetType": asset_type,
         "displayName": name[:50],
-        "description": "Rivals skin changer sky face",
+        "description": "Rivals skin changer " + ("sky face" if asset_type == "Image" else "sound"),
         "creationContext": {"creator": {"userId": str(user)}},
     }
     with open(path, "rb") as f:

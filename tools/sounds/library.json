@@ -1,0 +1,375 @@
+[
+ {
+  "name": "Rivals",
+  "sounds": [
+   [
+    "Hitmarker tick",
+    "13110130082"
+   ],
+   [
+    "Headshot crack",
+    "16537449730"
+   ],
+   [
+    "Elimination 1",
+    "16530229616"
+   ],
+   [
+    "Elimination 2",
+    "16530229541"
+   ],
+   [
+    "Elimination 3",
+    "16530229695"
+   ],
+   [
+    "Target shatter",
+    "14441658101"
+   ],
+   [
+    "RPG explosion",
+    "13455969017"
+   ],
+   [
+    "Equip click",
+    "13158735106"
+   ],
+   [
+    "Landing",
+    "16736552001"
+   ],
+   [
+    "Jump",
+    "16736552098"
+   ],
+   [
+    "Duel timer tick",
+    "17826390328"
+   ],
+   [
+    "Click",
+    "177266782"
+   ]
+  ]
+ },
+ {
+  "name": "Roblox",
+  "sounds": [
+   [
+    "Classic hit",
+    "12222046"
+   ],
+   [
+    "Button",
+    "12221967"
+   ],
+   [
+    "Electronic ping",
+    "12221990"
+   ],
+   [
+    "Glass break",
+    "12222005"
+   ],
+   [
+    "Kerplunk",
+    "12222054"
+   ],
+   [
+    "Fast click",
+    "12221976"
+   ],
+   [
+    "Bright click",
+    "15675059323"
+   ],
+   [
+    "Cute pop",
+    "15675055424"
+   ],
+   [
+    "Notification",
+    "17208361335"
+   ],
+   [
+    "Coin",
+    "127645268874265"
+   ],
+   [
+    "Pinball bell",
+    "16480570986"
+   ],
+   [
+    "8-bit blip",
+    "16480580213"
+   ],
+   [
+    "Metal click",
+    "16480551554"
+   ],
+   [
+    "Sparkle ding",
+    "9126073001"
+   ],
+   [
+    "Cannon blast",
+    "3149249837"
+   ]
+  ]
+ },
+ {
+  "name": "Hit sounds",
+  "sounds": [
+   [
+    "Undertale critical hit",
+    "140181868959125"
+   ],
+   [
+    "Hit sound",
+    "139520673393967"
+   ],
+   [
+    "Undertale attack hit",
+    "140721035016341"
+   ],
+   [
+    "Fist hit",
+    "140604838213617"
+   ],
+   [
+    "TF2 critical hit",
+    "137392628136734"
+   ],
+   [
+    "AvA punch",
+    "138208560796742"
+   ],
+   [
+    "Rock hit",
+    "82708037443413"
+   ],
+   [
+    "Spear hit",
+    "135278368445325"
+   ],
+   [
+    "Persona 5 hit",
+    "140706017778464"
+   ],
+   [
+    "Energy sword hit",
+    "139503070303020"
+   ],
+   [
+    "Stone hit",
+    "3581383408"
+   ],
+   [
+    "8-bit impact",
+    "109598434966968"
+   ],
+   [
+    "Minecraft hit",
+    "73369656122118"
+   ],
+   [
+    "Car hit",
+    "1897654568"
+   ],
+   [
+    "Beam hit",
+    "103134129110384"
+   ]
+  ]
+ },
+ {
+  "name": "Your pack",
+  "sounds": [
+   [
+    "agpa 1",
+    "102651850556408"
+   ],
+   [
+    "agpa 2",
+    "132463144859699"
+   ],
+   [
+    "Huhh",
+    "115574480250251"
+   ],
+   [
+    "Minecraft hurt",
+    "127059326655954"
+   ],
+   [
+    "msfrs.hit",
+    "138523457528846"
+   ],
+   [
+    "neverlose.cc",
+    "139452805868562"
+   ],
+   [
+    "Rust headshot 2",
+    "138750331387064"
+   ],
+   [
+    "skeet (louder)",
+    "140247876667835"
+   ],
+   [
+    "Taco Bell bong",
+    "128327858093323"
+   ],
+   [
+    "Bubble pop",
+    "121434237134952"
+   ],
+   [
+    "Windows XP error",
+    "95509039020568"
+   ],
+   [
+    "My name is Jeff",
+    "2867856238"
+   ],
+   [
+    "HL2 crowbar",
+    "73268721537561"
+   ],
+   [
+    "DSR-1",
+    "93739917036633"
+   ],
+   [
+    "Fatality",
+    "97439296876895"
+   ],
+   [
+    "Bepis",
+    "1921494658"
+   ],
+   [
+    "Burp",
+    "130147881880627"
+   ],
+   [
+    "Duck quack",
+    "140601322851309"
+   ],
+   [
+    "Computer beep",
+    "2626561747"
+   ],
+   [
+    "MGS alert",
+    "139345986070502"
+   ],
+   [
+    "Doom shotgun",
+    "15120932483"
+   ],
+   [
+    "Cash register",
+    "120891770644830"
+   ],
+   [
+    "Cowbell",
+    "9125935023"
+   ],
+   [
+    "Winner FX",
+    "1841267764"
+   ],
+   [
+    "Cartoon bubble",
+    "5852470908"
+   ]
+  ]
+ },
+ {
+  "name": "Community",
+  "sounds": [
+   [
+    "CoD hitmarker",
+    "138832207290954"
+   ],
+   [
+    "Quake hitmarker",
+    "1455817260"
+   ],
+   [
+    "GameSense hitmarker",
+    "4817809188"
+   ],
+   [
+    "Minecraft hitmarker",
+    "127091812835195"
+   ],
+   [
+    "Minecraft bow ding",
+    "135478009117226"
+   ],
+   [
+    "MLG hitmarker",
+    "121351852050830"
+   ],
+   [
+    "Head hitmarker",
+    "17724154662"
+   ],
+   [
+    "TF2 hitsound",
+    "138901307926331"
+   ],
+   [
+    "osu! hitsound",
+    "123941247147792"
+   ],
+   [
+    "Bubble pop",
+    "119697580657161"
+   ],
+   [
+    "CS:GO headshot",
+    "133002449941130"
+   ],
+   [
+    "Arsenal headshot",
+    "18513634637"
+   ],
+   [
+    "Fortnite headshot",
+    "2513174484"
+   ],
+   [
+    "Rust headshot",
+    "128633263668964"
+   ],
+   [
+    "Battlefield headshot",
+    "70528023820006"
+   ],
+   [
+    "PHIGHTING headshot",
+    "138549196892842"
+   ],
+   [
+    "TF2 kill",
+    "124543461907751"
+   ],
+   [
+    "Among Us kill",
+    "130456049552264"
+   ],
+   [
+    "MM2 knife kill",
+    "97347330766907"
+   ],
+   [
+    "Double kill",
+    "116907610084760"
+   ]
+  ]
+ }
+]

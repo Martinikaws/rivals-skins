@@ -19,7 +19,13 @@ CREDITS = {
     "cloudy": "Screaming Brain Studios (CC0)",
     "galaxy": "hackcraft.de (CC-BY)",
 }
-NAMES = {"galaxy": "Galaxy", "nebula-blue": "Blue Nebula", "nebula-gold": "Gold Nebula"}
+NAMES = {"galaxy": "Galaxy", "nebula-blue": "Blue Nebula", "nebula-gold": "Gold Nebula",
+         "blue-sky": "Blue Sky", "chromakey": "Chroma Key", "deadstarforest": "Dead Star Forest",
+         "elegentmorningsky": "Elegant Morning", "fadebluesky": "Fade Blue", "mcendsky": "Minecraft End",
+         "mcskybox": "Minecraft", "neonsky": "Neon Sky", "neonsky2": "Neon Sky 2", "nightskywmoon": "Night Sky Moon",
+         "peacefullmorningsky": "Peaceful Morning", "settingsunsky": "Setting Sun", "sfoth": "SFOTH",
+         "xenskybox": "Xen", "zenend": "Zen End", "sky2006": "Sky 2006", "jungle-csgo": "Jungle",
+         "blackhole-skybox": "Black Hole", "sky-nibiru-bl": "Nibiru", "sky-disaster": "Disaster"}
 
 
 def display_name(key):
