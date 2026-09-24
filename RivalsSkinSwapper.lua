@@ -2873,6 +2873,73 @@ local function applySounds(conf)
     return changed, (#bad > 0) and ("not an audio id: " .. table.concat(bad, ", ")) or nil
 end
 
+-- Sound volume. Every audio file has its own loudness while Rivals plays each
+-- at a fixed volume, so custom sounds come out louder or quieter. The game
+-- creates each hit, headshot and kill sound fresh, parented to the script
+-- that plays it (ClientViewModel for hits, EliminationSlots for kills); a
+-- light watcher scales new ones by the chosen multiplier. Volume is the float
+-- at +0x120 of a Sound.
+local SOUND_VOLUME_OFF = 0x120
+local DEFAULT_SOUND_TEXT = {
+    hit = {"rbxassetid://13110130082"},
+    critical = {"rbxassetid://16537449730"},
+    kill = {"rbxassetid://16530229616", "rbxassetid://16530229541", "rbxassetid://16530229695"},
+}
+
+local function startVolumeWatcher(conf)
+    _G.__RIVALS_SOUND_WATCH = (_G.__RIVALS_SOUND_WATCH or 0) + 1
+    local token = _G.__RIVALS_SOUND_WATCH
+    local gains = {}
+    for _, slot in ipairs({"hit", "critical", "kill"}) do
+        local g = tonumber(tostring(conf[slot .. "volume"] or ""):match("[%d%.]+"))
+        if g then
+            if g > 5 then g = g / 100 end  -- "150" means 150%
+            g = math.clamp(g, 0, 5)
+            if g ~= 1 then
+                local custom = soundText(conf[slot] or "")
+                local texts = custom and custom ~= "" and {custom} or DEFAULT_SOUND_TEXT[slot]
+                for _, t in ipairs(texts) do gains[t] = g end
+            end
+        end
+    end
+    if not next(gains) then return 0 end
+
+    local fighter = LP.PlayerScripts:FindFirstChild("Modules")
+    fighter = fighter and fighter:FindFirstChild("ClientReplicatedClasses")
+    fighter = fighter and fighter:FindFirstChild("ClientFighter")
+    local item = fighter and fighter:FindFirstChild("ClientItem")
+    local ui = fighter and fighter:FindFirstChild("FighterInterface")
+    local parents = {item and item:FindFirstChild("ClientViewModel"), ui and ui:FindFirstChild("EliminationSlots")}
+    task.spawn(function()
+        local seen = {}
+        while _G.__RIVALS_SOUND_WATCH == token do
+            local now = tick()
+            for _, parent in ipairs(parents) do
+                if parent then
+                    for _, s in ipairs(parent:GetChildren()) do
+                        local a = s.ClassName == "Sound" and s.Address
+                        if a and not seen[a] then
+                            seen[a] = now
+                            local ok, text = pcall(mrd, "string", rd(a + 0xb8))
+                            local g = ok and gains[text]
+                            if g then
+                                local v = mrd("float", a + SOUND_VOLUME_OFF)
+                                if v then mwr("float", a + SOUND_VOLUME_OFF, v * g) end
+                            end
+                        end
+                    end
+                end
+            end
+            -- Sounds live at most 10 s; forget old ones so a reused address counts again.
+            for a, t in pairs(seen) do if now - t > 15 then seen[a] = nil end end
+            task.wait(0.02)
+        end
+    end)
+    local n = 0
+    for _ in pairs(gains) do n = n + 1 end
+    return n
+end
+
 -- Lighting
 local LIGHTING_FIELDS = {
     brightness = {off = 0x108, key = "Brightness"},
@@ -3192,6 +3259,12 @@ do
         print("[RivalsSkinChanger] Sounds: " .. tostring(soundNote))
     elseif not okS then
         print("[RivalsSkinChanger] Sounds error: " .. tostring(changed))
+    end
+    local okV, watched = pcall(startVolumeWatcher, configSounds)
+    if okV and (watched or 0) > 0 then
+        print("[RivalsSkinChanger] Sound volume adjusted for " .. tostring(watched) .. " sound(s)")
+    elseif not okV then
+        print("[RivalsSkinChanger] Sound volume error: " .. tostring(watched))
     end
 end
 
