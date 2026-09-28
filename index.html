@@ -5264,8 +5264,7 @@
         // Device, which the changer sends to the server (everyone sees it).
         let spoofConfig = {};
         const SPOOF_TEXT = [
-            {key: "Name", name: "Display name", sub: "The big name on your nametag and profile", placeholder: "Your real one"},
-            {key: "Username", name: "Username", sub: "The @name under it", placeholder: "@yourname"},
+            {key: "Name", name: "Display name", sub: "Your nametag, player list and profile name (your @username stays real)", placeholder: "Your real one"},
             {key: "Level", name: "Level", sub: "Nametag, leaderboard and profile", number: true},
             {key: "Streak", name: "Win streak", sub: "Duel win streak", number: true},
             {key: "ELO", name: "ELO", sub: "Ranked rating on the leaderboard", number: true}
@@ -5319,7 +5318,6 @@
                 input.addEventListener("click", function (e) { e.stopPropagation(); });
                 input.addEventListener("change", function () {
                     let v = input.value.trim();
-                    if (f.key === "Username") v = v.replace(/^@/, "");
                     if (f.number && v && !/^\d{1,12}$/.test(v)) { showToast(f.name + " takes a whole number"); input.value = spoofConfig[f.key] || ""; return; }
                     setSpoof(f.key, v);
                     input.closest(".sky-card").classList.toggle("active", !!v);

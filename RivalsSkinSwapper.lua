@@ -2972,30 +2972,31 @@ local function startVolumeWatcher(conf)
     local item = fighter and fighter:FindFirstChild("ClientItem")
     local ui = fighter and fighter:FindFirstChild("FighterInterface")
     local parents = {item and item:FindFirstChild("ClientViewModel"), ui and ui:FindFirstChild("EliminationSlots")}
-    task.spawn(function()
-        local seen = {}
-        while _G.__RIVALS_SOUND_WATCH == token do
-            local now = tick()
-            for _, parent in ipairs(parents) do
-                if parent then
-                    for _, s in ipairs(parent:GetChildren()) do
-                        local a = s.ClassName == "Sound" and s.Address
-                        if a and not seen[a] then
-                            seen[a] = now
-                            local ok, text = pcall(mrd, "string", rd(a + 0xb8))
-                            local g = ok and gains[text]
-                            if g then
-                                local v = mrd("float", a + SOUND_VOLUME_OFF)
-                                if v then mwr("float", a + SOUND_VOLUME_OFF, v * g) end
-                            end
+    -- A Heartbeat connection rather than a spawned loop: Matcha stops resuming
+    -- a thread's task.wait once the changer run that spawned it has ended.
+    if _G.__RIVALS_SOUND_CONN then pcall(function() _G.__RIVALS_SOUND_CONN:Disconnect() end) end
+    local seen = {}
+    _G.__RIVALS_SOUND_CONN = game:GetService("RunService").Heartbeat:Connect(function()
+        if _G.__RIVALS_SOUND_WATCH ~= token then return end
+        local now = tick()
+        for _, parent in ipairs(parents) do
+            if parent then
+                for _, s in ipairs(parent:GetChildren()) do
+                    local a = s.ClassName == "Sound" and s.Address
+                    if a and not seen[a] then
+                        seen[a] = now
+                        local ok, text = pcall(mrd, "string", rd(a + 0xb8))
+                        local g = ok and gains[text]
+                        if g then
+                            local v = mrd("float", a + SOUND_VOLUME_OFF)
+                            if v then mwr("float", a + SOUND_VOLUME_OFF, v * g) end
                         end
                     end
                 end
             end
-            -- Sounds live at most 10 s; forget old ones so a reused address counts again.
-            for a, t in pairs(seen) do if now - t > 15 then seen[a] = nil end end
-            task.wait(0.02)
         end
+        -- Sounds live at most 10 s; forget old ones so a reused address counts again.
+        for a, t in pairs(seen) do if now - t > 15 then seen[a] = nil end end
     end)
     local n = 0
     for _ in pairs(gains) do n = n + 1 end
@@ -3006,16 +3007,23 @@ end
 -- the real ones, so only your screen changes - except Device, which is sent to
 -- the server and shows to everyone.
 --
--- Level, streak, ELO and the badges are attributes (and leaderstats) the game
--- redraws from; the name and the profile page's level are plain text, so those
--- labels get their text rewritten. A TextLabel keeps its text as a std::string
--- in four places; only copies holding the label's current text are touched.
+-- A label only redraws when the game sets its text (the glyphs are laid out
+-- right then), so rewriting a label's text in memory never shows properly.
+-- Instead the values are changed where the game reads them: your player's
+-- DisplayName (for every nametag, player list entry and profile it builds from
+-- then on) and the attributes it draws level, streak, ELO and badges from. The
+-- profile card's level and rank come from the server when it opens, so those
+-- stay real, and so does the @username (your account name).
 local SPOOF_ATTRS = {
     level = "Level", streak = "StatisticDuelsWinStreak", elo = "DisplayELO",
     influencer = "IsInfluencer", employee = "IsRobloxEmployee", trustworthy = "IsTrustWorthy",
 }
 local SPOOF_STATS = {level = "Level", streak = "Win Streak", elo = "Current ELO"}
-local TEXT_COPIES = {0xb88, 0xdf0, 0xe50, 0xe70}
+local DISPLAY_NAME_OFF = 0x128 -- Player.DisplayName, a std::string
+local TEXT_COPIES = {0xb88, 0xdf0, 0xe50, 0xe70} -- a TextLabel's text and its derived copies
+local TEXT_RUNS, TEXT_RUNS_END, TEXT_RUN_SIZE = 0xc48, 0xc50, 0xC8
+local GLYPHS, GLYPHS_END, GLYPH_SIZE = 0xc18, 0xc20, 56 -- laid-out glyphs, codepoint at +12
+local SPOOF_REAL_FILE = "rivals_spoof_real.txt"
 local DEVICES = {mousekeyboard = "MouseKeyboard", keyboard = "MouseKeyboard", pc = "MouseKeyboard",
     touch = "Touch", mobile = "Touch", gamepad = "Gamepad", controller = "Gamepad", vr = "VR"}
 
@@ -3035,21 +3043,178 @@ local function writeStdString(a, text)
     wr(a + 16, #text)
     return true
 end
-local function setLabelText(label, text)
-    local okT, current = pcall(function() return label.Text end)
-    if not okT or current == text then return false end
-    local wrote = false
-    for _, off in ipairs(TEXT_COPIES) do
-        local a = label.Address + off
-        if readStdString(a) == current and writeStdString(a, text) then wrote = true end
+-- What a label actually shows: its laid-out glyphs, as text.
+local function shownText(label)
+    local b, e = rd(label.Address + GLYPHS), rd(label.Address + GLYPHS_END)
+    if not b or not e or e < b or e - b > GLYPH_SIZE * 64 then return nil end
+    local out = {}
+    for g = b, e - GLYPH_SIZE, GLYPH_SIZE do
+        local cp = rint(g + 12)
+        if cp ~= 0 then -- (0: padding left by patchGlyphs)
+            if not cp or cp < 32 or cp > 126 then return nil end
+            out[#out + 1] = string.char(cp)
+        end
     end
-    return wrote
+    return table.concat(out)
+end
+-- Put a label's text back to what it shows, so layers that redraw on their
+-- own (the animated name effects) match the ones that don't.
+local function healLabel(label, text)
+    for _, off in ipairs(TEXT_COPIES) do writeStdString(label.Address + off, text) end
+    local b, e = rd(label.Address + TEXT_RUNS), rd(label.Address + TEXT_RUNS_END)
+    if b and e and e > b and e - b < TEXT_RUN_SIZE * 16 then
+        for run = b, e - 1, TEXT_RUN_SIZE do writeStdString(run, text) end
+    end
+end
+-- The profile card sets its level and rank from the server each time it
+-- opens, so the text can't be changed at the source. What can be changed is
+-- the result: the laid-out glyphs (glyph index at +8, character at +12), which
+-- is what gets drawn. Digits sit in order in the game's font, so a number
+-- becomes another by swapping glyph indices; other characters are looked up
+-- from glyphs already laid out on the card. It can't add glyphs, only reuse or
+-- drop them, so the new text can't be longer than the old one.
+local RANK_THRESHOLDS = {
+    {0, "Bronze 1", "rbxassetid://106623367501544"}, {200, "Bronze 2", "rbxassetid://131795064007344"},
+    {400, "Bronze 3", "rbxassetid://73543520622815"}, {600, "Silver 1", "rbxassetid://80716950169934"},
+    {800, "Silver 2", "rbxassetid://136100661820261"}, {1000, "Silver 3", "rbxassetid://107898816876115"},
+    {1200, "Gold 1", "rbxassetid://134520747948636"}, {1400, "Gold 2", "rbxassetid://114166096331502"},
+    {1600, "Gold 3", "rbxassetid://90039594400813"}, {1800, "Platinum 1", "rbxassetid://133903971285645"},
+    {2000, "Platinum 2", "rbxassetid://82834564754747"}, {2200, "Platinum 3", "rbxassetid://73345783863790"},
+    {2400, "Diamond 1", "rbxassetid://113997689031026"}, {2600, "Diamond 2", "rbxassetid://88059506918419"},
+    {2800, "Diamond 3", "rbxassetid://112183171942172"}, {3000, "Onyx 1", "rbxassetid://104871954739030"},
+    {3200, "Onyx 2", "rbxassetid://109012386782238"}, {3400, "Onyx 3", "rbxassetid://127982903682334"},
+    {3600, "Nemesis", "rbxassetid://116941545385923"},
+}
+local function rankFor(elo)
+    local pick = RANK_THRESHOLDS[1]
+    for _, r in ipairs(RANK_THRESHOLDS) do if elo >= r[1] then pick = r end end
+    return pick[2], pick[3]
+end
+local function glyphList(label)
+    local b, e = rd(label.Address + GLYPHS), rd(label.Address + GLYPHS_END)
+    if not b or not e or e < b or e - b > GLYPH_SIZE * 64 then return nil end
+    local list = {}
+    for g = b, e - GLYPH_SIZE, GLYPH_SIZE do
+        list[#list + 1] = {addr = g, width = rint(g + 4), glyph = rint(g + 8), cp = rint(g + 12)}
+    end
+    return list, b
+end
+-- Every label laid out on the card: its characters, their glyph index and
+-- width (each glyph carries its advance; the game spaces text by it).
+local function glyphMap(root)
+    local map = {glyph = {}, labels = {}}
+    for _, d in ipairs(root:GetDescendants()) do
+        if d.ClassName == "TextLabel" then
+            local widths = {}
+            for _, g in ipairs(glyphList(d) or {}) do
+                if g.cp and g.glyph and g.cp > 0 and g.cp < 128 then
+                    local c = string.char(g.cp)
+                    map.glyph[c] = g.glyph
+                    widths[c] = g.width
+                    local digit = g.cp - 48
+                    if digit >= 0 and digit <= 9 then map.zero = g.glyph - digit end
+                end
+            end
+            if next(widths) then map.labels[#map.labels + 1] = widths end
+        end
+    end
+    -- Digits sit in order in the font.
+    if map.zero then for dg = 0, 9 do map.glyph[tostring(dg)] = map.glyph[tostring(dg)] or map.zero + dg end end
+    return map
+end
+-- A character's width at a label's size: its own if it has it, otherwise
+-- another label's scaled by a character both have.
+local function widthFor(c, own, map)
+    if own[c] then return own[c] end
+    -- (scaled by every character both have, so one narrow letter can't skew it)
+    for _, other in ipairs(map.labels) do
+        if other[c] then
+            local mine, theirs = 0, 0
+            for k, w in pairs(own) do
+                if other[k] then mine, theirs = mine + w, theirs + other[k] end
+            end
+            if theirs > 0 then return math.floor(other[c] * mine / theirs + 0.5) end
+        end
+    end
+    local sum, n = 0, 0
+    for _, w in pairs(own) do sum, n = sum + w, n + 1 end
+    return n > 0 and math.floor(sum / n + 0.5) or nil
+end
+-- Make a label show `text` by rewriting its glyphs. When the text can't be
+-- shown (longer than the label's glyphs, or a character missing) the label is
+-- cleared, or left as it is with `keep`.
+local function patchGlyphs(label, text, map, keep)
+    local list, b = glyphList(label)
+    if not list or #list == 0 then return false end
+    local shown = {}
+    for _, g in ipairs(list) do
+        if g.cp ~= 0 then shown[#shown + 1] = string.char(math.max(0, math.min(255, g.cp or 63))) end
+    end
+    if table.concat(shown) == text then return true end
+    local ok = #text <= #list
+    local own = {}
+    for _, g in ipairs(list) do
+        if g.cp and g.cp > 0 and g.cp < 128 then own[string.char(g.cp)] = g.width end
+    end
+    local glyphs, widths = {}, {}
+    for i = 1, ok and #text or 0 do
+        local c = text:sub(i, i)
+        glyphs[i], widths[i] = map.glyph[c], widthFor(c, own, map)
+        if not glyphs[i] or not widths[i] then ok = false end
+    end
+    if not ok then
+        if not keep then wr(label.Address + GLYPHS_END, b) end -- nothing rather than the real value
+        return false
+    end
+    -- The glyph count can't shrink (the game puts the end back), so spare
+    -- glyphs go first as zero-width copies of the first character: drawn
+    -- exactly on top of it, they don't show.
+    local pad = #list - #text
+    for i = 1, #list do
+        local j = i - pad
+        mwr("int", list[i].addr + 4, j >= 1 and widths[j] or 0)
+        mwr("int", list[i].addr + 8, glyphs[math.max(j, 1)])
+        mwr("int", list[i].addr + 12, j >= 1 and string.byte(text, j) or 0)
+    end
+    return true
+end
+-- Two labels' character -> glyph tables are from the same font when every
+-- character they share has the same glyph.
+local function sameFont(a, b)
+    local shared = 0
+    for c, g in pairs(a) do
+        if b[c] ~= nil then
+            if b[c] ~= g then return false end
+            shared = shared + 1
+        end
+    end
+    return shared >= 2
+end
+-- Every label's glyphs under some roots, as {glyph = char -> index, widths}.
+local function glyphSamples(roots)
+    local out = {}
+    for _, root in ipairs(roots) do
+        for _, d in ipairs(root:GetDescendants()) do
+            if d.ClassName == "TextLabel" then
+                local s = {glyph = {}, widths = {}}
+                for _, g in ipairs(glyphList(d) or {}) do
+                    if g.cp and g.glyph and g.cp > 32 and g.cp < 127 then
+                        local c = string.char(g.cp)
+                        s.glyph[c], s.widths[c] = g.glyph, g.width
+                    end
+                end
+                if next(s.glyph) then out[#out + 1] = s end
+            end
+        end
+    end
+    return out
 end
 local function prettyNumber(n)
     local s = tostring(math.floor(n))
     local out = s:reverse():gsub("(%d%d%d)", "%1,"):reverse()
     return (out:gsub("^,", ""))
 end
+
 local function spoofFlag(v)
     local low = tostring(v or ""):lower()
     if low == "true" or low == "1" or low == "on" or low == "yes" then return true end
@@ -3061,14 +3226,20 @@ local function startSpoof(conf)
     _G.__RIVALS_SPOOF = (_G.__RIVALS_SPOOF or 0) + 1
     local token = _G.__RIVALS_SPOOF
 
-    -- The real values, read once before anything is changed and kept across
-    -- runs, so turning the spoof off can put them back.
+    -- The real values, read once before anything is changed. The display name
+    -- is also kept in a file: after a Matcha restart the player object may
+    -- still carry a spoofed one.
     local real = _G.__RIVALS_SPOOF_REAL
     if not real or real.user ~= LP.Name then
-        local okD, display = pcall(function()
-            return workspace[LP.Name].HumanoidRootPart.NametagGui.Elements.NameDisplay.DisplayName.Text
-        end)
-        real = {user = LP.Name, display = okD and display or nil, attrs = {}, stats = {}}
+        real = {user = LP.Name, attrs = {}, stats = {}}
+        local okF, saved = pcall(readfile, SPOOF_REAL_FILE)
+        local savedUser, savedName = (okF and type(saved) == "string" and saved or ""):match("^(.-)\n(.-)\n?$")
+        if savedUser == LP.Name and savedName and savedName ~= "" then
+            real.display = savedName
+        else
+            real.display = readStdString(LP.Address + DISPLAY_NAME_OFF)
+            if real.display then pcall(writefile, SPOOF_REAL_FILE, LP.Name .. "\n" .. real.display .. "\n") end
+        end
         for key, attr in pairs(SPOOF_ATTRS) do real.attrs[key] = LP:GetAttribute(attr) end
         local ls = LP:FindFirstChild("CustomLeaderstats")
         for key, stat in pairs(SPOOF_STATS) do
@@ -3080,7 +3251,6 @@ local function startSpoof(conf)
 
     local want = {
         name = conf.name and conf.name ~= "" and conf.name or nil,
-        username = conf.username and conf.username:gsub("^@", "") ~= "" and conf.username:gsub("^@", "") or nil,
         level = tonumber(conf.level), streak = tonumber(conf.streak), elo = tonumber(conf.elo),
         influencer = spoofFlag(conf.influencer), employee = spoofFlag(conf.employee),
         trustworthy = spoofFlag(conf.trustworthy),
@@ -3089,27 +3259,23 @@ local function startSpoof(conf)
     local any = device ~= nil
     for _, v in pairs(want) do if v ~= nil then any = true end end
 
-    -- Values to show: the spoofed one where set, otherwise the real one (so
-    -- clearing a field puts the real value back).
-    local function value(key)
-        if want[key] ~= nil then return want[key] end
-        return real.attrs[key]
-    end
+    -- The name the player object should carry; the field has room for as many
+    -- characters as the real name's storage (15 for a short name).
+    local notes = {}
     local shownName = want.name or real.display
-    local shownUser = "@" .. (want.username or real.user)
-    -- What the last run showed, so labels still carrying it get updated too.
-    local prev = real.shown or {}
-    real.shown = {name = shownName, user = shownUser}
-    local function isOurName(text)
-        return text == real.display or text == prev.name or (want.name ~= nil and text == want.name)
+    local nameCap = rd(LP.Address + DISPLAY_NAME_OFF + 24)
+    if want.name and nameCap and #want.name > nameCap then
+        notes[#notes + 1] = "name longer than " .. nameCap .. " characters - kept the real one"
+        shownName = real.display
     end
-    local function isOurUser(text)
-        return text == "@" .. real.user or text == prev.user or text == shownUser
-    end
+    -- The name the last run showed, so labels still drawing it are found too.
+    local prevShown = real.shownName
+    real.shownName = shownName
 
     local function applyValues()
         for key, attr in pairs(SPOOF_ATTRS) do
-            local v = value(key)
+            local v = want[key]
+            if v == nil then v = real.attrs[key] end
             if v ~= nil and LP:GetAttribute(attr) ~= v then pcall(LP.SetAttribute, LP, attr, v) end
         end
         local ls = LP:FindFirstChild("CustomLeaderstats")
@@ -3118,70 +3284,188 @@ local function startSpoof(conf)
             local v = want[key] or real.stats[key]
             if obj and v ~= nil and obj.Value ~= v then pcall(function() obj.Value = v end) end
         end
+        if shownName and readStdString(LP.Address + DISPLAY_NAME_OFF) ~= shownName then
+            writeStdString(LP.Address + DISPLAY_NAME_OFF, shownName)
+            -- The nametag and player list set your name again (through the
+            -- game, so it redraws) whenever PlayerStatus changes: change it
+            -- and put it back.
+            local status = LP:GetAttribute("PlayerStatus")
+            pcall(LP.SetAttribute, LP, "PlayerStatus", status == nil and "" or nil)
+            pcall(LP.SetAttribute, LP, "PlayerStatus", status)
+        end
     end
 
-    -- Labels showing your name, found again every few seconds (the nametag
-    -- and pages are rebuilt on respawn and when opened).
-    local labels, lastScan = {}, 0
-    local function scan()
-        labels = {}
+    -- Name labels built before the name changed still draw the old one (the
+    -- player list sets it once, when your slot is made), and their effect
+    -- layers (clones, rebuilt at other times) can draw either, which overlaps.
+    -- Setting the text again wouldn't redraw them: the text in memory already
+    -- matches, so the game skips it. So every member of a name label is made
+    -- to draw the name by rewriting its glyphs, taken from any label in the
+    -- same font (the whole UI uses one; the profile card and nametag have the
+    -- name drawn in full), and its text is set to match.
+    local lastHeal = 0
+    local function heal()
+        if not shownName then return end
         local roots = {}
-        local char = workspace:FindFirstChild(LP.Name)
-        local tag = char and char:FindFirstChild("HumanoidRootPart")
-        tag = tag and tag:FindFirstChild("NametagGui")
-        if tag then roots[#roots + 1] = tag end
         local mg = LP.PlayerGui:FindFirstChild("MainGui")
         local list = mg and mg:FindFirstChild("PlayerList")
-        if list then roots[#roots + 1] = list end
-        local profile = mg and mg:FindFirstChild("ViewProfile", true)
-        if profile then roots[#roots + 1] = profile end
+        if list then roots[#roots + 1] = list end -- first: glyphs at the list's size
+        local char = workspace:FindFirstChild(LP.Name)
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        local tag = hrp and hrp:FindFirstChild("NametagGui")
+        if tag then roots[#roots + 1] = tag end
+        local names = {}
+        for _, n in ipairs({real.display, shownName, prevShown}) do
+            if n and n ~= "" then names[n] = true end
+        end
+        local samples
         for _, root in ipairs(roots) do
             for _, d in ipairs(root:GetDescendants()) do
-                if d.ClassName == "TextLabel" and d.Parent.Name ~= "_ITEMSTATUSCLONE" then
-                    labels[#labels + 1] = d
-                end
-            end
-        end
-        return profile
-    end
-    local profile
-
-    task.spawn(function()
-        while _G.__RIVALS_SPOOF == token do
-            local now = tick()
-            if now - lastScan > 3 then lastScan = now; profile = scan() end
-            pcall(applyValues)
-            for _, label in ipairs(labels) do
-                local okT, text = pcall(function() return label.Text end)
-                if okT and text then
-                    -- Only labels showing your own name, real or spoofed.
-                    if shownName and isOurName(text) and text ~= shownName then
-                        pcall(setLabelText, label, shownName)
-                    elseif isOurUser(text) and text ~= shownUser then
-                        pcall(setLabelText, label, shownUser)
+                if d.ClassName == "TextLabel" and d.Parent and d.Parent.Name ~= "_ITEMSTATUSCLONE" then
+                    local okT, text = pcall(function() return d.Text end)
+                    local shows = okT and shownText(d)
+                    if okT and names[text] and shows and names[shows] then
+                        local group = {d}
+                        local layers = d:FindFirstChild("_ITEMSTATUSCLONE")
+                        for _, l in ipairs(layers and layers:GetChildren() or {}) do
+                            if l.ClassName == "TextLabel" then group[#group + 1] = l end
+                        end
+                        local own = {}
+                        for _, m in ipairs(group) do
+                            for _, g in ipairs(glyphList(m) or {}) do
+                                if g.cp and g.cp > 32 and g.cp < 127 then own[string.char(g.cp)] = g.glyph end
+                            end
+                        end
+                        local map
+                        for _, m in ipairs(group) do
+                            if shownText(m) ~= shownName then
+                                if not map then
+                                    if not samples then
+                                        local sampleRoots = {table.unpack(roots)}
+                                        local pages = {LP.PlayerScripts:FindFirstChild("Assets"), mg}
+                                        pages[1] = pages[1] and pages[1]:FindFirstChild("Temp")
+                                        pages[1] = pages[1] and pages[1]:FindFirstChild("Pages")
+                                        pages[2] = mg and mg:FindFirstChild("MainFrame")
+                                        pages[2] = pages[2] and pages[2]:FindFirstChild("Pages")
+                                        for i = 1, 2 do
+                                            local page = pages[i] and pages[i]:FindFirstChild("ViewProfile")
+                                            if page then sampleRoots[#sampleRoots + 1] = page end
+                                        end
+                                        samples = glyphSamples(sampleRoots)
+                                    end
+                                    map = {glyph = {}, labels = {}}
+                                    for _, s in ipairs(samples) do
+                                        if sameFont(own, s.glyph) then
+                                            for c, g in pairs(s.glyph) do map.glyph[c] = map.glyph[c] or g end
+                                            map.labels[#map.labels + 1] = s.widths
+                                        end
+                                    end
+                                end
+                                if patchGlyphs(m, shownName, map, true) then
+                                    healLabel(m, shownName)
+                                else
+                                    -- Can't draw it here: show one name, the one it draws.
+                                    healLabel(m, shownText(m) or text)
+                                end
+                            elseif pcall(function() return m.Text end) and m.Text ~= shownName then
+                                healLabel(m, shownName)
+                            end
+                        end
                     end
                 end
             end
-            -- The profile page takes your level from the server's profile data,
-            -- not the attribute: rewrite it while the page shows you.
-            if profile and (want.level or want.streak) then
-                local okN, name = pcall(function() return profile:FindFirstChild("DisplayName", true).Text end)
-                if okN and (name == shownName or isOurName(name)) then
-                    local bragging = profile:FindFirstChild("BraggingFrame", true)
-                    local lv = bragging and bragging:FindFirstChild("Level")
-                    lv = lv and lv:FindFirstChild("Value")
-                    if lv and want.level then pcall(setLabelText, lv, prettyNumber(want.level)) end
-                    local st = bragging and bragging:FindFirstChild("Streak")
-                    st = st and st:FindFirstChild("Value")
-                    if st and want.streak then pcall(setLabelText, st, prettyNumber(want.streak)) end
+        end
+    end
+
+    local function pass()
+        local now = tick()
+        real.beat = now
+        pcall(applyValues)
+        if now - lastHeal > 3 then lastHeal = now; pcall(heal) end
+    end
+
+    -- The profile card keeps its frame between openings (parked in
+    -- Assets.Temp.Pages while closed) and lays its text out again each time it
+    -- opens, so it is checked every frame while it shows you.
+    -- The page is only made the first time it opens in a server, straight
+    -- into the open pages (MainFrame.Pages), and parked in Temp.Pages when
+    -- closed; it is looked for in both until found.
+    local parked, page
+    pcall(function() parked = LP.PlayerScripts.Assets.Temp.Pages end)
+    local wantLevel = want.level and prettyNumber(want.level)
+    local wantRank, wantRankImage
+    if want.elo then wantRank, wantRankImage = rankFor(want.elo) end
+    local cardMap
+    local function profilePass()
+        if not (wantLevel or wantRank) or not parked then return end
+        if not page then
+            page = parked:FindFirstChild("ViewProfile")
+            if not page then
+                local open = LP.PlayerGui:FindFirstChild("MainGui")
+                open = open and open:FindFirstChild("MainFrame")
+                open = open and open:FindFirstChild("Pages")
+                page = open and open:FindFirstChild("ViewProfile")
+            end
+            if not page then return end
+        end
+        if page.Parent == parked then cardMap = nil return end -- closed
+        local player = page:FindFirstChild("Active")
+        player = player and player:FindFirstChild("Player")
+        local user = player and player:FindFirstChild("Username")
+        local okU, userText = pcall(function() return user.Text end)
+        if not okU or userText ~= "@" .. LP.Name then return end -- someone else's profile
+        local bragging = player:FindFirstChild("Bragging")
+        if not bragging then return end
+        cardMap = cardMap or glyphMap(page)
+        local level = bragging:FindFirstChild("Level")
+        level = level and level:FindFirstChild("Value")
+        if level and wantLevel then patchGlyphs(level, wantLevel, cardMap) end
+        local rank = bragging:FindFirstChild("Rank")
+        if rank and wantRank then
+            local title = rank:FindFirstChild("Title")
+            if title then patchGlyphs(title, wantRank, cardMap) end
+            -- The icon's image, wherever the ImageLabel keeps it (images do
+            -- redraw from memory, unlike text).
+            local container = rank:FindFirstChild("Container")
+            for _, d in ipairs(container and container:GetDescendants() or {}) do
+                if d.ClassName == "ImageLabel" and d.Name == "Icon" then
+                    for _, off in ipairs({IMG_OFF, 0xA18, 0xA10}) do
+                        local current = readStdString(d.Address + off)
+                        if current and current:find("^rbxasset") then
+                            if current ~= wantRankImage then writeStdString(d.Address + off, wantRankImage) end
+                            break
+                        end
+                    end
                 end
             end
-            if not any then break end -- one pass put the real values back
-            task.wait(0.5)
         end
-    end)
+    end
 
-    local note
+    -- Driven by Heartbeat, not a spawned loop: Matcha stops resuming a
+    -- thread's task.wait once the changer run that spawned it has ended, while
+    -- connections keep firing (the icon sync works the same way). The game can
+    -- reset the attributes, so they are put back every half second.
+    if _G.__RIVALS_SPOOF_CONN then pcall(function() _G.__RIVALS_SPOOF_CONN:Disconnect() end) end
+    _G.__RIVALS_SPOOF_CONN = nil
+    local okFirst, firstErr = pcall(pass) -- once now, so clearing it restores straight away
+    if not okFirst then print("[RivalsSkinChanger] Spoof: " .. tostring(firstErr)) end
+    if any then
+        local lastRun, lastError = tick(), nil
+        _G.__RIVALS_SPOOF_CONN = game:GetService("RunService").Heartbeat:Connect(function()
+            if _G.__RIVALS_SPOOF ~= token then return end
+            pcall(profilePass)
+            local now = tick()
+            if now - lastRun < 0.5 then return end
+            lastRun = now
+            -- One bad pass (a page closing mid-read) must not stop the next.
+            local ok, err = pcall(pass)
+            if not ok and tostring(err) ~= lastError then
+                lastError = tostring(err)
+                print("[RivalsSkinChanger] Spoof: " .. lastError)
+            end
+        end)
+    end
+
     if device then
         local remotes = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes")
         local rep = remotes and remotes:FindFirstChild("Replication")
@@ -3189,10 +3473,11 @@ local function startSpoof(conf)
         local setControls = fighter and fighter:FindFirstChild("SetControls")
         local okF, err = false, "SetControls not found"
         if setControls then okF, err = pcall(function() setControls:FireServer(device) end) end
-        note = okF and ("device shown as " .. device)
+        notes[#notes + 1] = okF and ("device shown as " .. device)
             or ("device not changed (needs Matcha's Hybrid Mode): " .. tostring(err):sub(1, 60))
     end
-    return any, note
+    if want.name then notes[#notes + 1] = "the name shows within a few seconds; your @username stays real" end
+    return any, #notes > 0 and table.concat(notes, "; ") or nil
 end
 
 -- Lighting
