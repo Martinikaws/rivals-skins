@@ -1373,8 +1373,14 @@ local MISC_EXPLOSIONS_BASE = {
     RPG = "ExplosionEffect"
 }
 
--- Sniper scopes
+-- Scopes. The game picks these by the viewmodel's name (Mouse.Scope._Setup),
+-- which is the owned skin in swap mode and the weapon in switch mode, so the
+-- target's images are written over whatever it chose.
 local SCOPE_RETICLES = {
+    Sniper = {
+        blur = "rbxassetid://13466088854",
+        circle = "rbxassetid://13466076605"
+    },
     ["Pixel Sniper"] = {
         blur = "rbxassetid://18171031143",
         circle = "rbxassetid://18171045114"
@@ -1384,6 +1390,8 @@ local SCOPE_RETICLES = {
         circle = "rbxassetid://81498448678518"
     }
 }
+-- weapon -> {target skin, owned skin or nil}, for weapons with a scope.
+local scopeSkins = {}
 
 
 local _scriptAlive = true
@@ -2077,6 +2085,42 @@ local function applySkinSwapper()
     local vmMods = LP.PlayerScripts:FindFirstChild("Modules")
     vmMods = vmMods and vmMods:FindFirstChild("ViewModels")
 
+    -- Family scripts by their real names, before any line trades them.
+    local vmOrder = vmMods and vmMods:GetChildren() or {}
+    local vmFamilies = {}
+    for _, c in ipairs(vmOrder) do vmFamilies[c.Name] = c end
+
+    -- The game picks a viewmodel script with ViewModels:FindFirstChild(name, true).
+    -- On Energy Rifle, Sniper, Freeze Ray and the like the family script is both
+    -- the default weapon's script and the base class every skin script requires
+    -- by name (ViewModels["Energy Rifle"]), so the two can't simply trade names.
+    -- Instead the skin script, named like the weapon, moves into an earlier family,
+    -- which a depth-first search reaches before the family script; the family
+    -- script keeps its name for the require. It trades places with a spare script
+    -- there that no config line uses, which keeps its own name.
+    local spares = {}
+    local function moveAhead(sm, fam, inConfig)
+        for _, host in ipairs(vmOrder) do
+            if host == fam then return false end
+            if not spares[host] then
+                spares[host] = {}
+                local default = host.Name:gsub("^Base", "")
+                for _, c in ipairs(host:GetChildren()) do
+                    if c.ClassName == "ModuleScript" and c.Name ~= default and not inConfig[c.Name] then
+                        table.insert(spares[host], c)
+                    end
+                end
+            end
+            local spare = table.remove(spares[host], 1)
+            if spare then
+                -- Names first, so the swap leaves each with the right one; the
+                -- next run then undoes the swap before the names.
+                return (copyName(sm, spare) and copyName(spare, fam) and swapTwoWay(sm, spare, host)) and true or false
+            end
+        end
+        return false
+    end
+
     local jobs, swapJobs, touched, skippedConflicts = {}, {}, {}, {}
 
     local section = "skins"
@@ -2120,6 +2164,8 @@ local function applySkinSwapper()
         end
     end
     for _, j in ipairs(swapJobs) do jobs[#jobs + 1] = j end
+    local inConfig = {}
+    for _, j in ipairs(jobs) do inConfig[j[1]], inConfig[j[2]], inConfig[j[3]] = true, true, true end
 
     for _, job in ipairs(jobs) do
         local weaponName, skinTarget, srcName = job[1], job[2], job[3]
@@ -2138,6 +2184,9 @@ local function applySkinSwapper()
                 touched[skinTarget], touched[srcName] = true, true
                 nonDefaultPairs = nonDefaultPairs + 1
                 if not ownedSwap then ACTIVE_CONFIG_SKINS[weaponName] = skinTarget end
+                if SCOPE_RETICLES[weaponName] then
+                    scopeSkins[weaponName] = {skinTarget, ownedSwap and srcName or nil}
+                end
                 local function findSource()
                     if ownedSwap then return findSkinModel(srcName) end
                     return wf:FindFirstChild(weaponName)
@@ -2196,7 +2245,7 @@ local function applySkinSwapper()
                                     scriptMoved = swapTwoWay(defMod, skinMod, baseMod) and true or false
                                 elseif ownedSwap then
 
-                                    local fam = baseMod or (vmMods and vmMods:FindFirstChild(weaponName))
+                                    local fam = baseMod or vmFamilies[weaponName]
                                     local om = fam and fam:FindFirstChild(srcName)
                                     local sm = fam and fam:FindFirstChild(skinTarget)
                                     if om and sm then
@@ -2209,9 +2258,14 @@ local function applySkinSwapper()
                                     end
                                 elseif not baseMod then
 
-                                    local fam = vmMods and vmMods:FindFirstChild(weaponName)
+                                    local fam = vmFamilies[weaponName]
                                     local sm = fam and fam:FindFirstChild(skinTarget)
-                                    if sm and not fam:FindFirstChild(weaponName) and copyName(sm, fam) then
+                                    if sm and fam.ClassName == "ModuleScript" then
+                                        if moveAhead(sm, fam, inConfig) then
+                                            scriptMoved = true
+                                            table.insert(renamedScripts, {weaponName, skinTarget})
+                                        end
+                                    elseif sm and not fam:FindFirstChild(weaponName) and copyName(sm, fam) then
                                         scriptMoved = true
                                         table.insert(renamedScripts, {weaponName, skinTarget})
                                     end
@@ -2511,17 +2565,20 @@ local function fastSyncGui()
         end
     end
 
-    local sniperSkin = ACTIVE_CONFIG_SKINS["Sniper"]
-    local scopeConf = sniperSkin and SCOPE_RETICLES[sniperSkin]
-    if scopeConf then
-        local ii = mf:FindFirstChild("ItemInterfaces")
-        local si = ii and ii:FindFirstChild(LP.Name .. " - Sniper")
-        local sc2 = si and si:FindFirstChild("Mouse") and si.Mouse:FindFirstChild("Scope")
-        if sc2 then
-            local bi = sc2:FindFirstChild("Blur") and sc2.Blur:FindFirstChild("ImageLabel")
-            local ci = sc2:FindFirstChild("Circle") and sc2.Circle:FindFirstChild("ImageLabel")
-            if bi then writeImage(bi, scopeConf.blur) end
-            if ci then writeImage(ci, scopeConf.circle) end
+    for weaponName, pick in pairs(scopeSkins) do
+        -- The target's scope, or the plain one when only the owned skin has its own.
+        local scopeConf = SCOPE_RETICLES[pick[1]]
+            or (pick[2] and SCOPE_RETICLES[pick[2]] and SCOPE_RETICLES[weaponName])
+        if scopeConf then
+            local ii = mf:FindFirstChild("ItemInterfaces")
+            local si = ii and ii:FindFirstChild(LP.Name .. " - " .. weaponName)
+            local sc2 = si and si:FindFirstChild("Mouse") and si.Mouse:FindFirstChild("Scope")
+            if sc2 then
+                local bi = sc2:FindFirstChild("Blur") and sc2.Blur:FindFirstChild("ImageLabel")
+                local ci = sc2:FindFirstChild("Circle") and sc2.Circle:FindFirstChild("ImageLabel")
+                if bi and scopeConf.blur then writeImage(bi, scopeConf.blur) end
+                if ci and scopeConf.circle then writeImage(ci, scopeConf.circle) end
+            end
         end
     end
 end
