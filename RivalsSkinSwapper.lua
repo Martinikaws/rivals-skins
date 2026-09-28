@@ -1078,6 +1078,7 @@ local configWrapPairs = {}
 
 local configSkybox = {}
 local configSounds = {}
+local configSpoof = {}
 
 local configLighting = {}
 
@@ -2132,7 +2133,8 @@ local function applySkinSwapper()
             section = h:find("wrap") and "wraps" or (h:find("sky") and "skybox"
                 or (h:find("light") and "lighting" or (h:find("finisher") and "finishers"
                 or (h:find("charm") and "charms" or (h:find("sound") and "sounds"
-                or (h:find("skin") and "skins" or "other"))))))
+                or (h:find("spoof") and "spoof"
+                or (h:find("skin") and "skins" or "other")))))))
         elseif section == "other" then
 
         elseif section == "finishers" or section == "charms" then
@@ -2150,6 +2152,9 @@ local function applySkinSwapper()
         elseif section == "sounds" then
             local key, value = parseConfigLine(rawLine)
             if key and value then configSounds[key:lower()] = value end
+        elseif section == "spoof" then
+            local key, value = parseConfigLine(rawLine)
+            if key and value then configSpoof[key:lower()] = value end
         elseif section == "lighting" then
             local key, value = parseConfigLine(rawLine)
             if key and value then configLighting[key:lower()] = value end
@@ -2997,6 +3002,199 @@ local function startVolumeWatcher(conf)
     return n
 end
 
+-- Spoof: your name, level, streak and badges as you see them. The server keeps
+-- the real ones, so only your screen changes - except Device, which is sent to
+-- the server and shows to everyone.
+--
+-- Level, streak, ELO and the badges are attributes (and leaderstats) the game
+-- redraws from; the name and the profile page's level are plain text, so those
+-- labels get their text rewritten. A TextLabel keeps its text as a std::string
+-- in four places; only copies holding the label's current text are touched.
+local SPOOF_ATTRS = {
+    level = "Level", streak = "StatisticDuelsWinStreak", elo = "DisplayELO",
+    influencer = "IsInfluencer", employee = "IsRobloxEmployee", trustworthy = "IsTrustWorthy",
+}
+local SPOOF_STATS = {level = "Level", streak = "Win Streak", elo = "Current ELO"}
+local TEXT_COPIES = {0xb88, 0xdf0, 0xe50, 0xe70}
+local DEVICES = {mousekeyboard = "MouseKeyboard", keyboard = "MouseKeyboard", pc = "MouseKeyboard",
+    touch = "Touch", mobile = "Touch", gamepad = "Gamepad", controller = "Gamepad", vr = "VR"}
+
+local function readStdString(a)
+    local size, cap = rd(a + 16), rd(a + 24)
+    if not size or not cap or size > 256 or cap < size then return nil end
+    local p = cap > 15 and rd(a) or a
+    local ok, s = pcall(mrd, "string", p)
+    return ok and type(s) == "string" and s:sub(1, size) or nil
+end
+local function writeStdString(a, text)
+    local cap = rd(a + 24)
+    if not cap or #text > cap then return false end
+    local p = cap > 15 and rd(a) or a
+    for i = 1, #text do mwr("byte", p + i - 1, string.byte(text, i)) end
+    mwr("byte", p + #text, 0)
+    wr(a + 16, #text)
+    return true
+end
+local function setLabelText(label, text)
+    local okT, current = pcall(function() return label.Text end)
+    if not okT or current == text then return false end
+    local wrote = false
+    for _, off in ipairs(TEXT_COPIES) do
+        local a = label.Address + off
+        if readStdString(a) == current and writeStdString(a, text) then wrote = true end
+    end
+    return wrote
+end
+local function prettyNumber(n)
+    local s = tostring(math.floor(n))
+    local out = s:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+    return (out:gsub("^,", ""))
+end
+local function spoofFlag(v)
+    local low = tostring(v or ""):lower()
+    if low == "true" or low == "1" or low == "on" or low == "yes" then return true end
+    if low == "false" or low == "0" or low == "off" or low == "no" then return false end
+    return nil
+end
+
+local function startSpoof(conf)
+    _G.__RIVALS_SPOOF = (_G.__RIVALS_SPOOF or 0) + 1
+    local token = _G.__RIVALS_SPOOF
+
+    -- The real values, read once before anything is changed and kept across
+    -- runs, so turning the spoof off can put them back.
+    local real = _G.__RIVALS_SPOOF_REAL
+    if not real or real.user ~= LP.Name then
+        local okD, display = pcall(function()
+            return workspace[LP.Name].HumanoidRootPart.NametagGui.Elements.NameDisplay.DisplayName.Text
+        end)
+        real = {user = LP.Name, display = okD and display or nil, attrs = {}, stats = {}}
+        for key, attr in pairs(SPOOF_ATTRS) do real.attrs[key] = LP:GetAttribute(attr) end
+        local ls = LP:FindFirstChild("CustomLeaderstats")
+        for key, stat in pairs(SPOOF_STATS) do
+            local v = ls and ls:FindFirstChild(stat)
+            if v then real.stats[key] = v.Value end
+        end
+        _G.__RIVALS_SPOOF_REAL = real
+    end
+
+    local want = {
+        name = conf.name and conf.name ~= "" and conf.name or nil,
+        username = conf.username and conf.username:gsub("^@", "") ~= "" and conf.username:gsub("^@", "") or nil,
+        level = tonumber(conf.level), streak = tonumber(conf.streak), elo = tonumber(conf.elo),
+        influencer = spoofFlag(conf.influencer), employee = spoofFlag(conf.employee),
+        trustworthy = spoofFlag(conf.trustworthy),
+    }
+    local device = conf.device and DEVICES[conf.device:lower():gsub("[%s&/_-]", "")]
+    local any = device ~= nil
+    for _, v in pairs(want) do if v ~= nil then any = true end end
+
+    -- Values to show: the spoofed one where set, otherwise the real one (so
+    -- clearing a field puts the real value back).
+    local function value(key)
+        if want[key] ~= nil then return want[key] end
+        return real.attrs[key]
+    end
+    local shownName = want.name or real.display
+    local shownUser = "@" .. (want.username or real.user)
+    -- What the last run showed, so labels still carrying it get updated too.
+    local prev = real.shown or {}
+    real.shown = {name = shownName, user = shownUser}
+    local function isOurName(text)
+        return text == real.display or text == prev.name or (want.name ~= nil and text == want.name)
+    end
+    local function isOurUser(text)
+        return text == "@" .. real.user or text == prev.user or text == shownUser
+    end
+
+    local function applyValues()
+        for key, attr in pairs(SPOOF_ATTRS) do
+            local v = value(key)
+            if v ~= nil and LP:GetAttribute(attr) ~= v then pcall(LP.SetAttribute, LP, attr, v) end
+        end
+        local ls = LP:FindFirstChild("CustomLeaderstats")
+        for key, stat in pairs(SPOOF_STATS) do
+            local obj = ls and ls:FindFirstChild(stat)
+            local v = want[key] or real.stats[key]
+            if obj and v ~= nil and obj.Value ~= v then pcall(function() obj.Value = v end) end
+        end
+    end
+
+    -- Labels showing your name, found again every few seconds (the nametag
+    -- and pages are rebuilt on respawn and when opened).
+    local labels, lastScan = {}, 0
+    local function scan()
+        labels = {}
+        local roots = {}
+        local char = workspace:FindFirstChild(LP.Name)
+        local tag = char and char:FindFirstChild("HumanoidRootPart")
+        tag = tag and tag:FindFirstChild("NametagGui")
+        if tag then roots[#roots + 1] = tag end
+        local mg = LP.PlayerGui:FindFirstChild("MainGui")
+        local list = mg and mg:FindFirstChild("PlayerList")
+        if list then roots[#roots + 1] = list end
+        local profile = mg and mg:FindFirstChild("ViewProfile", true)
+        if profile then roots[#roots + 1] = profile end
+        for _, root in ipairs(roots) do
+            for _, d in ipairs(root:GetDescendants()) do
+                if d.ClassName == "TextLabel" and d.Parent.Name ~= "_ITEMSTATUSCLONE" then
+                    labels[#labels + 1] = d
+                end
+            end
+        end
+        return profile
+    end
+    local profile
+
+    task.spawn(function()
+        while _G.__RIVALS_SPOOF == token do
+            local now = tick()
+            if now - lastScan > 3 then lastScan = now; profile = scan() end
+            pcall(applyValues)
+            for _, label in ipairs(labels) do
+                local okT, text = pcall(function() return label.Text end)
+                if okT and text then
+                    -- Only labels showing your own name, real or spoofed.
+                    if shownName and isOurName(text) and text ~= shownName then
+                        pcall(setLabelText, label, shownName)
+                    elseif isOurUser(text) and text ~= shownUser then
+                        pcall(setLabelText, label, shownUser)
+                    end
+                end
+            end
+            -- The profile page takes your level from the server's profile data,
+            -- not the attribute: rewrite it while the page shows you.
+            if profile and (want.level or want.streak) then
+                local okN, name = pcall(function() return profile:FindFirstChild("DisplayName", true).Text end)
+                if okN and (name == shownName or isOurName(name)) then
+                    local bragging = profile:FindFirstChild("BraggingFrame", true)
+                    local lv = bragging and bragging:FindFirstChild("Level")
+                    lv = lv and lv:FindFirstChild("Value")
+                    if lv and want.level then pcall(setLabelText, lv, prettyNumber(want.level)) end
+                    local st = bragging and bragging:FindFirstChild("Streak")
+                    st = st and st:FindFirstChild("Value")
+                    if st and want.streak then pcall(setLabelText, st, prettyNumber(want.streak)) end
+                end
+            end
+            if not any then break end -- one pass put the real values back
+            task.wait(0.5)
+        end
+    end)
+
+    local note
+    if device then
+        local remotes = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes")
+        local rep = remotes and remotes:FindFirstChild("Replication")
+        local fighter = rep and rep:FindFirstChild("Fighter")
+        local setControls = fighter and fighter:FindFirstChild("SetControls")
+        local okF, err = false, "SetControls not found"
+        if setControls then okF, err = pcall(function() setControls:FireServer(device) end) end
+        note = okF and ("device shown as " .. device)
+            or ("device not changed (needs Matcha's Hybrid Mode): " .. tostring(err):sub(1, 60))
+    end
+    return any, note
+end
+
 -- Lighting
 local LIGHTING_FIELDS = {
     brightness = {off = 0x108, key = "Brightness"},
@@ -3322,6 +3520,15 @@ do
         print("[RivalsSkinChanger] Sound volume adjusted for " .. tostring(watched) .. " sound(s)")
     elseif not okV then
         print("[RivalsSkinChanger] Sound volume error: " .. tostring(watched))
+    end
+end
+
+do
+    local okP, spoofing, spoofNote = pcall(startSpoof, configSpoof)
+    if okP and spoofing then
+        print("[RivalsSkinChanger] Spoof on - only you see it" .. (spoofNote and (" (" .. spoofNote .. ")") or ""))
+    elseif not okP then
+        print("[RivalsSkinChanger] Spoof error: " .. tostring(spoofing))
     end
 end
 

@@ -560,6 +560,7 @@
                 <button class="dash-switch-btn" id="switch-charms" onclick="setDashMode('charms')">Charms</button>
                 <button class="dash-switch-btn" id="switch-skybox" onclick="setDashMode('skybox')">Skybox</button>
                 <button class="dash-switch-btn" id="switch-sounds" onclick="setDashMode('sounds')">Sounds</button>
+                <button class="dash-switch-btn" id="switch-spoof" onclick="setDashMode('spoof')">Spoof</button>
             </div>
             <div class="dash-actions">
                 <button class="btn-ghost btn-sm" onclick="openPreview()">Config Preview</button>
@@ -4417,8 +4418,9 @@
             loadSharedSkies();
             try { lightConfig = JSON.parse(localStorage.getItem("rivals_lighting_saved") || "{}") || {}; } catch (e) { lightConfig = {}; }
             try { soundConfig = JSON.parse(localStorage.getItem("rivals_sounds_saved") || "{}") || {}; } catch (e) { soundConfig = {}; }
+            try { spoofConfig = JSON.parse(localStorage.getItem("rivals_spoof_saved") || "{}") || {}; } catch (e) { spoofConfig = {}; }
             loadCosmeticConfigs();
-            setDashMode(["wraps", "advanced", "skybox", "sounds", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
+            setDashMode(["wraps", "advanced", "skybox", "sounds", "spoof", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
         }
 
         const CATEGORY_ORDER = ["Primary", "Secondary", "Melee", "Utility"];
@@ -4429,6 +4431,7 @@
             document.getElementById("advToggle").classList.toggle("active", mode === "advanced");
             document.getElementById("switch-skybox").classList.toggle("active", mode === "skybox");
             document.getElementById("switch-sounds").classList.toggle("active", mode === "sounds");
+            document.getElementById("switch-spoof").classList.toggle("active", mode === "spoof");
             document.getElementById("switch-finishers").classList.toggle("active", mode === "finishers");
             document.getElementById("switch-charms").classList.toggle("active", mode === "charms");
             document.getElementById("advToggle").hidden = mode !== "skins" && mode !== "advanced";
@@ -4483,6 +4486,11 @@
             }
             if (dashMode === "sounds") {
                 renderSoundGrid(grid);
+                updateFootCount();
+                return;
+            }
+            if (dashMode === "spoof") {
+                renderSpoofGrid(grid);
                 updateFootCount();
                 return;
             }
@@ -5250,6 +5258,117 @@
                 .concat(keys.map(function (k) { return k + "=" + soundConfig[k]; }));
         }
 
+        // ---- Spoof tab ----
+        // Your name, level, streak and badges as you see them in game, saved as
+        // [Spoof]. The server keeps the real ones, so only you see them - except
+        // Device, which the changer sends to the server (everyone sees it).
+        let spoofConfig = {};
+        const SPOOF_TEXT = [
+            {key: "Name", name: "Display name", sub: "The big name on your nametag and profile", placeholder: "Your real one"},
+            {key: "Username", name: "Username", sub: "The @name under it", placeholder: "@yourname"},
+            {key: "Level", name: "Level", sub: "Nametag, leaderboard and profile", number: true},
+            {key: "Streak", name: "Win streak", sub: "Duel win streak", number: true},
+            {key: "ELO", name: "ELO", sub: "Ranked rating on the leaderboard", number: true}
+        ];
+        const SPOOF_BADGES = [
+            {key: "Influencer", name: "Influencer badge"},
+            {key: "Employee", name: "Roblox employee badge"},
+            {key: "Trustworthy", name: "Trustworthy"}
+        ];
+        const SPOOF_DEVICES = [["", "Your real device"], ["MouseKeyboard", "PC"], ["Touch", "Mobile"], ["Gamepad", "Controller"], ["VR", "VR"]];
+
+        function saveSpoofConfig() {
+            try { localStorage.setItem("rivals_spoof_saved", JSON.stringify(spoofConfig)); } catch (e) {}
+        }
+        function setSpoof(key, value) {
+            const v = String(value == null ? "" : value).trim();
+            if (v) spoofConfig[key] = v; else delete spoofConfig[key];
+            saveSpoofConfig();
+            updateFootCount();
+        }
+
+        function renderSpoofGrid(grid) {
+            const card = document.createElement("div");
+            card.className = "weapon-card";
+            const label = document.createElement("div");
+            label.className = "card-label";
+            label.textContent = "Spoof - only you see it";
+            card.appendChild(label);
+
+            function row(name, sub, control, active) {
+                const r = document.createElement("div");
+                r.className = "sky-card sky-custom" + (active ? " active" : "");
+                r.dataset.name = (name + " spoof").toLowerCase();
+                const info = document.createElement("div");
+                info.innerHTML = '<div class="sky-name"></div><div class="sky-sub"></div>';
+                info.querySelector(".sky-name").textContent = name;
+                info.querySelector(".sky-sub").textContent = sub;
+                r.appendChild(info);
+                const box = document.createElement("div");
+                box.className = "sky-add";
+                box.appendChild(control);
+                r.appendChild(box);
+                card.appendChild(r);
+            }
+
+            SPOOF_TEXT.forEach(function (f) {
+                const input = document.createElement("input");
+                input.placeholder = f.placeholder || "Real";
+                input.value = spoofConfig[f.key] || "";
+                if (f.number) { input.inputMode = "numeric"; input.pattern = "\\d*"; }
+                input.addEventListener("click", function (e) { e.stopPropagation(); });
+                input.addEventListener("change", function () {
+                    let v = input.value.trim();
+                    if (f.key === "Username") v = v.replace(/^@/, "");
+                    if (f.number && v && !/^\d{1,12}$/.test(v)) { showToast(f.name + " takes a whole number"); input.value = spoofConfig[f.key] || ""; return; }
+                    setSpoof(f.key, v);
+                    input.closest(".sky-card").classList.toggle("active", !!v);
+                });
+                row(f.name, f.sub, input, !!spoofConfig[f.key]);
+            });
+
+            SPOOF_BADGES.forEach(function (b) {
+                const pick = document.createElement("select");
+                pick.className = "sound-pick";
+                pick.innerHTML = '<option value="">Real</option><option value="true">On</option><option value="false">Off</option>';
+                pick.value = spoofConfig[b.key] || "";
+                pick.addEventListener("click", function (e) { e.stopPropagation(); });
+                pick.addEventListener("change", function () {
+                    setSpoof(b.key, pick.value);
+                    pick.closest(".sky-card").classList.toggle("active", !!pick.value);
+                });
+                row(b.name, "Shows next to your name", pick, !!spoofConfig[b.key]);
+            });
+
+            const device = document.createElement("select");
+            device.className = "sound-pick";
+            device.innerHTML = SPOOF_DEVICES.map(function (d) { return '<option value="' + d[0] + '">' + d[1] + '</option>'; }).join("");
+            device.value = spoofConfig.Device || "";
+            device.addEventListener("click", function (e) { e.stopPropagation(); });
+            device.addEventListener("change", function () {
+                setSpoof("Device", device.value);
+                device.closest(".sky-card").classList.toggle("active", !!device.value);
+            });
+            row("Device Icon (Pro Matcha Only)", "Everyone sees this one: it is sent to the server. Needs Matcha's Hybrid Mode.", device, !!spoofConfig.Device);
+
+            const note = document.createElement("div");
+            note.className = "sky-card";
+            note.dataset.name = "spoof note";
+            note.innerHTML = '<div><div class="sky-name">How it works</div><div class="sky-sub">'
+                + 'Empty keeps your real value. The changer shows these on your screen only (nametag, leaderboard, '
+                + 'profile); other players still see the real ones. The device icon is the exception.</div></div>';
+            card.appendChild(note);
+            grid.appendChild(card);
+        }
+
+        function generateSpoofLines() {
+            const keys = SPOOF_TEXT.concat(SPOOF_BADGES).map(function (f) { return f.key; }).concat(["Device"])
+                .filter(function (k) { return spoofConfig[k]; });
+            if (!keys.length) return [];
+            return ["", "[Spoof]", "-- Only you see these, except Device (sent to the server). Empty = your real one."]
+                .concat(keys.map(function (k) { return k + "=" + spoofConfig[k]; }));
+        }
+
         function generateLightLines() {
             if (!lightConfig.preset) return [];
             const lines = ["", "[Lighting]", "-- Applied right away and kept across map changes.", "Preset=" + lightConfig.preset];
@@ -5766,6 +5885,11 @@
                 el.textContent = k ? k + (k === 1 ? " sound changed" : " sounds changed") : "Sounds unchanged";
                 return;
             }
+            if (dashMode === "spoof") {
+                const k = Object.keys(spoofConfig).length;
+                el.textContent = k ? k + (k === 1 ? " thing spoofed" : " things spoofed") : "Nothing spoofed";
+                return;
+            }
             if (dashMode === "advanced") {
                 const k = swapCount();
                 el.textContent = k + (k === 1 ? " skin swap" : " skin swaps");
@@ -5844,6 +5968,7 @@
                 lines = lines.concat(swapLines);
             }
             return lines.concat(generateWrapLines()).concat(generateSkyLines()).concat(generateLightLines()).concat(generateSoundLines())
+                .concat(generateSpoofLines())
                 .concat(generateCosmeticLines("finishers")).concat(generateCosmeticLines("charms")).join("\n");
         }
 
@@ -5866,6 +5991,10 @@
             }
             if (dashMode === "sounds") {
                 if (presetType === "default") { soundConfig = {}; saveSoundConfig(); renderGrid(); showToast("All sounds back to the game's"); }
+                return;
+            }
+            if (dashMode === "spoof") {
+                if (presetType === "default") { spoofConfig = {}; saveSpoofConfig(); renderGrid(); showToast("Spoof off - your real name and stats"); }
                 return;
             }
             if (COS_KINDS[dashMode]) {
