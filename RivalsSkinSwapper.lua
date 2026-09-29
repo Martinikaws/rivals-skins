@@ -3020,8 +3020,6 @@ local SPOOF_ATTRS = {
 }
 local SPOOF_STATS = {level = "Level", streak = "Win Streak", elo = "Current ELO"}
 local DISPLAY_NAME_OFF = 0x128 -- Player.DisplayName, a std::string
-local TEXT_COPIES = {0xb88, 0xdf0, 0xe50, 0xe70} -- a TextLabel's text and its derived copies
-local TEXT_RUNS, TEXT_RUNS_END, TEXT_RUN_SIZE = 0xc48, 0xc50, 0xC8
 local GLYPHS, GLYPHS_END, GLYPH_SIZE = 0xc18, 0xc20, 56 -- laid-out glyphs, codepoint at +12
 local SPOOF_REAL_FILE = "rivals_spoof_real.txt"
 local DEVICES = {mousekeyboard = "MouseKeyboard", keyboard = "MouseKeyboard", pc = "MouseKeyboard",
@@ -3056,15 +3054,6 @@ local function shownText(label)
         end
     end
     return table.concat(out)
-end
--- Put a label's text back to what it shows, so layers that redraw on their
--- own (the animated name effects) match the ones that don't.
-local function healLabel(label, text)
-    for _, off in ipairs(TEXT_COPIES) do writeStdString(label.Address + off, text) end
-    local b, e = rd(label.Address + TEXT_RUNS), rd(label.Address + TEXT_RUNS_END)
-    if b and e and e > b and e - b < TEXT_RUN_SIZE * 16 then
-        for run = b, e - 1, TEXT_RUN_SIZE do writeStdString(run, text) end
-    end
 end
 -- The profile card sets its level and rank from the server each time it
 -- opens, so the text can't be changed at the source. What can be changed is
@@ -3170,6 +3159,10 @@ local function patchGlyphs(label, text, map, keep)
     -- glyphs go first as zero-width copies of the first character: drawn
     -- exactly on top of it, they don't show.
     local pad = #list - #text
+    -- Checked again right before writing: a label laid out again (or gone)
+    -- since it was read must not be written into.
+    local b2, e2 = rd(label.Address + GLYPHS), rd(label.Address + GLYPHS_END)
+    if b2 ~= b or e2 ~= b + #list * GLYPH_SIZE or rint(list[1].addr + 12) ~= list[1].cp then return false end
     for i = 1, #list do
         local j = i - pad
         mwr("int", list[i].addr + 4, j >= 1 and widths[j] or 0)
@@ -3251,6 +3244,7 @@ local function startSpoof(conf)
 
     local want = {
         name = conf.name and conf.name ~= "" and conf.name or nil,
+        user = conf.username and conf.username:gsub("^@", "") ~= "" and (conf.username:gsub("^@", "")) or nil,
         level = tonumber(conf.level), streak = tonumber(conf.streak), elo = tonumber(conf.elo),
         influencer = spoofFlag(conf.influencer), employee = spoofFlag(conf.employee),
         trustworthy = spoofFlag(conf.trustworthy),
@@ -3268,9 +3262,14 @@ local function startSpoof(conf)
         notes[#notes + 1] = "name longer than " .. nameCap .. " characters - kept the real one"
         shownName = real.display
     end
-    -- The name the last run showed, so labels still drawing it are found too.
-    local prevShown = real.shownName
-    real.shownName = shownName
+    -- The @username is redrawn over the real one's glyphs, so it can't be
+    -- longer than the real one.
+    local realUser = "@" .. LP.Name
+    local shownUser = want.user and "@" .. want.user or realUser
+    if #shownUser > #realUser then
+        notes[#notes + 1] = "username longer than " .. #LP.Name .. " characters - kept the real one"
+        shownUser = realUser
+    end
 
     local function applyValues()
         for key, attr in pairs(SPOOF_ATTRS) do
@@ -3295,84 +3294,60 @@ local function startSpoof(conf)
         end
     end
 
-    -- Name labels built before the name changed still draw the old one (the
-    -- player list sets it once, when your slot is made), and their effect
-    -- layers (clones, rebuilt at other times) can draw either, which overlaps.
-    -- Setting the text again wouldn't redraw them: the text in memory already
-    -- matches, so the game skips it. So every member of a name label is made
-    -- to draw the name by rewriting its glyphs, taken from any label in the
-    -- same font (the whole UI uses one; the profile card and nametag have the
-    -- name drawn in full), and its text is set to match.
+    -- Your name reaches the nametag, player list and profile through the
+    -- DisplayName above, whenever the game sets it (the nametag on every
+    -- status change, the profile on every opening, the player list when your
+    -- slot is made). Labels are never rewritten in memory for the name: the
+    -- player list's name layers are destroyed and remade whenever it opens,
+    -- and writing into one that just went away crashed the game.
+    -- The @username is your account name, which the game gets from the
+    -- server, so it can only be redrawn: its glyphs are swapped for the same
+    -- font's (its text stays real - that is how your own profile card is told
+    -- apart from others). Only on the nametag and profile card, which stay put.
     local lastHeal = 0
+    local function mapFor(label, samples)
+        local own = {}
+        for _, g in ipairs(glyphList(label) or {}) do
+            if g.cp and g.cp > 32 and g.cp < 127 then own[string.char(g.cp)] = g.glyph end
+        end
+        local map = {glyph = {}, labels = {}}
+        for _, s in ipairs(samples) do
+            if sameFont(own, s.glyph) then
+                for c, g in pairs(s.glyph) do map.glyph[c] = map.glyph[c] or g end
+                map.labels[#map.labels + 1] = s.widths
+            end
+        end
+        return map
+    end
+    local function userSampleOf(label)
+        local s = {glyph = {}, widths = {}}
+        for _, g in ipairs(glyphList(label) or {}) do
+            if g.cp and g.cp > 32 and g.cp < 127 then
+                s.glyph[string.char(g.cp)], s.widths[string.char(g.cp)] = g.glyph, g.width
+            end
+        end
+        return s
+    end
     local function heal()
-        if not shownName then return end
-        local roots = {}
-        local mg = LP.PlayerGui:FindFirstChild("MainGui")
-        local list = mg and mg:FindFirstChild("PlayerList")
-        if list then roots[#roots + 1] = list end -- first: glyphs at the list's size
         local char = workspace:FindFirstChild(LP.Name)
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
         local tag = hrp and hrp:FindFirstChild("NametagGui")
-        if tag then roots[#roots + 1] = tag end
-        local names = {}
-        for _, n in ipairs({real.display, shownName, prevShown}) do
-            if n and n ~= "" then names[n] = true end
+        if not tag then return end
+        local labels = {}
+        for _, d in ipairs(tag:GetDescendants()) do
+            if d.ClassName == "TextLabel" and d.Parent and d.Parent.Name ~= "_ITEMSTATUSCLONE" then
+                local okT, text = pcall(function() return d.Text end)
+                if okT and text == realUser then labels[#labels + 1] = d end
+            end
         end
-        local samples
-        for _, root in ipairs(roots) do
-            for _, d in ipairs(root:GetDescendants()) do
-                if d.ClassName == "TextLabel" and d.Parent and d.Parent.Name ~= "_ITEMSTATUSCLONE" then
-                    local okT, text = pcall(function() return d.Text end)
-                    local shows = okT and shownText(d)
-                    if okT and names[text] and shows and names[shows] then
-                        local group = {d}
-                        local layers = d:FindFirstChild("_ITEMSTATUSCLONE")
-                        for _, l in ipairs(layers and layers:GetChildren() or {}) do
-                            if l.ClassName == "TextLabel" then group[#group + 1] = l end
-                        end
-                        local own = {}
-                        for _, m in ipairs(group) do
-                            for _, g in ipairs(glyphList(m) or {}) do
-                                if g.cp and g.cp > 32 and g.cp < 127 then own[string.char(g.cp)] = g.glyph end
-                            end
-                        end
-                        local map
-                        for _, m in ipairs(group) do
-                            if shownText(m) ~= shownName then
-                                if not map then
-                                    if not samples then
-                                        local sampleRoots = {table.unpack(roots)}
-                                        local pages = {LP.PlayerScripts:FindFirstChild("Assets"), mg}
-                                        pages[1] = pages[1] and pages[1]:FindFirstChild("Temp")
-                                        pages[1] = pages[1] and pages[1]:FindFirstChild("Pages")
-                                        pages[2] = mg and mg:FindFirstChild("MainFrame")
-                                        pages[2] = pages[2] and pages[2]:FindFirstChild("Pages")
-                                        for i = 1, 2 do
-                                            local page = pages[i] and pages[i]:FindFirstChild("ViewProfile")
-                                            if page then sampleRoots[#sampleRoots + 1] = page end
-                                        end
-                                        samples = glyphSamples(sampleRoots)
-                                    end
-                                    map = {glyph = {}, labels = {}}
-                                    for _, s in ipairs(samples) do
-                                        if sameFont(own, s.glyph) then
-                                            for c, g in pairs(s.glyph) do map.glyph[c] = map.glyph[c] or g end
-                                            map.labels[#map.labels + 1] = s.widths
-                                        end
-                                    end
-                                end
-                                if patchGlyphs(m, shownName, map, true) then
-                                    healLabel(m, shownName)
-                                else
-                                    -- Can't draw it here: show one name, the one it draws.
-                                    healLabel(m, shownText(m) or text)
-                                end
-                            elseif pcall(function() return m.Text end) and m.Text ~= shownName then
-                                healLabel(m, shownName)
-                            end
-                        end
-                    end
-                end
+        for _, d in ipairs(labels) do
+            local shows = shownText(d)
+            if shows == realUser and not real.userSample then real.userSample = userSampleOf(d) end
+            if shows and shows ~= shownUser then
+                local samples = glyphSamples({tag})
+                if real.userSample then table.insert(samples, 1, real.userSample) end
+                -- (straight after, so the label can't have gone in between)
+                if d.Parent then patchGlyphs(d, shownUser, mapFor(d, samples), true) end
             end
         end
     end
@@ -3397,7 +3372,7 @@ local function startSpoof(conf)
     if want.elo then wantRank, wantRankImage = rankFor(want.elo) end
     local cardMap
     local function profilePass()
-        if not (wantLevel or wantRank) or not parked then return end
+        if not (wantLevel or wantRank or shownUser ~= realUser) or not parked then return end
         if not page then
             page = parked:FindFirstChild("ViewProfile")
             if not page then
@@ -3413,10 +3388,26 @@ local function startSpoof(conf)
         player = player and player:FindFirstChild("Player")
         local user = player and player:FindFirstChild("Username")
         local okU, userText = pcall(function() return user.Text end)
-        if not okU or userText ~= "@" .. LP.Name then return end -- someone else's profile
+        if not okU or userText ~= realUser then return end -- someone else's profile
+        if not cardMap then
+            if not real.userSample and shownText(user) == realUser then
+                real.userSample = {glyph = {}, widths = {}}
+                for _, g in ipairs(glyphList(user) or {}) do
+                    if g.cp and g.cp > 32 and g.cp < 127 then
+                        real.userSample.glyph[string.char(g.cp)] = g.glyph
+                        real.userSample.widths[string.char(g.cp)] = g.width
+                    end
+                end
+            end
+            cardMap = glyphMap(page)
+            if real.userSample then -- your real username's letters, to put it back
+                for c, g in pairs(real.userSample.glyph) do cardMap.glyph[c] = cardMap.glyph[c] or g end
+                cardMap.labels[#cardMap.labels + 1] = real.userSample.widths
+            end
+        end
+        if shownText(user) ~= shownUser then patchGlyphs(user, shownUser, cardMap, true) end
         local bragging = player:FindFirstChild("Bragging")
         if not bragging then return end
-        cardMap = cardMap or glyphMap(page)
         local level = bragging:FindFirstChild("Level")
         level = level and level:FindFirstChild("Value")
         if level and wantLevel then patchGlyphs(level, wantLevel, cardMap) end
@@ -3476,7 +3467,7 @@ local function startSpoof(conf)
         notes[#notes + 1] = okF and ("device shown as " .. device)
             or ("device not changed (needs Matcha's Hybrid Mode): " .. tostring(err):sub(1, 60))
     end
-    if want.name then notes[#notes + 1] = "the name shows within a few seconds; your @username stays real" end
+    if want.name then notes[#notes + 1] = "the name shows on your nametag and profile; the Tab list keeps the real one until it remakes your slot (next join)" end
     return any, #notes > 0 and table.concat(notes, "; ") or nil
 end
 
