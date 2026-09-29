@@ -1081,6 +1081,7 @@ local configSounds = {}
 local configSpoof = {}
 
 local configLighting = {}
+local configTracers = {}
 
 local configFinishers, configCharms = {}, {}
 
@@ -2133,8 +2134,8 @@ local function applySkinSwapper()
             section = h:find("wrap") and "wraps" or (h:find("sky") and "skybox"
                 or (h:find("light") and "lighting" or (h:find("finisher") and "finishers"
                 or (h:find("charm") and "charms" or (h:find("sound") and "sounds"
-                or (h:find("spoof") and "spoof"
-                or (h:find("skin") and "skins" or "other")))))))
+                or (h:find("spoof") and "spoof" or (h:find("tracer") and "tracers"
+                or (h:find("skin") and "skins" or "other"))))))))
         elseif section == "other" then
 
         elseif section == "finishers" or section == "charms" then
@@ -2155,6 +2156,9 @@ local function applySkinSwapper()
         elseif section == "spoof" then
             local key, value = parseConfigLine(rawLine)
             if key and value then configSpoof[key:lower()] = value end
+        elseif section == "tracers" then
+            local key, value = parseConfigLine(rawLine)
+            if key and value then configTracers[key:lower()] = value end
         elseif section == "lighting" then
             local key, value = parseConfigLine(rawLine)
             if key and value then configLighting[key:lower()] = value end
@@ -3816,6 +3820,189 @@ do
         print("[RivalsSkinChanger] Lighting: " .. tostring(lightNote))
     elseif not okL then
         print("[RivalsSkinChanger] Lighting error: " .. tostring(applied))
+    end
+end
+
+-- Tracer colours
+-- Each shot's Beam.Color comes from a ColorSequence constant: TracerEffect's
+-- default, or the skin script's own (GetFriendlyTracerColor). Rewriting those
+-- constants recolours the tracers the game draws itself, so they don't lag.
+-- Every address belongs to this server: each write checks it still holds what
+-- it did, and the watcher stops when the server or the module changes.
+do
+    _G.__RIVALS_TRACERS = (_G.__RIVALS_TRACERS or 0) + 1
+    local token = _G.__RIVALS_TRACERS
+    if _G.__RIVALS_TRACER_CONN then pcall(function() _G.__RIVALS_TRACER_CONN:Disconnect() end) end
+    _G.__RIVALS_TRACER_CONN = nil
+
+    local job = game.JobId
+    local mods = psRoot and psRoot:FindFirstChild("Modules")
+    local function tracerModule() return mods and moduleTable(mods:FindFirstChild("TracerEffect")) end
+    local te = tracerModule()
+    -- Originals, kept across runs (same server only) so turning a colour off
+    -- puts the game's back.
+    local orig = _G.__RIVALS_TRACER_ORIG
+    if type(orig) ~= "table" or orig.te ~= te or orig.job ~= job then orig = {te = te, job = job, seqs = {}, checked = {}} end
+    _G.__RIVALS_TRACER_ORIG = orig
+
+    -- A two-keypoint ColorSequence: times 0 and 1, 0x14 apart.
+    local function isSeq(seq)
+        local ok0, t0 = pcall(mrd, "float", seq)
+        local ok1, t1 = pcall(mrd, "float", seq + 0x14)
+        return ok0 and ok1 and t0 == 0 and t1 == 1
+    end
+    local function writeSeq(seq, r, g, b)
+        if not isSeq(seq) then return false end
+        for _, k in ipairs({4, 0x18}) do
+            pcall(mwr, "float", seq + k, r)
+            pcall(mwr, "float", seq + k + 4, g)
+            pcall(mwr, "float", seq + k + 8, b)
+        end
+        return true
+    end
+    local function isNumber(a)
+        local ok, tt = pcall(mrd, "int", a + 12)
+        return ok and tt == 3
+    end
+    for seq, c in pairs(orig.seqs) do writeSeq(seq, c[1], c[2], c[3]) end
+    if orig.speed and isNumber(orig.speed[1]) then pcall(mwr, "double", orig.speed[1], orig.speed[2]) end
+
+    -- Speed: the per-shot function moves the tracer 800 / distance percent a
+    -- frame. That 800 sits in its constant list: Play's proto (closure +0x18),
+    -- its first child proto, then the child's constants.
+    local function speedSlot()
+        if orig.speed then return isNumber(orig.speed[1]) and orig.speed[1] or nil end
+        local f = nodesOf(te, 1024, {Play = true})
+        local cl = f and f.Play and rd(f.Play)
+        local proto = cl and cl > 0x10000 and rd(cl + 0x18)
+        local b = proto and proto > 0x10000 and rd(proto + 8)
+        local arr = b and b > 0x10000 and rd(b + 0x20)
+        local child = arr and arr > 0x10000 and rd(arr)
+        local d = child and child > 0x10000 and rd(child + 8)
+        local k = d and d > 0x10000 and rd(d + 0x38)
+        if not k or k < 0x10000 then return nil end
+        -- 800, or what an earlier run set it to (800 x a multiple of 5%)
+        local fallbackSlot
+        for i = 0, 63 do
+            local a = k + i * 16
+            local okV, v = pcall(mrd, "double", a)
+            if okV and isNumber(a) then
+                if v == 800 then
+                    orig.speed = {a, 800}
+                    return a
+                end
+                local pct = v / 8
+                if not fallbackSlot and pct >= 5 and pct <= 300 and pct % 5 == 0 then fallbackSlot = a end
+            end
+        end
+        if fallbackSlot then orig.speed = {fallbackSlot, 800} end
+        return fallbackSlot
+    end
+
+    local function seqOf(t, key)
+        local f = nodesOf(t, 1024, {[key] = true})
+        local cl = f and f[key] and rd(f[key])
+        local p1 = cl and cl > 0x10000 and rd(cl + 0x20)
+        local seq = p1 and p1 > 0x10000 and rd(p1 + 0x10)
+        if seq and seq > 0x10000 and isSeq(seq) then return seq end
+    end
+    -- Skin scripts load when first used, so this runs again on every equip.
+    -- A loaded script is only read once; the rest is a few reads each.
+    local function collect()
+        local list = {}
+        local function add(seq)
+            if not seq then return end
+            if not orig.seqs[seq] then
+                orig.seqs[seq] = {mrd("float", seq + 4), mrd("float", seq + 8), mrd("float", seq + 12)}
+            end
+            list[#list + 1] = seq
+        end
+        add(seqOf(te, "VerifyTracerData"))
+        local vms = mods:FindFirstChild("ViewModels")
+        for _, d in ipairs(vms and vms:GetDescendants() or {}) do
+            if d.ClassName == "ModuleScript" then
+                local a = d.Address
+                if orig.checked[a] == nil then
+                    local t = moduleTable(d)
+                    if t then orig.checked[a] = seqOf(t, "GetFriendlyTracerColor") or false end
+                end
+                add(orig.checked[a] or nil)
+            end
+        end
+        return list
+    end
+
+    local conf = {}
+    for k, v in pairs(configTracers) do conf[k:lower()] = tostring(v):lower() end
+
+    local speed = tonumber(conf.speed)
+    if speed and te then
+        speed = math.max(5, math.min(300, speed))
+        local slot = speedSlot()
+        if slot then
+            pcall(mwr, "double", slot, 800 * speed / 100)
+            print("[RivalsSkinChanger] Tracers: speed " .. speed .. "%")
+        else
+            print("[RivalsSkinChanger] Tracers: couldn't find the tracer speed - left as it is")
+        end
+    end
+    conf.speed = nil
+    local fallback = conf.color or conf.all or conf.default
+    local any = next(conf) ~= nil
+
+    if any and te then
+        local seqs, current, lastName = collect(), nil, false
+        local acc, sinceCheck, lastRgb = 0, 0, nil
+        local function equipped()
+            local vmf = workspace:FindFirstChild("ViewModels")
+            local fp = vmf and vmf:FindFirstChild("FirstPerson")
+            local c = fp and fp:GetChildren()[1]
+            return c and c.Name
+        end
+        local function pick(name)
+            local parts = {}
+            for p in tostring(name or ""):gmatch("[^%-]+") do parts[#parts + 1] = p:match("^%s*(.-)%s*$"):lower() end
+            return (parts[3] and conf[parts[3]]) or (parts[2] and conf[parts[2]]) or fallback
+        end
+        local conn
+        conn = game:GetService("RunService").Heartbeat:Connect(function(dt)
+            if _G.__RIVALS_TRACERS ~= token then pcall(function() conn:Disconnect() end) return end
+            dt = dt or 1 / 60
+            acc, sinceCheck = acc + dt, sinceCheck + dt
+            if acc < 0.05 then return end
+            acc = 0
+            if sinceCheck >= 1 then
+                sinceCheck, lastRgb = 0, nil -- rewrite once a second in case the game reset one
+                if game.JobId ~= job or tracerModule() ~= te then
+                    pcall(function() conn:Disconnect() end)
+                    return
+                end
+            end
+            local name = equipped()
+            if name ~= lastName then
+                lastName, lastRgb = name, nil
+                seqs = collect()
+                current = pick(name)
+            end
+            local r, g, b
+            if current == "rainbow" then
+                local c = Color3.fromHSV(tick() * 0.25 % 1, 1, 1)
+                r, g, b = c.R, c.G, c.B
+            elseif current and current ~= "off" and current ~= "default" then
+                r, g, b = lightingColor(current)
+            end
+            local rgb = r and (r .. "," .. g .. "," .. b) or "orig"
+            if rgb == lastRgb then return end
+            lastRgb = rgb
+            for _, seq in ipairs(seqs) do
+                local c = r and {r, g, b} or orig.seqs[seq]
+                if c then writeSeq(seq, c[1], c[2], c[3]) end
+            end
+        end)
+        _G.__RIVALS_TRACER_CONN = conn
+        print("[RivalsSkinChanger] Tracers: recolouring " .. #seqs .. " tracer colours (more load as you equip skins)")
+    elseif any then
+        print("[RivalsSkinChanger] Tracers: TracerEffect not loaded yet - fire once and run again")
     end
 end
 

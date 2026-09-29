@@ -303,6 +303,10 @@
         .sky-mini { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 9px; padding: 6px 10px; font-size: 12px; cursor: pointer; transition: color .18s, border-color .18s; }
         .sky-mini:hover { color: var(--txt); border-color: #45547a; }
         .sky-add { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+        .sky-add input.tracer-color { width: 34px; min-width: 0; flex: none; height: 30px; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: none; cursor: pointer; }
+        .sky-add input.tracer-color[hidden] { display: none; }
+        .sky-add input.tracer-speed { width: 180px; accent-color: var(--accent, #7aa8ff); }
+        .tracer-speed-val { min-width: 118px; font-size: 12.5px; color: var(--txt); }
         .sound-pick { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; color: var(--txt); padding: 8px 10px; font: inherit; font-size: 12.5px; }
         .sky-mini:disabled { opacity: .4; cursor: default; }
         .sky-add input { width: 150px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; color: var(--txt); padding: 8px 10px; font-size: 12.5px; }
@@ -559,6 +563,7 @@
                 <button class="dash-switch-btn" id="switch-finishers" onclick="setDashMode('finishers')">Finishers</button>
                 <button class="dash-switch-btn" id="switch-charms" onclick="setDashMode('charms')">Charms</button>
                 <button class="dash-switch-btn" id="switch-skybox" onclick="setDashMode('skybox')">Skybox</button>
+                <button class="dash-switch-btn" id="switch-tracers" onclick="setDashMode('tracers')">Tracers</button>
                 <button class="dash-switch-btn" id="switch-sounds" onclick="setDashMode('sounds')">Sounds</button>
                 <button class="dash-switch-btn" id="switch-spoof" onclick="setDashMode('spoof')">Spoof</button>
             </div>
@@ -4419,8 +4424,9 @@
             try { lightConfig = JSON.parse(localStorage.getItem("rivals_lighting_saved") || "{}") || {}; } catch (e) { lightConfig = {}; }
             try { soundConfig = JSON.parse(localStorage.getItem("rivals_sounds_saved") || "{}") || {}; } catch (e) { soundConfig = {}; }
             try { spoofConfig = JSON.parse(localStorage.getItem("rivals_spoof_saved") || "{}") || {}; } catch (e) { spoofConfig = {}; }
+            try { tracerConfig = JSON.parse(localStorage.getItem("rivals_tracers_saved") || "{}") || {}; } catch (e) { tracerConfig = {}; }
             loadCosmeticConfigs();
-            setDashMode(["wraps", "advanced", "skybox", "sounds", "spoof", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
+            setDashMode(["wraps", "advanced", "skybox", "sounds", "spoof", "tracers", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
         }
 
         const CATEGORY_ORDER = ["Primary", "Secondary", "Melee", "Utility"];
@@ -4432,6 +4438,7 @@
             document.getElementById("switch-skybox").classList.toggle("active", mode === "skybox");
             document.getElementById("switch-sounds").classList.toggle("active", mode === "sounds");
             document.getElementById("switch-spoof").classList.toggle("active", mode === "spoof");
+            document.getElementById("switch-tracers").classList.toggle("active", mode === "tracers");
             document.getElementById("switch-finishers").classList.toggle("active", mode === "finishers");
             document.getElementById("switch-charms").classList.toggle("active", mode === "charms");
             document.getElementById("advToggle").hidden = mode !== "skins" && mode !== "advanced";
@@ -4486,6 +4493,11 @@
             }
             if (dashMode === "sounds") {
                 renderSoundGrid(grid);
+                updateFootCount();
+                return;
+            }
+            if (dashMode === "tracers") {
+                renderTracerGrid(grid);
                 updateFootCount();
                 return;
             }
@@ -5258,6 +5270,122 @@
                 .concat(keys.map(function (k) { return k + "=" + soundConfig[k]; }));
         }
 
+        // ---- Tracers tab ----
+        // The colour of your shots' tracers, for every gun or per gun (used while
+        // that gun is out), saved as [Tracers]. The game draws them, so no lag.
+        let tracerConfig = {};
+        const TRACER_COLORS = [["Red", "ff2d2d"], ["Orange", "ff7a00"], ["Gold", "ffc400"], ["Yellow", "ffee00"],
+            ["Lime", "a6ff00"], ["Green", "2dff5a"], ["Mint", "00ffa6"], ["Cyan", "00e5ff"], ["Blue", "2d6bff"],
+            ["Purple", "8a2dff"], ["Pink", "ff4fd8"], ["White", "ffffff"]];
+
+        function saveTracerConfig() {
+            try { localStorage.setItem("rivals_tracers_saved", JSON.stringify(tracerConfig)); } catch (e) {}
+        }
+        function setTracer(key, value) {
+            if (value) tracerConfig[key] = value; else delete tracerConfig[key];
+            saveTracerConfig();
+            updateFootCount();
+        }
+
+        function renderTracerGrid(grid) {
+            const card = document.createElement("div");
+            card.className = "weapon-card";
+            const label = document.createElement("div");
+            label.className = "card-label";
+            label.textContent = "Tracers - only you see them";
+            card.appendChild(label);
+
+            function row(key, name, sub) {
+                const current = tracerConfig[key] || "";
+                const r = document.createElement("div");
+                r.className = "sky-card sky-custom" + (current ? " active" : "");
+                r.dataset.name = (name + " tracer").toLowerCase();
+                const info = document.createElement("div");
+                info.innerHTML = '<div class="sky-name"></div><div class="sky-sub"></div>';
+                info.querySelector(".sky-name").textContent = name;
+                info.querySelector(".sky-sub").textContent = sub;
+                r.appendChild(info);
+                const box = document.createElement("div");
+                box.className = "sky-add";
+                const pick = document.createElement("select");
+                pick.className = "sound-pick";
+                pick.innerHTML = '<option value="">' + (key === "Color" ? "Game's own" : "Same as all guns") + '</option>'
+                    + '<option value="rainbow">Rainbow</option>'
+                    + TRACER_COLORS.map(function (c) { return '<option value="' + c[1] + '">' + c[0] + '</option>'; }).join("")
+                    + '<option value="custom">Custom</option>';
+                const color = document.createElement("input");
+                color.type = "color";
+                color.className = "tracer-color";
+                color.title = "Any colour";
+                const isHex = /^[0-9a-f]{6}$/.test(current);
+                pick.value = !current ? "" : (current === "rainbow" || TRACER_COLORS.some(function (c) { return c[1] === current; }) ? current : "custom");
+                color.value = "#" + (isHex ? current : "ffffff");
+                color.hidden = !isHex;
+                [pick, color].forEach(function (el) { el.addEventListener("click", function (e) { e.stopPropagation(); }); });
+                pick.addEventListener("change", function () {
+                    const v = pick.value === "custom" ? color.value.slice(1).toLowerCase() : pick.value;
+                    const hex = /^[0-9a-f]{6}$/.test(v);
+                    color.hidden = !hex;
+                    if (hex) color.value = "#" + v;
+                    setTracer(key, v);
+                    r.classList.toggle("active", !!v);
+                });
+                color.addEventListener("input", function () {
+                    const v = color.value.slice(1).toLowerCase();
+                    pick.value = TRACER_COLORS.some(function (c) { return c[1] === v; }) ? v : "custom";
+                    setTracer(key, v);
+                    r.classList.add("active");
+                });
+                box.appendChild(color);
+                box.appendChild(pick);
+                r.appendChild(box);
+                card.appendChild(r);
+            }
+
+            row("Color", "All guns", "Every gun you fire, unless it has its own colour below");
+
+            // Speed, for every gun: 100% is the game's own, low is slow like the Keyper.
+            const speedRow = document.createElement("div");
+            const speedNow = Number(tracerConfig.Speed) || 100;
+            speedRow.className = "sky-card sky-custom" + (tracerConfig.Speed ? " active" : "");
+            speedRow.dataset.name = "tracer speed slow fast keyper";
+            speedRow.innerHTML = '<div><div class="sky-name">Speed</div><div class="sky-sub">How fast tracers fly. Low is slow, like the Keyper.</div></div>'
+                + '<div class="sky-add"><input type="range" class="tracer-speed" min="5" max="200" step="5"><span class="tracer-speed-val"></span></div>';
+            const range = speedRow.querySelector("input");
+            const val = speedRow.querySelector(".tracer-speed-val");
+            function showSpeed(v) { val.textContent = v + "%" + (v === 100 ? " (game's own)" : (v <= 25 ? " (Keyper-like)" : "")); }
+            range.value = speedNow;
+            showSpeed(speedNow);
+            range.addEventListener("click", function (e) { e.stopPropagation(); });
+            range.addEventListener("input", function () { showSpeed(Number(range.value)); });
+            range.addEventListener("change", function () {
+                const v = Number(range.value);
+                setTracer("Speed", v === 100 ? "" : String(v));
+                speedRow.classList.toggle("active", v !== 100);
+            });
+            card.appendChild(speedRow);
+            OFFICIAL_WEAPON_DATA.forEach(function (w) {
+                if (w.category === "Primary" || w.category === "Secondary") row(w.name, w.name, w.category + " - while it's out");
+            });
+
+            const note = document.createElement("div");
+            note.className = "sky-card";
+            note.dataset.name = "tracer note";
+            note.innerHTML = '<div><div class="sky-name">How it works</div><div class="sky-sub">'
+                + 'The changer recolours the tracers the game draws for your shots, so they stay smooth when you move. '
+                + 'Only you see them. Guns that fire projectiles instead of tracers are unaffected.</div></div>';
+            card.appendChild(note);
+            grid.appendChild(card);
+        }
+
+        function generateTracerLines() {
+            const keys = Object.keys(tracerConfig).filter(function (k) { return tracerConfig[k]; })
+                .sort(function (a, b) { return a === "Color" ? -1 : (b === "Color" ? 1 : a.localeCompare(b)); });
+            if (!keys.length) return [];
+            return ["", "[Tracers]", "-- Color = every gun; a gun's own line wins while it's out. Hex, rainbow or default. Speed in % (100 = the game's)."]
+                .concat(keys.map(function (k) { return k + "=" + tracerConfig[k]; }));
+        }
+
         // ---- Spoof tab ----
         // Your name, level, streak and badges as you see them in game, saved as
         // [Spoof]. The server keeps the real ones, so only you see them - except
@@ -5885,6 +6013,12 @@
                 el.textContent = k ? k + (k === 1 ? " sound changed" : " sounds changed") : "Sounds unchanged";
                 return;
             }
+            if (dashMode === "tracers") {
+                const k = Object.keys(tracerConfig).filter(function (x) { return x !== "Color" && x !== "Speed"; }).length;
+                el.textContent = tracerConfig.Color ? "Tracers recoloured" : (k ? k + (k === 1 ? " gun recoloured" : " guns recoloured")
+                    : (tracerConfig.Speed ? "Tracer speed " + tracerConfig.Speed + "%" : "Tracers unchanged"));
+                return;
+            }
             if (dashMode === "spoof") {
                 const k = Object.keys(spoofConfig).length;
                 el.textContent = k ? k + (k === 1 ? " thing spoofed" : " things spoofed") : "Nothing spoofed";
@@ -5968,7 +6102,7 @@
                 lines = lines.concat(swapLines);
             }
             return lines.concat(generateWrapLines()).concat(generateSkyLines()).concat(generateLightLines()).concat(generateSoundLines())
-                .concat(generateSpoofLines())
+                .concat(generateSpoofLines()).concat(generateTracerLines())
                 .concat(generateCosmeticLines("finishers")).concat(generateCosmeticLines("charms")).join("\n");
         }
 
@@ -5991,6 +6125,10 @@
             }
             if (dashMode === "sounds") {
                 if (presetType === "default") { soundConfig = {}; saveSoundConfig(); renderGrid(); showToast("All sounds back to the game's"); }
+                return;
+            }
+            if (dashMode === "tracers") {
+                if (presetType === "default") { tracerConfig = {}; saveTracerConfig(); renderGrid(); showToast("Tracers back to the game's colours"); }
                 return;
             }
             if (dashMode === "spoof") {
