@@ -26,6 +26,41 @@ end
 _G.__RIVALS_SKIN_CHANGER_RESTORE = nil
 _G.__RIVALS_SKIN_CHANGER_ACTIVE = nil
 
+-- Support ID: a short number for this PC, made here from Matcha's hardware ID
+-- and scrambled so it can't be turned back into it. Nothing is sent anywhere;
+-- it rides along on two of the log lines (as "ref"), so a log or screenshot
+-- says which copy it came from, and the
+-- changer refuses to run for IDs on the list in the rsc-refs repo.
+local function supportId()
+    local ok, hw = pcall(function() return gethwid() end)
+    if not ok or type(hw) ~= "string" or hw == "" then return nil end
+    local s = "rsc:" .. hw
+    local h1, h2 = 7, 11
+    for _ = 1, 3 do
+        for i = 1, #s do
+            local c = s:byte(i)
+            h1 = (h1 * 131 + c + h2 % 251) % 999983
+            h2 = (h2 * 65599 + c * 7 + i + h1 % 509) % 1000003
+        end
+    end
+    return string.format("%04d-%04d", h1 % 10000, h2 % 10000)
+end
+do
+    local BLACKLIST_URL = "https://raw.githubusercontent.com/Martinikaws/rsc-refs/main/list.txt"
+    local id = supportId()
+    _G.__RIVALS_SUPPORT_ID = id
+    if id then
+        -- If the list can't be fetched the changer runs as usual.
+        local okList, list = pcall(function() return game:HttpGet(BLACKLIST_URL) end)
+        if okList and type(list) == "string" then
+            for line in list:gmatch("[^\r\n]+") do
+                -- A listed ID stops here, without a message.
+                if line:match("^%s*(%d%d%d%d%-%d%d%d%d)") == id then return end
+            end
+        end
+    end
+end
+
 -- Run lock
 local RUN_LOCK_SECONDS = 180
 do
@@ -92,6 +127,43 @@ local OFF = {
     Transparency = 288
 }
 
+-- The undo data (what each swap overwrote) lives in _G, which a Matcha restart
+-- or update wipes while the game keeps the swaps. A run then would swap the
+-- models back and leave the rest of its work on the wrong ones. So each run
+-- also saves the data to a file, keyed by this server; the next run reads it
+-- back when _G has none, and undoes the old swaps before applying again.
+local UNDO_FILE = "rivals_undo_state.txt"
+local SERVER_KEY = tostring(game.JobId) .. ":" .. tostring(wf.Address)
+-- Returns the saved state for this server, nil when there is none, or
+-- false when there is one that can't be read.
+local function loadUndo()
+    local okF, text = pcall(function() return isfile(UNDO_FILE) and readfile(UNDO_FILE) or nil end)
+    if not okF or type(text) ~= "string" then return nil end
+    local lines = {}
+    for line in text:gmatch("[^\r\n]+") do lines[#lines + 1] = line end
+    if lines[1] ~= SERVER_KEY then return nil end
+    local function num(s) return s ~= "-" and tonumber(s) or nil end
+    local state = {restores = {}, nameCopies = {}, floats = {}, wfAddr = wf.Address}
+    for i = 2, #lines do
+        local f = {}
+        for word in lines[i]:gmatch("%S+") do f[#f + 1] = word end
+        local tag = f[1]
+        if tag == "R" and #f == 13 then
+            state.restores[#state.restores + 1] = {
+                defSlot = num(f[2]), skinSlot = num(f[3]), origDefInst = num(f[4]), origSkinInst = num(f[5]),
+                origDefCtrl = num(f[6]), origSkinCtrl = num(f[7]), defAddr = num(f[8]), skinAddr = num(f[9]),
+                origDefNC = num(f[10]), origSkinNC = num(f[11]), origDefParent = num(f[12]), origSkinParent = num(f[13])}
+        elseif tag == "N" and #f == 3 and num(f[2]) and num(f[3]) then
+            state.nameCopies[#state.nameCopies + 1] = {num(f[2]), num(f[3])}
+        elseif tag == "F" and #f == 3 and num(f[2]) and num(f[3]) then
+            state.floats[#state.floats + 1] = {num(f[2]), num(f[3])}
+        else
+            return false
+        end
+    end
+    return state
+end
+
 -- Undo the previous run
 local dictCache = {}
 do
@@ -121,6 +193,20 @@ do
 
     local prev = _G.__RIVALS_SKIN_CHANGER_STATE
     _G.__RIVALS_SKIN_CHANGER_STATE = nil
+    if type(prev) ~= "table" then
+        local saved = loadUndo()
+        if saved == false then
+            print("[RivalsSkinChanger] Skins were applied in this server before Matcha restarted, and the saved undo data can't be read, so applying again would mix the models up. Rejoin, then run it once.")
+            if typeof(notify) == "function" then
+                pcall(notify, "Applied before Matcha restarted - rejoin, then run it once", "Rivals Skin Changer", 8)
+            end
+            _G.__RIVALS_SKIN_CHANGER_BUSY = nil
+            return
+        elseif saved then
+            prev = saved
+            print("[RivalsSkinChanger] Matcha restarted since the last run - undoing its swaps from the saved file first")
+        end
+    end
 
     if type(prev) == "table" and type(prev.restores) == "table" and prev.wfAddr == wf.Address then
         if type(prev.dicts) == "table" then dictCache = prev.dicts end
@@ -1049,6 +1135,7 @@ end
 -- Memory swap
 local memoryRestores = {}
 local renamedScripts = {}
+local floatRestores = {}
 
 local ENABLE_MODEL_SWAPS = true
 
@@ -1058,6 +1145,19 @@ local ENABLE_SOUND_REPLACEMENT = false
 -- Name copies
 local ENABLE_NAME_COPIES = true
 local nameCopies = {}
+-- Writes everything the swaps overwrote to the undo file (see loadUndo).
+local function saveUndo()
+    local function n(v) return v and string.format("%.0f", v) or "-" end
+    local out = {SERVER_KEY}
+    for _, r in ipairs(memoryRestores) do
+        out[#out + 1] = table.concat({"R", n(r.defSlot), n(r.skinSlot), n(r.origDefInst), n(r.origSkinInst),
+            n(r.origDefCtrl), n(r.origSkinCtrl), n(r.defAddr), n(r.skinAddr), n(r.origDefNC), n(r.origSkinNC),
+            n(r.origDefParent), n(r.origSkinParent)}, " ")
+    end
+    for _, c in ipairs(nameCopies) do out[#out + 1] = "N " .. n(c[1]) .. " " .. n(c[2]) end
+    for _, f in ipairs(floatRestores) do out[#out + 1] = "F " .. n(f[1]) .. " " .. string.format("%.9g", f[2]) end
+    pcall(writefile, UNDO_FILE, table.concat(out, "\n") .. "\n")
+end
 local function copyName(target, nameSource)
     if not ENABLE_NAME_COPIES or not target or not nameSource then return false end
     local slot = target.Address + OFF.NameContainer
@@ -1082,6 +1182,7 @@ local configSpoof = {}
 
 local configLighting = {}
 local configTracers = {}
+local configNoHands = {}
 
 local configFinishers, configCharms = {}, {}
 
@@ -1785,7 +1886,7 @@ end
 -- tables' nodes and can match a foreign entry with the same key.
 local function nodeCount(t)
     if not t or t < 0x10000 then return nil end
-    local ok, l = pcall(mrd, "byte", t + 6)
+    local ok, l = pcall(mrd, "byte", t + 4)
     if not ok or not l or l < 0 or l > 20 then return nil end
     return 2 ^ l
 end
@@ -1847,7 +1948,11 @@ local function walkAround(center, span, wanted)
 end
 
 -- Registry route
-local ROUTE = {thread = 0x170, slot = 0x178, globalState = 0x18, registry = 0x620, node = 0x18, array = 0x20}
+-- Roblox build 02c37bc (Sep 30 2026): the type byte of a Luau object is
+-- byte 1 of its header (was 0), a table's lsizenode is byte 4 (was 6), and
+-- the thread's global state is at +0x68 (was +0x18).
+local ROUTE = {thread = 0x170, slot = 0x178, globalState = 0x68, registry = 0x620, node = 0x18, array = 0x20}
+local GC_TT = 1
 local TAG_TABLE, TAG_THREAD = 7, 10
 
 local function rbyte(a) local ok, v = pcall(mrd, "byte", a) return ok and v or nil end
@@ -1856,19 +1961,19 @@ local function rint(a) local ok, v = pcall(mrd, "int", a) return ok and v or nil
 local function moduleTable(ms)
     if not ms or not ms.Address then return nil end
     local thread = rd(ms.Address + ROUTE.thread)
-    if not thread or thread < 0x10000 or rbyte(thread) ~= TAG_THREAD then return nil end
+    if not thread or thread < 0x10000 or rbyte(thread + GC_TT) ~= TAG_THREAD then return nil end
     local g = rd(thread + ROUTE.globalState)
     local reg = g and g > 0x10000 and rd(g + ROUTE.registry)
-    if not reg or reg < 0x10000 or rbyte(reg) ~= TAG_TABLE or rint(g + ROUTE.registry + 12) ~= TAG_TABLE then return nil end
+    if not reg or reg < 0x10000 or rbyte(reg + GC_TT) ~= TAG_TABLE or rint(g + ROUTE.registry + 12) ~= TAG_TABLE then return nil end
     local slot, size, arr = rint(ms.Address + ROUTE.slot), rint(reg + 8), rd(reg + ROUTE.array)
     if not slot or not size or not arr or slot < 1 or slot > size then return nil end
     local t = rd(arr + (slot - 1) * 16)
-    if not t or t < 0x10000 or rbyte(t) ~= TAG_TABLE then return nil end
+    if not t or t < 0x10000 or rbyte(t + GC_TT) ~= TAG_TABLE then return nil end
     return t
 end
 
 local function nodesOf(t, maxNodes, wanted)
-    local base = t and t > 0x10000 and rbyte(t) == TAG_TABLE and rd(t + ROUTE.node)
+    local base = t and t > 0x10000 and rbyte(t + GC_TT) == TAG_TABLE and rd(t + ROUTE.node)
     if not base or base < 0x10000 then return nil end
     local count = math.min(maxNodes, nodeCount(t) or maxNodes)
     local found, n = walkNodes(base, count, wanted)
@@ -2060,7 +2165,8 @@ local function applySkinSwapper()
         return 0, "rivals_config.lua was not found in your executor's workspace folder! Make sure rivals_config.lua is placed in your workspace directory."
     end
 
-    print("[RivalsSkinChanger] Config: " .. tostring(targetFile))
+    print("[RivalsSkinChanger] Config: " .. tostring(targetFile)
+        .. (_G.__RIVALS_SUPPORT_ID and ("  (ref " .. _G.__RIVALS_SUPPORT_ID .. ")") or ""))
     local okRead, r2 = pcall(readfile, targetFile)
     if not okRead or not r2 then
         return 0, "Failed to read file '" .. tostring(targetFile) .. "'. File may be locked by another application."
@@ -2134,8 +2240,8 @@ local function applySkinSwapper()
             section = h:find("wrap") and "wraps" or (h:find("sky") and "skybox"
                 or (h:find("light") and "lighting" or (h:find("finisher") and "finishers"
                 or (h:find("charm") and "charms" or (h:find("sound") and "sounds"
-                or (h:find("spoof") and "spoof" or (h:find("tracer") and "tracers"
-                or (h:find("skin") and "skins" or "other"))))))))
+                or (h:find("spoof") and "spoof" or (h:find("tracer") and "tracers" or (h:find("hand") and "nohands"
+                or (h:find("skin") and "skins" or "other")))))))))
         elseif section == "other" then
 
         elseif section == "finishers" or section == "charms" then
@@ -2156,6 +2262,9 @@ local function applySkinSwapper()
         elseif section == "spoof" then
             local key, value = parseConfigLine(rawLine)
             if key and value then configSpoof[key:lower()] = value end
+        elseif section == "nohands" then
+            local key, value = parseConfigLine(rawLine)
+            if key and value then configNoHands[key:lower()] = value end
         elseif section == "tracers" then
             local key, value = parseConfigLine(rawLine)
             if key and value then configTracers[key:lower()] = value end
@@ -2187,10 +2296,12 @@ local function applySkinSwapper()
         local scriptMoved = false
 
         if isSkin and (touched[skinTarget] or touched[srcName]) then
-            table.insert(skippedConflicts, srcName .. " -> " .. skinTarget)
+            table.insert(skippedConflicts, srcName .. " -> " .. skinTarget
+                .. " (" .. (touched[skinTarget] or touched[srcName]) .. " already uses it)")
         else
             if isSkin then
-                touched[skinTarget], touched[srcName] = true, true
+                local line = srcName .. " -> " .. skinTarget
+                touched[skinTarget], touched[srcName] = line, line
                 nonDefaultPairs = nonDefaultPairs + 1
                 if not ownedSwap then ACTIVE_CONFIG_SKINS[weaponName] = skinTarget end
                 if SCOPE_RETICLES[weaponName] then
@@ -2382,6 +2493,9 @@ local function applySkinSwapper()
     end
     if #skippedConflicts > 0 then
         print("[RivalsSkinChanger] Skipped (skin already used by another line): " .. table.concat(skippedConflicts, ", "))
+        -- A swap trades two models, so a skin can only be in one line.
+        notifyUser("Rivals Skin Changer", "Skipped " .. #skippedConflicts .. " skin line" .. (#skippedConflicts == 1 and "" or "s")
+            .. " - two lines use the same skin: " .. table.concat(skippedConflicts, ", "), 10)
     end
     if #skippedNoScript > 0 then
         print("[RivalsSkinChanger] Left default (skin has no viewmodel script of its own): " .. table.concat(skippedNoScript, ", "))
@@ -2430,6 +2544,7 @@ do
 end
 
 local count, errorReason = applySkinSwapper()
+saveUndo() -- saved now, in case a later step fails before the final save
 local elapsed = math.floor((tick() - t_start) * 1000)
 
 if count == 0 then
@@ -2441,6 +2556,7 @@ if count == 0 then
     notifyUser("Rivals Skin Changer Error", "0 Skins Loaded: " .. errText, 10)
 else
     local msg = "Swapped " .. tostring(count) .. " skins in " .. tostring(elapsed) .. "ms!"
+        .. (_G.__RIVALS_SUPPORT_ID and ("  ref " .. _G.__RIVALS_SUPPORT_ID) or "")
     print("[RivalsSkinChanger] " .. msg)
     notifyUser("Rivals Skin Changer", "Swapped " .. tostring(count) .. " skins - loading animations, offsets and icons...", 6)
 end
@@ -3021,7 +3137,12 @@ end
 local SPOOF_ATTRS = {
     level = "Level", streak = "StatisticDuelsWinStreak", elo = "DisplayELO",
     influencer = "IsInfluencer", employee = "IsRobloxEmployee", trustworthy = "IsTrustWorthy",
+    -- The name effect (gold Prime, purple Contraband) on the nametag, player
+    -- list and profile: the game draws it from this attribute.
+    effect = "PlayerStatus",
 }
+local NAME_EFFECTS = {prime = "Prime", gold = "Prime", contraband = "Contraband", purple = "Contraband",
+    none = "", off = "", ["false"] = ""}
 local SPOOF_STATS = {level = "Level", streak = "Win Streak", elo = "Current ELO"}
 local DISPLAY_NAME_OFF = 0x128 -- Player.DisplayName, a std::string
 local GLYPHS, GLYPHS_END, GLYPH_SIZE = 0xc18, 0xc20, 56 -- laid-out glyphs, codepoint at +12
@@ -3238,6 +3359,7 @@ local function startSpoof(conf)
             if real.display then pcall(writefile, SPOOF_REAL_FILE, LP.Name .. "\n" .. real.display .. "\n") end
         end
         for key, attr in pairs(SPOOF_ATTRS) do real.attrs[key] = LP:GetAttribute(attr) end
+        real.effectRead = true
         local ls = LP:FindFirstChild("CustomLeaderstats")
         for key, stat in pairs(SPOOF_STATS) do
             local v = ls and ls:FindFirstChild(stat)
@@ -3246,7 +3368,16 @@ local function startSpoof(conf)
         _G.__RIVALS_SPOOF_REAL = real
     end
 
+    -- A record from before the effect existed has no real effect in it; none
+    -- was spoofed then, so what the player has now is the real one. No effect
+    -- is kept as "", which the game draws as nothing, so it can be put back.
+    if not real.effectRead then
+        real.attrs.effect, real.effectRead = LP:GetAttribute("PlayerStatus"), true
+    end
+    if real.attrs.effect == nil then real.attrs.effect = "" end
+
     local want = {
+        effect = conf.effect and NAME_EFFECTS[tostring(conf.effect):lower():gsub("%s", "")],
         name = conf.name and conf.name ~= "" and conf.name or nil,
         user = conf.username and conf.username:gsub("^@", "") ~= "" and (conf.username:gsub("^@", "")) or nil,
         level = tonumber(conf.level), streak = tonumber(conf.streak), elo = tonumber(conf.elo),
@@ -3869,17 +4000,16 @@ do
 
     -- Speed: the per-shot function moves the tracer 800 / distance percent a
     -- frame. That 800 sits in its constant list: Play's proto (closure +0x18),
-    -- its first child proto, then the child's constants.
+    -- its child protos (+0x28), the first one's constants (+0x48). Offsets for
+    -- Roblox build 02c37bc (Sep 30 2026).
     local function speedSlot()
         if orig.speed then return isNumber(orig.speed[1]) and orig.speed[1] or nil end
         local f = nodesOf(te, 1024, {Play = true})
         local cl = f and f.Play and rd(f.Play)
         local proto = cl and cl > 0x10000 and rd(cl + 0x18)
-        local b = proto and proto > 0x10000 and rd(proto + 8)
-        local arr = b and b > 0x10000 and rd(b + 0x20)
+        local arr = proto and proto > 0x10000 and rd(proto + 0x28)
         local child = arr and arr > 0x10000 and rd(arr)
-        local d = child and child > 0x10000 and rd(child + 8)
-        local k = d and d > 0x10000 and rd(d + 0x38)
+        local k = child and child > 0x10000 and rd(child + 0x48)
         if not k or k < 0x10000 then return nil end
         -- 800, or what an earlier run set it to (800 x a multiple of 5%)
         local fallbackSlot
@@ -3947,6 +4077,33 @@ do
         end
     end
     conf.speed = nil
+
+    -- Energy Pistols ship with DisableTracerEffects = true, so the game draws
+    -- no tracers for them. EnergyPistolsTracers=true flips it off (the gun then
+    -- takes the colours and speed above like the others); without the line
+    -- the game's value is put back. Only the local tracer drawing reads it.
+    -- (A function of its own: the main chunk is at Luau's 200-local limit.)
+    pcall(function()
+        local on = spoofFlag(conf.energypistolstracers) == true
+        local rsMods = game:GetService("ReplicatedStorage"):FindFirstChild("Modules")
+        local lib = moduleTable(rsMods and rsMods:FindFirstChild("ItemLibrary"))
+        local f = nodesOf(lib, 256, {Items = true})
+        local items = f and f.Items and rd(f.Items)
+        local fi = items and nodesOf(items, 256, {["Energy Pistols"] = true})
+        local ep = fi and fi["Energy Pistols"] and rd(fi["Energy Pistols"])
+        local fe = ep and nodesOf(ep, 256, {DisableTracerEffects = true})
+        local node = fe and fe.DisableTracerEffects
+        local okT, tt = pcall(mrd, "int", (node or 0) + 12)
+        if node and okT and tt == 1 then
+            local want = on and 0 or 1
+            local okV, now = pcall(mrd, "int", node)
+            if okV and now ~= want then pcall(mwr, "int", node, want) end
+            if on then print("[RivalsSkinChanger] Tracers: Energy Pistols now draw tracers") end
+        elseif on then
+            print("[RivalsSkinChanger] Tracers: couldn't find the Energy Pistols tracer setting - left as it is")
+        end
+    end)
+    conf.energypistolstracers = nil
     local fallback = conf.color or conf.all or conf.default
     local any = next(conf) ~= nil
 
@@ -4006,9 +4163,120 @@ do
     end
 end
 
+-- No hands
+-- Your first-person arms are two parts with a SpecialMesh each; the game hides
+-- them for VR by setting the mesh's Scale to zero. The same is done here for
+-- the weapons in [NoHands]: the scale is written in memory, then the part's
+-- Size is changed (a real property change) so the arm is drawn again with it.
+-- Arms are handled as their weapon comes out, and put back the same way.
+do
+    _G.__RIVALS_NOHANDS = (_G.__RIVALS_NOHANDS or 0) + 1
+    local token = _G.__RIVALS_NOHANDS
+    if _G.__RIVALS_NOHANDS_CONN then pcall(function() _G.__RIVALS_NOHANDS_CONN:Disconnect() end) end
+    _G.__RIVALS_NOHANDS_CONN = nil
+
+    local MESH_SCALE = 0xB4 -- SpecialMesh.Scale, three floats
+    local ARM_SIZE, TINY = Vector3.new(1.8, 0.45, 0.45), Vector3.new(0.001, 0.001, 0.001)
+    local job = game.JobId
+    -- What was hidden, kept across runs (same server) so it can be put back:
+    -- mesh address -> its scale.
+    local hidden = _G.__RIVALS_NOHANDS_HIDDEN
+    if type(hidden) ~= "table" or hidden.job ~= job then hidden = {job = job, scales = {}, any = false} end
+    _G.__RIVALS_NOHANDS_HIDDEN = hidden
+
+    local conf = {}
+    for k, v in pairs(configNoHands) do conf[k:lower()] = spoofFlag(v) end
+    local function wanted(name)
+        local parts = {}
+        for part in tostring(name or ""):gmatch("[^%-]+") do parts[#parts + 1] = part:match("^%s*(.-)%s*$"):lower() end
+        local v = parts[3] and conf[parts[3]]
+        if v == nil then v = parts[2] and conf[parts[2]] end
+        if v == nil then v = conf.all end
+        return v == true
+    end
+
+    local function scaleOf(mesh)
+        local a = mesh.Address
+        local ok, x = pcall(mrd, "float", a + MESH_SCALE)
+        local ok2, y = pcall(mrd, "float", a + MESH_SCALE + 4)
+        local ok3, z = pcall(mrd, "float", a + MESH_SCALE + 8)
+        if ok and ok2 and ok3 and x and y and z then return x, y, z end
+    end
+    local function setScale(mesh, x, y, z)
+        local a = mesh.Address
+        pcall(mwr, "float", a + MESH_SCALE, x)
+        pcall(mwr, "float", a + MESH_SCALE + 4, y)
+        pcall(mwr, "float", a + MESH_SCALE + 8, z)
+    end
+    local function pass()
+        local vmf = workspace:FindFirstChild("ViewModels")
+        local fp = vmf and vmf:FindFirstChild("FirstPerson")
+        for _, vm in ipairs(fp and fp:GetChildren() or {}) do
+            local hide = wanted(vm.Name)
+            for _, armName in ipairs({"LeftArm", "RightArm"}) do
+                local arm = vm:FindFirstChild(armName)
+                local mesh = arm and arm:FindFirstChild("Mesh")
+                if mesh and mesh.ClassName == "SpecialMesh" then
+                    local x, y, z = scaleOf(mesh)
+                    local key = mesh.Address
+                    if hide and x and (x ~= 0 or y ~= 0 or z ~= 0) then
+                        -- a sane scale only: anything else isn't the field it was
+                        if x > 0 and x < 20 and y > 0 and y < 20 and z > 0 and z < 20 then
+                            hidden.scales[key], hidden.any = {x, y, z}, true
+                            setScale(mesh, 0, 0, 0)
+                            pcall(function() arm.Size = TINY end)
+                        end
+                    elseif not hide and x == 0 and y == 0 and z == 0 and hidden.scales[key] then
+                        local sc = hidden.scales[key]
+                        hidden.scales[key] = nil
+                        setScale(mesh, sc[1], sc[2], sc[3])
+                        pcall(function() arm.Size = ARM_SIZE end)
+                    end
+                end
+                -- The wrapped arm (shown instead when a wrap covers the arms) is a
+                -- MeshPart, which follows its Size.
+                local wrapped = vm:FindFirstChild(armName .. "Wrapped")
+                if wrapped and wrapped.ClassName == "MeshPart" then
+                    local okS, size = pcall(function() return wrapped.Size end)
+                    if okS and size then
+                        if hide and size.X > 0.01 then
+                            hidden.any = true
+                            pcall(function() wrapped.Size = TINY end)
+                        elseif not hide and size.X <= 0.01 then
+                            pcall(function() wrapped.Size = ARM_SIZE end)
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    local any = false
+    for _, v in pairs(conf) do if v == true then any = true end end
+    -- Also runs with nothing set while arms hidden earlier are still out there,
+    -- so they come back as their weapons are equipped.
+    if any or hidden.any then
+        local acc, conn = 0, nil
+        conn = game:GetService("RunService").Heartbeat:Connect(function(dt)
+            if _G.__RIVALS_NOHANDS ~= token or game.JobId ~= job then pcall(function() conn:Disconnect() end) return end
+            acc = acc + (dt or 1 / 60)
+            if acc < 0.15 then return end
+            acc = 0
+            pcall(pass)
+        end)
+        _G.__RIVALS_NOHANDS_CONN = conn
+        pcall(pass)
+        if any then
+            local names = {}
+            for k, v in pairs(conf) do if v == true then names[#names + 1] = k == "all" and "every weapon" or k end end
+            table.sort(names)
+            print("[RivalsSkinChanger] No hands: " .. table.concat(names, ", ") .. " - only you see it")
+        end
+    end
+end
+
 -- Finishers and charms
 -- Season rank charms
-local floatRestores = {}
 local function showOnlyVariant(model, keepName)
     local extra = model:FindFirstChild("Extra")
     local keep = extra and extra:FindFirstChild(keepName)
@@ -4040,10 +4308,15 @@ local function applyCosmetics()
     local charmModels = A and A:FindFirstChild("Charms")
     local psModules = psRoot and psRoot:FindFirstChild("Modules")
     local charmScripts = psModules and psModules:FindFirstChild("Charms")
-    local used, done, missed = {}, {}, {}
+    local used, done, missed, dupes = {}, {}, {}, {}
+    -- A swap trades two models, so each one can only be in one line.
     local function claim(kind, a, b)
-        if used[kind .. a] or used[kind .. b] then return false end
-        used[kind .. a], used[kind .. b] = true, true
+        local by = used[kind .. a] or used[kind .. b]
+        if by then
+            dupes[#dupes + 1] = a .. " -> " .. b .. " (" .. by .. " already uses it)"
+            return false
+        end
+        used[kind .. a], used[kind .. b] = a .. " -> " .. b, a .. " -> " .. b
         return true
     end
     for _, p in ipairs(configFinishers) do
@@ -4102,11 +4375,11 @@ local function applyCosmetics()
             missed[#missed + 1] = owned .. "=" .. target .. " (swap failed)"
         end
     end
-    return done, missed
+    return done, missed, dupes
 end
 
 do
-    local okC, done, missed = pcall(applyCosmetics)
+    local okC, done, missed, dupes = pcall(applyCosmetics)
     if not okC then
         print("[RivalsSkinChanger] Finishers/charms error: " .. tostring(done))
     elseif done then
@@ -4118,9 +4391,14 @@ do
         if #missed > 0 then
             print("[RivalsSkinChanger] Finishers/charms not applied: " .. table.concat(missed, "; "))
         end
+        if dupes and #dupes > 0 then
+            notifyUser("Rivals Skin Changer", "Skipped - two lines use the same finisher or charm: "
+                .. table.concat(dupes, ", "), 10)
+        end
     end
 end
 
 -- Save state
 _G.__RIVALS_SKIN_CHANGER_STATE = {restores = memoryRestores, wfAddr = wf.Address, nameCopies = nameCopies, dicts = dictCache, floats = floatRestores}
+saveUndo()
 _G.__RIVALS_SKIN_CHANGER_BUSY = nil

@@ -305,6 +305,7 @@
         .sky-add { display: flex; gap: 8px; align-items: center; margin-left: auto; }
         .sky-add input.tracer-color { width: 34px; min-width: 0; flex: none; height: 30px; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: none; cursor: pointer; }
         .sky-add input.tracer-color[hidden] { display: none; }
+        .misc-switch { display: inline-flex; align-self: flex-start; margin-bottom: -14px; }
         .sky-add input.tracer-speed { width: 180px; accent-color: var(--accent, #7aa8ff); }
         .tracer-speed-val { min-width: 118px; font-size: 12.5px; color: var(--txt); }
         .sound-pick { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; color: var(--txt); padding: 8px 10px; font: inherit; font-size: 12.5px; }
@@ -331,6 +332,12 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes sheetIn { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
         @keyframes sheetUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
+        .notice-overlay { z-index: 200; }
+        #noticeModal .modal-header h3 { color: #ff2d3c; font-size: 24px; letter-spacing: .04em; text-shadow: 0 0 10px rgba(255, 45, 60, .85), 0 0 26px rgba(255, 45, 60, .55); }
+        .notice-body p { margin: 0 0 14px; line-height: 1.55; font-size: 14.5px; color: #ffc233; }
+        .notice-body p:last-child { margin-bottom: 0; }
+        #noticeButton { min-width: 170px; }
+        #noticeButton:disabled { opacity: .55; cursor: not-allowed; }
         .modal-header {
             display: flex; align-items: center; justify-content: space-between; gap: 12px;
             padding: 18px 20px 12px;
@@ -563,9 +570,8 @@
                 <button class="dash-switch-btn" id="switch-finishers" onclick="setDashMode('finishers')">Finishers</button>
                 <button class="dash-switch-btn" id="switch-charms" onclick="setDashMode('charms')">Charms</button>
                 <button class="dash-switch-btn" id="switch-skybox" onclick="setDashMode('skybox')">Skybox</button>
-                <button class="dash-switch-btn" id="switch-tracers" onclick="setDashMode('tracers')">Tracers</button>
+                <button class="dash-switch-btn" id="switch-misc" onclick="setDashMode(lastMiscMode)">Misc</button>
                 <button class="dash-switch-btn" id="switch-sounds" onclick="setDashMode('sounds')">Sounds</button>
-                <button class="dash-switch-btn" id="switch-spoof" onclick="setDashMode('spoof')">Spoof</button>
             </div>
             <div class="dash-actions">
                 <button class="btn-ghost btn-sm" onclick="openPreview()">Config Preview</button>
@@ -620,6 +626,24 @@
                 <button class="modal-close" onclick="closeSkinModal()" aria-label="Close">&#10005;</button>
             </div>
             <div class="modal-body" id="skinModalBody"></div>
+        </div>
+    </div>
+
+    <!-- First-visit notice: has to be read; its button unlocks after a few seconds. -->
+    <div class="modal-overlay notice-overlay" id="noticeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>NOTICE!</h3>
+            </div>
+            <div class="modal-body notice-body">
+                <p>All of the functions of the script are undetected. The only detectable way is to enable Device Spoof, but the chances of a ban by using it are extremely unlikely.</p>
+                <p>You can swap between your own skins. Example: you own Event Horizon and set Event Horizon &gt; Keyper. If you equip Event Horizon, it will show Keyper.</p>
+                <p>Demanding questions about the mentioned stuff in this notice will get you blacklisted.</p>
+                <p>The script gives your PC a support ID, made on your PC from Matcha's hardware ID and scrambled. It is not sent anywhere: it shows in the console, and a blacklisted ID can't run the script.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="noticeButton" disabled>I've read and accept</button>
+            </div>
         </div>
     </div>
 
@@ -4425,8 +4449,9 @@
             try { soundConfig = JSON.parse(localStorage.getItem("rivals_sounds_saved") || "{}") || {}; } catch (e) { soundConfig = {}; }
             try { spoofConfig = JSON.parse(localStorage.getItem("rivals_spoof_saved") || "{}") || {}; } catch (e) { spoofConfig = {}; }
             try { tracerConfig = JSON.parse(localStorage.getItem("rivals_tracers_saved") || "{}") || {}; } catch (e) { tracerConfig = {}; }
+            try { handsConfig = JSON.parse(localStorage.getItem("rivals_hands_saved") || "{}") || {}; } catch (e) { handsConfig = {}; }
             loadCosmeticConfigs();
-            setDashMode(["wraps", "advanced", "skybox", "sounds", "spoof", "tracers", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
+            setDashMode(["wraps", "advanced", "skybox", "sounds", "spoof", "tracers", "hands", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
         }
 
         const CATEGORY_ORDER = ["Primary", "Secondary", "Melee", "Utility"];
@@ -4437,8 +4462,8 @@
             document.getElementById("advToggle").classList.toggle("active", mode === "advanced");
             document.getElementById("switch-skybox").classList.toggle("active", mode === "skybox");
             document.getElementById("switch-sounds").classList.toggle("active", mode === "sounds");
-            document.getElementById("switch-spoof").classList.toggle("active", mode === "spoof");
-            document.getElementById("switch-tracers").classList.toggle("active", mode === "tracers");
+            if (MISC_MODES[mode]) lastMiscMode = mode;
+            document.getElementById("switch-misc").classList.toggle("active", !!MISC_MODES[mode]);
             document.getElementById("switch-finishers").classList.toggle("active", mode === "finishers");
             document.getElementById("switch-charms").classList.toggle("active", mode === "charms");
             document.getElementById("advToggle").hidden = mode !== "skins" && mode !== "advanced";
@@ -4496,12 +4521,20 @@
                 updateFootCount();
                 return;
             }
+            if (dashMode === "hands") {
+                renderMiscSwitch(grid);
+                renderHandsGrid(grid);
+                updateFootCount();
+                return;
+            }
             if (dashMode === "tracers") {
+                renderMiscSwitch(grid);
                 renderTracerGrid(grid);
                 updateFootCount();
                 return;
             }
             if (dashMode === "spoof") {
+                renderMiscSwitch(grid);
                 renderSpoofGrid(grid);
                 updateFootCount();
                 return;
@@ -5270,6 +5303,94 @@
                 .concat(keys.map(function (k) { return k + "=" + soundConfig[k]; }));
         }
 
+        // ---- Misc tab ----
+        // Smaller features share one tab, each a tab of its own under it.
+        const MISC_MODES = {tracers: "Tracers", hands: "Hands", spoof: "Spoof"};
+        let lastMiscMode = "tracers";
+        function renderMiscSwitch(grid) {
+            const bar = document.createElement("div");
+            bar.className = "dash-switch misc-switch";
+            Object.keys(MISC_MODES).forEach(function (mode) {
+                const b = document.createElement("button");
+                b.className = "dash-switch-btn" + (dashMode === mode ? " active" : "");
+                b.textContent = MISC_MODES[mode];
+                b.addEventListener("click", function () { setDashMode(mode); });
+                bar.appendChild(b);
+            });
+            grid.appendChild(bar);
+        }
+
+        // ---- Hands tab ----
+        // Your arms in first person, hidden per weapon or on all of them, saved as
+        // [NoHands]: Weapon=true, All=true, and Weapon=false to keep one when All is on.
+        let handsConfig = {};
+        function saveHandsConfig() {
+            try { localStorage.setItem("rivals_hands_saved", JSON.stringify(handsConfig)); } catch (e) {}
+        }
+        function renderHandsGrid(grid) {
+            const card = document.createElement("div");
+            card.className = "weapon-card";
+            const label = document.createElement("div");
+            label.className = "card-label";
+            label.textContent = "Hands - only you see it";
+            card.appendChild(label);
+            const all = handsConfig.All === "true";
+
+            function row(key, name, sub) {
+                const hidden = key === "All" ? all : (handsConfig[key] === "true" || (all && handsConfig[key] !== "false"));
+                const r = document.createElement("div");
+                r.className = "sky-card sky-custom" + (hidden ? " active" : "");
+                r.dataset.name = (name + " hands").toLowerCase();
+                const info = document.createElement("div");
+                info.innerHTML = '<div class="sky-name"></div><div class="sky-sub"></div>';
+                info.querySelector(".sky-name").textContent = name;
+                info.querySelector(".sky-sub").textContent = sub;
+                r.appendChild(info);
+                const box = document.createElement("div");
+                box.className = "sky-add";
+                const pick = document.createElement("select");
+                pick.className = "sound-pick";
+                pick.innerHTML = '<option value="shown">Shown</option><option value="hidden">Hidden</option>';
+                pick.value = hidden ? "hidden" : "shown";
+                pick.addEventListener("click", function (e) { e.stopPropagation(); });
+                pick.addEventListener("change", function () {
+                    const hide = pick.value === "hidden";
+                    if (key === "All") {
+                        if (hide) handsConfig.All = "true"; else delete handsConfig.All;
+                    } else if (hide) {
+                        if (all) delete handsConfig[key]; else handsConfig[key] = "true";
+                    } else {
+                        if (all) handsConfig[key] = "false"; else delete handsConfig[key];
+                    }
+                    saveHandsConfig();
+                    renderGrid();
+                    filterWeapons();
+                });
+                box.appendChild(pick);
+                r.appendChild(box);
+                card.appendChild(r);
+            }
+
+            row("All", "Every weapon", "Hides your arms on all of them; set one back to Shown below to keep it");
+            OFFICIAL_WEAPON_DATA.forEach(function (w) { row(w.name, w.name, w.category); });
+
+            const note = document.createElement("div");
+            note.className = "sky-card";
+            note.dataset.name = "hands note";
+            note.innerHTML = '<div><div class="sky-name">How it works</div><div class="sky-sub">'
+                + 'Your first-person arms are hidden while that weapon is out; the weapon still moves as if held. '
+                + 'Only you see it - other players see your character as usual.</div></div>';
+            card.appendChild(note);
+            grid.appendChild(card);
+        }
+        function generateHandsLines() {
+            const keys = Object.keys(handsConfig).filter(function (k) { return handsConfig[k]; })
+                .sort(function (a, b) { return a === "All" ? -1 : (b === "All" ? 1 : a.localeCompare(b)); });
+            if (!keys.length) return [];
+            return ["", "[NoHands]", "-- Weapons shown without your arms in first person. All=true is every weapon."]
+                .concat(keys.map(function (k) { return k + "=" + handsConfig[k]; }));
+        }
+
         // ---- Tracers tab ----
         // The colour of your shots' tracers, for every gun or per gun (used while
         // that gun is out), saved as [Tracers]. The game draws them, so no lag.
@@ -5364,6 +5485,23 @@
                 speedRow.classList.toggle("active", v !== 100);
             });
             card.appendChild(speedRow);
+
+            // The game draws no tracers for the Energy Pistols; this turns them on.
+            const epRow = document.createElement("div");
+            const epOn = tracerConfig.EnergyPistolsTracers === "true";
+            epRow.className = "sky-card sky-custom" + (epOn ? " active" : "");
+            epRow.dataset.name = "energy pistols tracers";
+            epRow.innerHTML = '<div><div class="sky-name">Energy Pistols tracers (not recommended with 50% speed or under)</div>'
+                + '<div class="sky-sub">The game draws none for them; this turns them on, with the colours and speed above.</div></div>'
+                + '<div class="sky-add"><select class="sound-pick"><option value="">Off</option><option value="true">On</option></select></div>';
+            const epPick = epRow.querySelector("select");
+            epPick.value = epOn ? "true" : "";
+            epPick.addEventListener("click", function (e) { e.stopPropagation(); });
+            epPick.addEventListener("change", function () {
+                setTracer("EnergyPistolsTracers", epPick.value);
+                epRow.classList.toggle("active", !!epPick.value);
+            });
+            card.appendChild(epRow);
             OFFICIAL_WEAPON_DATA.forEach(function (w) {
                 if (w.category === "Primary" || w.category === "Secondary") row(w.name, w.name, w.category + " - while it's out");
             });
@@ -5468,6 +5606,18 @@
                 row(b.name, "Shows next to your name", pick, !!spoofConfig[b.key]);
             });
 
+            const effect = document.createElement("select");
+            effect.className = "sound-pick";
+            effect.innerHTML = '<option value="">Real</option><option value="none">None</option>'
+                + '<option value="prime">Prime (gold)</option><option value="contraband">Contraband (purple)</option>';
+            effect.value = spoofConfig.Effect || "";
+            effect.addEventListener("click", function (e) { e.stopPropagation(); });
+            effect.addEventListener("change", function () {
+                setSpoof("Effect", effect.value);
+                effect.closest(".sky-card").classList.toggle("active", !!effect.value);
+            });
+            row("Name effect", "The game's gold or purple effect on your name", effect, !!spoofConfig.Effect);
+
             const device = document.createElement("select");
             device.className = "sound-pick";
             device.innerHTML = SPOOF_DEVICES.map(function (d) { return '<option value="' + d[0] + '">' + d[1] + '</option>'; }).join("");
@@ -5490,7 +5640,7 @@
         }
 
         function generateSpoofLines() {
-            const keys = SPOOF_TEXT.concat(SPOOF_BADGES).map(function (f) { return f.key; }).concat(["Device"])
+            const keys = SPOOF_TEXT.concat(SPOOF_BADGES).map(function (f) { return f.key; }).concat(["Effect", "Device"])
                 .filter(function (k) { return spoofConfig[k]; });
             if (!keys.length) return [];
             return ["", "[Spoof]", "-- Only you see these, except Device (sent to the server). Empty = your real one."]
@@ -5958,6 +6108,12 @@
         }
 
         function onSkinChange(weaponName, skinName) {
+            const swapsHere = advConfig[weaponName] || {};
+            const usedBy = isCustom(skinName) && Object.keys(swapsHere).find(function (o) { return o === skinName || swapsHere[o] === skinName; });
+            if (usedBy) {
+                showToast(skinName + " is already used by the swap " + usedBy + " \u2192 " + swapsHere[usedBy] + ". Remove that swap first.");
+                return;
+            }
             currentConfig[weaponName] = skinName;
             localStorage.setItem("rivals_config_saved", JSON.stringify(currentConfig));
 
@@ -6011,6 +6167,12 @@
             if (dashMode === "sounds") {
                 const k = Object.keys(soundConfig).length;
                 el.textContent = k ? k + (k === 1 ? " sound changed" : " sounds changed") : "Sounds unchanged";
+                return;
+            }
+            if (dashMode === "hands") {
+                const k = Object.keys(handsConfig).filter(function (x) { return x !== "All" && handsConfig[x] === "true"; }).length;
+                el.textContent = handsConfig.All === "true" ? "Hands hidden on every weapon"
+                    : (k ? "Hands hidden on " + k + (k === 1 ? " weapon" : " weapons") : "Hands shown");
                 return;
             }
             if (dashMode === "tracers") {
@@ -6102,7 +6264,7 @@
                 lines = lines.concat(swapLines);
             }
             return lines.concat(generateWrapLines()).concat(generateSkyLines()).concat(generateLightLines()).concat(generateSoundLines())
-                .concat(generateSpoofLines()).concat(generateTracerLines())
+                .concat(generateSpoofLines()).concat(generateTracerLines()).concat(generateHandsLines())
                 .concat(generateCosmeticLines("finishers")).concat(generateCosmeticLines("charms")).join("\n");
         }
 
@@ -6125,6 +6287,10 @@
             }
             if (dashMode === "sounds") {
                 if (presetType === "default") { soundConfig = {}; saveSoundConfig(); renderGrid(); showToast("All sounds back to the game's"); }
+                return;
+            }
+            if (dashMode === "hands") {
+                if (presetType === "default") { handsConfig = {}; saveHandsConfig(); renderGrid(); showToast("Hands shown on every weapon"); }
                 return;
             }
             if (dashMode === "tracers") {
@@ -6180,8 +6346,42 @@
         function copyConfig() {
             const code = generateLuaCode();
             navigator.clipboard.writeText(code).then(() => {
-                showToast("✅ Config copied to clipboard!");
+                if (!warnClashes()) showToast("✅ Config copied to clipboard!");
             });
+        }
+
+        // The changer trades two models per line, so a skin, finisher or charm can
+        // only be in one line; it skips a second line that uses one again.
+        function configClashes() {
+            const out = [];
+            const touched = {};
+            OFFICIAL_WEAPON_DATA.forEach(function (w) {
+                const skin = currentConfig[w.name];
+                if (isCustom(skin)) { touched[skin] = true; touched[w.name] = true; }
+            });
+            OFFICIAL_WEAPON_DATA.forEach(function (w) {
+                const swaps = advConfig[w.name] || {};
+                Object.keys(swaps).sort().forEach(function (owned) {
+                    const target = swaps[owned];
+                    if (touched[target] || touched[owned]) out.push(owned + " \u2192 " + target);
+                    else { touched[target] = true; touched[owned] = true; }
+                });
+            });
+            ["finishers", "charms"].forEach(function (k) {
+                const kind = COS_KINDS[k];
+                const used = {};
+                Object.keys(kind ? kind.config : {}).sort().forEach(function (owned) {
+                    const model = cosBaseName(kind.config[owned]);
+                    if (used[owned] || used[model]) out.push(owned + " \u2192 " + kind.config[owned]);
+                    else { used[owned] = true; used[model] = true; }
+                });
+            });
+            return out;
+        }
+        function warnClashes() {
+            const bad = configClashes();
+            if (bad.length) showToast("Two lines use the same item - the changer will skip: " + bad.join(", "));
+            return bad.length > 0;
         }
 
         function downloadConfig() {
@@ -6195,7 +6395,7 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            showToast("💾 " + configFileName() + " downloaded!");
+            if (!warnClashes()) showToast("💾 " + configFileName() + " downloaded!");
         }
 
         function showToast(msg) {
@@ -6279,8 +6479,36 @@
             if (document.fonts && document.fonts.ready) document.fonts.ready.then(slideAll);
             requestAnimationFrame(slideAll);
         })();
+        // First visit: the notice, with its button locked for a few seconds. Seen
+        // once, it is remembered in this browser.
+        const NOTICE_SECONDS = 10;
+        function showNoticeOnce() {
+            let seen = false;
+            try { seen = localStorage.getItem("rivals_notice_seen") === "1"; } catch (e) {}
+            const modal = document.getElementById("noticeModal");
+            const btn = document.getElementById("noticeButton");
+            if (seen || !modal || !btn) return;
+            modal.style.display = "flex";
+            let left = NOTICE_SECONDS;
+            btn.disabled = true;
+            btn.textContent = "I've read and accept (" + left + ")";
+            const timer = setInterval(function () {
+                left -= 1;
+                if (left > 0) { btn.textContent = "I've read and accept (" + left + ")"; return; }
+                clearInterval(timer);
+                btn.disabled = false;
+                btn.textContent = "I've read and accept";
+            }, 1000);
+            btn.addEventListener("click", function () {
+                if (btn.disabled) return;
+                try { localStorage.setItem("rivals_notice_seen", "1"); } catch (e) {}
+                modal.style.display = "none";
+            });
+        }
         // The footbar comes after this script; wait for it before the first render.
-        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", function () { init(); showNoticeOnce(); });
+        } else { init(); showNoticeOnce(); }
     </script>
     <div class="footbar">
         <div class="foot-status"><span class="foot-dot"></span><span id="footCount">0 skins configured</span></div>
