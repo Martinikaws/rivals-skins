@@ -1956,7 +1956,7 @@ end
 -- lsizenode +4, global state +0x68; cec3ad5 (Oct 2026) moved tt back to +0.
 -- So they are found at runtime (ROUTE.detect) instead of being hard-coded.
 local ROUTE = {thread = 0x170, slot = 0x178, globalState = 0x68, registry = 0x620, node = 0x18, array = 0x20,
-    tt = 1, lsize = 4}
+    sizearray = 8, tt = 1, lsize = 4}
 local TAG_TABLE, TAG_THREAD = 7, 10
 
 local function rbyte(a) local ok, v = pcall(mrd, "byte", a) return ok and v or nil end
@@ -1966,20 +1966,71 @@ local function rint(a) local ok, v = pcall(mrd, "int", a) return ok and v or nil
 -- one module: its thread's header says where tt is; the right global state
 -- leads to a registry whose slot for this module holds a table.
 ROUTE.detect = function(ms)
+    -- What was seen, for the debug copy ("why did detection fail").
+    local trace = {}
+    _G.__RSC_ROUTE_TRACE = trace
     local thread = rd(ms.Address + ROUTE.thread)
     local slot = rint(ms.Address + ROUTE.slot)
-    if not thread or thread < 0x10000 or not slot or slot < 1 then return false end
+    if not thread or thread < 0x10000 or not slot or slot < 1 then trace.stop = "no thread/slot on the module" return false end
     local tt
     for b = 0, 3 do if rbyte(thread + b) == TAG_THREAD then tt = b break end end
-    if not tt then return false end
-    local function moduleAt(g, y)
+    if not tt then trace.stop = "no thread tag in the thread header" return false end
+    trace.tt, trace.slot, trace.pointers, trace.tagged, trace.arrays = tt, slot, 0, 0, 0
+    -- A table's array: a size and a pointer somewhere in its first 0x30
+    -- bytes; the right pair has a table TValue (tag at +12) in this slot.
+    local function arrayOf(reg)
+        for _, so in ipairs({ROUTE.sizearray or 8, 8, 12, 4}) do
+            local size = rint(reg + so)
+            if size and size >= slot and size < 10000000 then
+                for _, ao in ipairs({ROUTE.array, 0x20, 0x18, 0x28, 0x10}) do
+                    local arr = rd(reg + ao)
+                    if arr and arr > 0x10000 and arr < 0x7fffffffffff and rint(arr + (slot - 1) * 16 + 12) == TAG_TABLE then
+                        local t = rd(arr + (slot - 1) * 16)
+                        if t and t > 0x10000 and rbyte(t + tt) == TAG_TABLE then return t, so, ao end
+                    end
+                end
+            end
+        end
+    end
+    -- A table's nodes: a pointer and a size byte (followed by its mask)
+    -- that lead to string keys.
+    local function nodesOfTable(t)
+        for _, no in ipairs({ROUTE.node, 0x18, 0x20, 0x10, 0x28}) do
+            local base = rd(t + no)
+            if base and base > 0x10000 and base < 0x7fffffffffff then
+                for _, b in ipairs({tt == 0 and 6 or 4, 4, 6, 5, 7, 3, 2}) do
+                    local l, m = rbyte(t + b), rbyte(t + b + 1)
+                    if l and m and l >= 1 and l <= 24 and m == (2 ^ l - 1) % 256 then
+                        local keys = 0
+                        for i = 0, math.min(2 ^ l, 64) - 1 do
+                            local n = base + i * 32
+                            local kp = rd(n + 16)
+                            if (rint(n + 28) or 0) % 16 == 6 and kp and kp > 0x10000 then
+                                local ok, k = pcall(mrd, "string", kp + 24)
+                                if ok and type(k) == "string" and #k > 0 and #k < 64 then keys = keys + 1 end
+                            end
+                        end
+                        if keys > 0 then return no, b end
+                    end
+                end
+            end
+        end
+    end
+    local function tryAt(g, x, y)
         local reg = rd(g + y)
-        if not reg or reg < 0x10000 or rbyte(reg + tt) ~= TAG_TABLE or rint(g + y + 12) ~= TAG_TABLE then return nil end
-        local size, arr = rint(reg + 8), rd(reg + ROUTE.array)
-        if not size or not arr or arr < 0x10000 or slot > size then return nil end
-        local t = rd(arr + (slot - 1) * 16)
-        if not t or t < 0x10000 or rbyte(t + tt) ~= TAG_TABLE then return nil end
-        return t
+        if not reg or reg < 0x10000 or rint(g + y + 12) ~= TAG_TABLE or rbyte(reg + tt) ~= TAG_TABLE then return false end
+        trace.tagged = trace.tagged + 1
+        local t, so, ao = arrayOf(reg)
+        if not t then return false end
+        trace.arrays = trace.arrays + 1
+        local no, lsize = nodesOfTable(t)
+        if not no then trace.stop = "module table found but its nodes weren't" return false end
+        ROUTE.tt, ROUTE.globalState, ROUTE.registry, ROUTE.lsize = tt, x, y, lsize
+        ROUTE.sizearray, ROUTE.array, ROUTE.node, ROUTE.ok = so, ao, no, true
+        _G.__RSC_LAYOUT = {tt = tt, globalState = x, registry = y, lsize = lsize, sizearray = so, array = ao, node = no}
+        print(string.format("[RivalsSkinChanger] Memory layout: type byte +%d, global state +0x%x, registry +0x%x, size byte +%d, array +0x%x/+%d, nodes +0x%x",
+            tt, x, y, lsize, ao, so, no))
+        return true
     end
     local xs = {ROUTE.globalState, 0x18, 0x68}
     for x = 0, 0x100, 8 do xs[#xs + 1] = x end
@@ -1991,26 +2042,19 @@ ROUTE.detect = function(ms)
         for _, x in ipairs(xs) do
             local g = rd(thread + x)
             if g and g > 0x10000 and g < 0x7fffffffffff then
-                local ys = {ROUTE.registry}
-                if pass == 2 then ys = {} for y = 0, 0x1000, 8 do ys[#ys + 1] = y end end
-                for _, y in ipairs(ys) do
-                    local t = moduleAt(g, y)
-                    if t then
-                        -- lsizenode is the header byte followed by its mask (2^l - 1).
-                        local lsize = tt == 0 and 6 or 4
-                        for _, b in ipairs({lsize, 4, 6, 5, 7, 3}) do
-                            local l, m = rbyte(t + b), rbyte(t + b + 1)
-                            if l and m and l >= 1 and l <= 24 and m == (2 ^ l - 1) % 256 then lsize = b break end
-                        end
-                        ROUTE.tt, ROUTE.globalState, ROUTE.registry, ROUTE.lsize, ROUTE.ok = tt, x, y, lsize, true
-                        _G.__RSC_LAYOUT = {tt = tt, globalState = x, registry = y, lsize = lsize}
-                        print(string.format("[RivalsSkinChanger] Memory layout: type byte +%d, global state +0x%x, registry +0x%x, table size byte +%d", tt, x, y, lsize))
-                        return true
+                if pass == 1 then trace.pointers = trace.pointers + 1 end
+                if pass == 1 then
+                    if tryAt(g, x, ROUTE.registry) then return true end
+                else
+                    for y = 0, 0x1000, 8 do
+                        if tryAt(g, x, y) then return true end
                     end
                 end
             end
         end
     end
+    trace.stop = trace.stop or (trace.arrays > 0 and "registry found, module slot not usable"
+        or (trace.tagged > 0 and "registry-like tables found, but none held this module" or "no registry found"))
     return false
 end
 
@@ -2023,7 +2067,7 @@ local function moduleTable(ms)
     local g = rd(thread + ROUTE.globalState)
     local reg = g and g > 0x10000 and rd(g + ROUTE.registry)
     if not reg or reg < 0x10000 or rbyte(reg + GC_TT) ~= TAG_TABLE or rint(g + ROUTE.registry + 12) ~= TAG_TABLE then return nil end
-    local slot, size, arr = rint(ms.Address + ROUTE.slot), rint(reg + 8), rd(reg + ROUTE.array)
+    local slot, size, arr = rint(ms.Address + ROUTE.slot), rint(reg + ROUTE.sizearray), rd(reg + ROUTE.array)
     if not slot or not size or not arr or slot < 1 or slot > size then return nil end
     local t = rd(arr + (slot - 1) * 16)
     if not t or t < 0x10000 or rbyte(t + GC_TT) ~= TAG_TABLE then return nil end
@@ -2589,6 +2633,14 @@ do
             told = true
             print("[RivalsSkinChanger] Waiting for the game to finish loading...")
         end
+        -- The tables load within seconds; if the route itself still can't be
+        -- worked out after 8, waiting longer won't help.
+        if not ROUTE.ok and tick() - t0 > 8 then
+            local tr = _G.__RSC_ROUTE_TRACE or {}
+            print("[RivalsSkinChanger] Couldn't read this Roblox build's memory layout (" .. tostring(tr.stop)
+                .. ") - going ahead with the slower lookup")
+            break
+        end
         task.wait(0.5)
         if game.JobId ~= job then
             print("[RivalsSkinChanger] Server changed while waiting - stopped")
@@ -3051,7 +3103,7 @@ local function writeLuaString(ts, text)
 end
 
 local function collectSoundStrings(out, tbl, depth)
-    local size, arr = rint(tbl + 8), rd(tbl + ROUTE.array)
+    local size, arr = rint(tbl + ROUTE.sizearray), rd(tbl + ROUTE.array)
     if not size or not arr or size < 1 or size > 256 or arr < 0x10000 then return end
     for i = 0, size - 1 do
         local v = arr + i * 16
@@ -4079,8 +4131,8 @@ do
             end
             return nil
         end
-        -- Build 02c37bc's Proto layout, then the older one.
-        local k = constantsVia(0x28, 0x48) or constantsVia(0x20, 0x38, 8)
+        -- Proto layouts: build cec3ad5, then 02c37bc, then the older one.
+        local k = constantsVia(0x48, 0x20) or constantsVia(0x28, 0x48) or constantsVia(0x20, 0x38, 8)
         if not k then return nil end
         -- 800, or what an earlier run set it to (800 x a multiple of 5%)
         local fallbackSlot
