@@ -3005,6 +3005,19 @@ local function applySkybox(conf)
     local gray = preset and tostring(preset):lower() == "gray"
     if type(setfflag) == "function" then pcall(setfflag, "DebugSkyGray", gray and 1 or 0) end
     if gray then return 0, "gray sky on - shows straight away" end
+    -- Since Roblox build cec3ad5 (Oct 2026) a sky whose images Rivals isn't
+    -- allowed to load crashes the game on the next map load. New uploads are
+    -- private to their owner, so the community skies (uploaded by Martinikaws
+    -- in 2026) crash; the older public images Rivals can load still work.
+    -- Only those presets are applied until the uploads are made public.
+    do
+        local PUBLIC = {blue = true, station = true, graveyard = true, ["sudden death"] = true, space = true,
+            westown = true, black = true, classic = true}
+        if preset and not PUBLIC[tostring(preset):lower()] then
+            return 0, "the '" .. tostring(preset) .. "' sky can't load in Rivals right now (its images aren't public) and would crash the game - "
+                .. "these work: Blue, Station, Graveyard, Sudden Death, Space, Westown, Black, Classic"
+        end
+    end
     if preset then
         local p = SKYBOX_PRESETS[tostring(preset):lower()]
         if not p then return 0, "unknown skybox preset '" .. tostring(preset) .. "'" end

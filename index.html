@@ -5020,6 +5020,11 @@
         let sharedSkies = [];
 
         function loadSharedSkies() {
+            // Off: these skies' images are private uploads Rivals isn't allowed
+            // to load, and since Roblox build cec3ad5 (Oct 2026) that crashes
+            // the game. The list stays in assets/skyboxes.json for later.
+            sharedSkies = [];
+            if (true) return;
             fetch("assets/skyboxes.json", {cache: "no-cache"}).then(function (r) { return r.json(); }).then(function (d) {
                 sharedSkies = (d && d.skyboxes || []).filter(function (s) {
                     return s && s.name && s.faces && SKY_FACE_ORDER.every(function (k) { return s.faces[k]; });
