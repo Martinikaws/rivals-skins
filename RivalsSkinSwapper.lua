@@ -1882,11 +1882,13 @@ local function nodeKey(node)
     if ok and type(str) == "string" and #str > 0 and #str < 80 then return str end
 end
 
--- 2^lsizenode (byte +6) is the real node count; walking past it reads other
--- tables' nodes and can match a foreign entry with the same key.
+-- 2^lsizenode is the real node count; walking past it reads other tables'
+-- nodes and can match a foreign entry with the same key. Which header byte
+-- holds it depends on the Roblox build (found by the registry route below).
 local function nodeCount(t)
     if not t or t < 0x10000 then return nil end
-    local ok, l = pcall(mrd, "byte", t + 4)
+    local layout = _G.__RSC_LAYOUT
+    local ok, l = pcall(mrd, "byte", t + (layout and layout.lsize or 4))
     if not ok or not l or l < 0 or l > 20 then return nil end
     return 2 ^ l
 end
@@ -1948,18 +1950,74 @@ local function walkAround(center, span, wanted)
 end
 
 -- Registry route
--- Roblox build 02c37bc (Sep 30 2026): the type byte of a Luau object is
--- byte 1 of its header (was 0), a table's lsizenode is byte 4 (was 6), and
--- the thread's global state is at +0x68 (was +0x18).
-local ROUTE = {thread = 0x170, slot = 0x178, globalState = 0x68, registry = 0x620, node = 0x18, array = 0x20}
-local GC_TT = 1
+-- Roblox reshuffles Luau's object layout between builds: which header byte
+-- holds an object's type (tt), which holds a table's lsizenode, and where a
+-- thread keeps its global state. Build 02c37bc (Sep 30 2026) had tt +1,
+-- lsizenode +4, global state +0x68; cec3ad5 (Oct 2026) moved tt back to +0.
+-- So they are found at runtime (ROUTE.detect) instead of being hard-coded.
+local ROUTE = {thread = 0x170, slot = 0x178, globalState = 0x68, registry = 0x620, node = 0x18, array = 0x20,
+    tt = 1, lsize = 4}
 local TAG_TABLE, TAG_THREAD = 7, 10
 
 local function rbyte(a) local ok, v = pcall(mrd, "byte", a) return ok and v or nil end
 local function rint(a) local ok, v = pcall(mrd, "int", a) return ok and v or nil end
 
+-- Finds tt, the global-state offset, the registry offset and lsizenode from
+-- one module: its thread's header says where tt is; the right global state
+-- leads to a registry whose slot for this module holds a table.
+ROUTE.detect = function(ms)
+    local thread = rd(ms.Address + ROUTE.thread)
+    local slot = rint(ms.Address + ROUTE.slot)
+    if not thread or thread < 0x10000 or not slot or slot < 1 then return false end
+    local tt
+    for b = 0, 3 do if rbyte(thread + b) == TAG_THREAD then tt = b break end end
+    if not tt then return false end
+    local function moduleAt(g, y)
+        local reg = rd(g + y)
+        if not reg or reg < 0x10000 or rbyte(reg + tt) ~= TAG_TABLE or rint(g + y + 12) ~= TAG_TABLE then return nil end
+        local size, arr = rint(reg + 8), rd(reg + ROUTE.array)
+        if not size or not arr or arr < 0x10000 or slot > size then return nil end
+        local t = rd(arr + (slot - 1) * 16)
+        if not t or t < 0x10000 or rbyte(t + tt) ~= TAG_TABLE then return nil end
+        return t
+    end
+    local xs = {ROUTE.globalState, 0x18, 0x68}
+    for x = 0, 0x100, 8 do xs[#xs + 1] = x end
+    -- The registry has sat at +0x620 for a long time: try that first, and
+    -- the whole global state only now and then (it is a few thousand reads).
+    local full = not ROUTE.nextFull or tick() >= ROUTE.nextFull
+    if full then ROUTE.nextFull = tick() + 10 end
+    for pass = 1, full and 2 or 1 do
+        for _, x in ipairs(xs) do
+            local g = rd(thread + x)
+            if g and g > 0x10000 and g < 0x7fffffffffff then
+                local ys = {ROUTE.registry}
+                if pass == 2 then ys = {} for y = 0, 0x1000, 8 do ys[#ys + 1] = y end end
+                for _, y in ipairs(ys) do
+                    local t = moduleAt(g, y)
+                    if t then
+                        -- lsizenode is the header byte followed by its mask (2^l - 1).
+                        local lsize = tt == 0 and 6 or 4
+                        for _, b in ipairs({lsize, 4, 6, 5, 7, 3}) do
+                            local l, m = rbyte(t + b), rbyte(t + b + 1)
+                            if l and m and l >= 1 and l <= 24 and m == (2 ^ l - 1) % 256 then lsize = b break end
+                        end
+                        ROUTE.tt, ROUTE.globalState, ROUTE.registry, ROUTE.lsize, ROUTE.ok = tt, x, y, lsize, true
+                        _G.__RSC_LAYOUT = {tt = tt, globalState = x, registry = y, lsize = lsize}
+                        print(string.format("[RivalsSkinChanger] Memory layout: type byte +%d, global state +0x%x, registry +0x%x, table size byte +%d", tt, x, y, lsize))
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    return false
+end
+
 local function moduleTable(ms)
     if not ms or not ms.Address then return nil end
+    if not ROUTE.ok then ROUTE.detect(ms) end
+    local GC_TT = ROUTE.tt
     local thread = rd(ms.Address + ROUTE.thread)
     if not thread or thread < 0x10000 or rbyte(thread + GC_TT) ~= TAG_THREAD then return nil end
     local g = rd(thread + ROUTE.globalState)
@@ -1973,7 +2031,7 @@ local function moduleTable(ms)
 end
 
 local function nodesOf(t, maxNodes, wanted)
-    local base = t and t > 0x10000 and rbyte(t + GC_TT) == TAG_TABLE and rd(t + ROUTE.node)
+    local base = t and t > 0x10000 and rbyte(t + ROUTE.tt) == TAG_TABLE and rd(t + ROUTE.node)
     if not base or base < 0x10000 then return nil end
     local count = math.min(maxNodes, nodeCount(t) or maxNodes)
     local found, n = walkNodes(base, count, wanted)
@@ -4007,10 +4065,23 @@ do
         local f = nodesOf(te, 1024, {Play = true})
         local cl = f and f.Play and rd(f.Play)
         local proto = cl and cl > 0x10000 and rd(cl + 0x18)
-        local arr = proto and proto > 0x10000 and rd(proto + 0x28)
-        local child = arr and arr > 0x10000 and rd(arr)
-        local k = child and child > 0x10000 and rd(child + 0x48)
-        if not k or k < 0x10000 then return nil end
+        local function constantsVia(protosOff, constOff, skip)
+            local b = proto and proto > 0x10000 and (skip and rd(proto + skip) or proto)
+            local arr = b and b > 0x10000 and rd(b + protosOff)
+            local child = arr and arr > 0x10000 and rd(arr)
+            local d = child and child > 0x10000 and (skip and rd(child + skip) or child)
+            local k = d and d > 0x10000 and rd(d + constOff)
+            if not k or k < 0x10000 then return nil end
+            -- Only a list that holds the speed (800, or an earlier run's value).
+            for i = 0, 63 do
+                local okV, v = pcall(mrd, "double", k + i * 16)
+                if okV and isNumber(k + i * 16) and (v == 800 or (v / 8 >= 5 and v / 8 <= 300 and (v / 8) % 5 == 0)) then return k end
+            end
+            return nil
+        end
+        -- Build 02c37bc's Proto layout, then the older one.
+        local k = constantsVia(0x28, 0x48) or constantsVia(0x20, 0x38, 8)
+        if not k then return nil end
         -- 800, or what an earlier run set it to (800 x a multiple of 5%)
         local fallbackSlot
         for i = 0, 63 do
