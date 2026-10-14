@@ -97,7 +97,7 @@ if not wf then
     return
 end
 
-do
+local function waitForAssets()
     local lastWf, lastVm = -1, -1
     for _ = 1, 20 do
         local wfCount = #wf:GetChildren()
@@ -107,6 +107,7 @@ do
         task.wait(0.3)
     end
 end
+waitForAssets()
 
 -- Memory
 local mrd, mwr, pcall, ipairs, pairs = memory_read, memory_write, pcall, ipairs, pairs
@@ -126,9 +127,8 @@ end
 -- The Instance offsets are then checked on the live game and found by
 -- scanning if they are wrong, so an update that moves them doesn't stop the
 -- changer even before the dump has caught up.
-local OFFSETS_CACHE = "rivals_offsets_cache.json"
-local dumpOff
-do
+local dumpOff = (function()
+    local OFFSETS_CACHE = "rivals_offsets_cache.json"
     local URLS = {"https://offsets.imtheo.lol/Offsets.json"}
     local hs = game:GetService("HttpService")
     local function decode(raw)
@@ -153,13 +153,13 @@ do
     end
     local dump = data and data.Offsets or {}
     _G.__RSC_OFFSETS = {from = from or "built-in", version = data and data["Roblox Version"]}
-    dumpOff = function(class, field, default)
+    return function(class, field, default)
         local c = dump[class]
         local v = type(c) == "table" and tonumber(c[field])
         if v and v > 0 and v < 0x4000 then return v end
         return default
     end
-end
+end)()
 
 local OFF = {
     Parent = dumpOff("Instance", "Parent", 104),
@@ -168,8 +168,7 @@ local OFF = {
     Transparency = dumpOff("BasePart", "Transparency", 288)
 }
 
--- Check the Instance offsets on the live game; scan for any that are wrong.
-do
+local function verifyOffsets()
     local fixed = {}
     local function stdString(p)
         if not p or p < 0x10000 then return nil end
@@ -238,6 +237,7 @@ do
     print("[RivalsSkinChanger] Offsets: " .. info.from .. (info.version and (" (" .. info.version .. ")") or "")
         .. (#fixed > 0 and (" - corrected on the live game: " .. table.concat(fixed, ", ")) or ""))
 end
+verifyOffsets()
 
 -- The undo data (what each swap overwrote) lives in _G, which a Matcha restart
 -- or update wipes while the game keeps the swaps. A run then would swap the
@@ -4141,7 +4141,7 @@ if ENABLE_SKIN_DATA_SYNC and (#skinDataPairs > 0 or #wrapPairs > 0) then
         notifyUser("Rivals Skin Changer", "Animation sync failed - skins are still swapped", 6)
     end
 end
-do
+local function applyPostEffects()
     local okSky, patched, skyNote = pcall(applySkybox, configSkybox)
     if okSky and (patched or 0) > 0 then
         local msg = "Skybox set on " .. tostring(patched) .. " map profiles - it shows on the next map or area load"
@@ -4152,9 +4152,7 @@ do
     elseif not okSky then
         print("[RivalsSkinChanger] Skybox error: " .. tostring(patched))
     end
-end
 
-do
     local okS, changed, soundNote = pcall(applySounds, configSounds)
     if okS and (changed or 0) > 0 then
         print("[RivalsSkinChanger] Sounds: " .. tostring(changed) .. " replaced - heard from the next hit"
@@ -4170,18 +4168,14 @@ do
     elseif not okV then
         print("[RivalsSkinChanger] Sound volume error: " .. tostring(watched))
     end
-end
 
-do
     local okP, spoofing, spoofNote = pcall(startSpoof, configSpoof)
     if okP and spoofing then
         print("[RivalsSkinChanger] Spoof on - only you see it" .. (spoofNote and (" (" .. spoofNote .. ")") or ""))
     elseif not okP then
         print("[RivalsSkinChanger] Spoof error: " .. tostring(spoofing))
     end
-end
 
-do
     local okL, applied, lightNote = pcall(applyLighting, configLighting, dictCache)
     if okL and (applied or 0) > 0 then
         print("[RivalsSkinChanger] Lighting: " .. tostring(applied) .. " settings" .. (lightNote and (" - " .. lightNote) or ""))
@@ -4191,14 +4185,13 @@ do
         print("[RivalsSkinChanger] Lighting error: " .. tostring(applied))
     end
 end
+applyPostEffects()
 
 -- Tracer colours
 -- Each shot's Beam.Color comes from a ColorSequence constant: TracerEffect's
 -- default, or the skin script's own (GetFriendlyTracerColor). Rewriting those
 -- constants recolours the tracers the game draws itself, so they don't lag.
--- Every address belongs to this server: each write checks it still holds what
--- it did, and the watcher stops when the server or the module changes.
-do
+local function applyTracersEffect()
     _G.__RIVALS_TRACERS = (_G.__RIVALS_TRACERS or 0) + 1
     local token = _G.__RIVALS_TRACERS
     if _G.__RIVALS_TRACER_CONN then pcall(function() _G.__RIVALS_TRACER_CONN:Disconnect() end) end
@@ -4413,6 +4406,7 @@ do
         print("[RivalsSkinChanger] Tracers: TracerEffect not loaded yet - fire once and run again")
     end
 end
+applyTracersEffect()
 
 -- No hands
 -- Your first-person arms are two parts with a SpecialMesh each; the game hides
@@ -4420,7 +4414,7 @@ end
 -- the weapons in [NoHands]: the scale is written in memory, then the part's
 -- Size is changed (a real property change) so the arm is drawn again with it.
 -- Arms are handled as their weapon comes out, and put back the same way.
-do
+local function applyNoHandsEffect()
     _G.__RIVALS_NOHANDS = (_G.__RIVALS_NOHANDS or 0) + 1
     local token = _G.__RIVALS_NOHANDS
     if _G.__RIVALS_NOHANDS_CONN then pcall(function() _G.__RIVALS_NOHANDS_CONN:Disconnect() end) end
@@ -4525,6 +4519,7 @@ do
         end
     end
 end
+applyNoHandsEffect()
 
 -- Finishers and charms
 -- Season rank charms
