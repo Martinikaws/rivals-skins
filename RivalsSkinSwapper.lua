@@ -120,12 +120,124 @@ local wr = function(a, v)
     pcall(mwr, "uintptr_t", a, v)
 end
 
+-- Offsets. Taken from the latest Roblox offsets dump (offsets.imtheo.lol),
+-- which is saved to a file so the last good one is used when the site is
+-- down. The numbers after each name are the fallback (Roblox build cec3ad5).
+-- The Instance offsets are then checked on the live game and found by
+-- scanning if they are wrong, so an update that moves them doesn't stop the
+-- changer even before the dump has caught up.
+local OFFSETS_CACHE = "rivals_offsets_cache.json"
+local dumpOff
+do
+    local URLS = {"https://offsets.imtheo.lol/Offsets.json"}
+    local hs = game:GetService("HttpService")
+    local function decode(raw)
+        if type(raw) ~= "string" or #raw < 200 then return nil end
+        local ok, data = pcall(function() return hs:JSONDecode(raw) end)
+        if ok and type(data) == "table" and type(data.Offsets) == "table" then return data end
+    end
+    local data, from
+    for _, url in ipairs(URLS) do
+        local ok, raw = pcall(function() return game:HttpGet(url) end)
+        data = ok and decode(raw) or nil
+        if data then
+            from = "online"
+            pcall(writefile, OFFSETS_CACHE, raw)
+            break
+        end
+    end
+    if not data then
+        local ok, raw = pcall(function() return isfile(OFFSETS_CACHE) and readfile(OFFSETS_CACHE) or nil end)
+        data = ok and decode(raw) or nil
+        if data then from = "saved copy" end
+    end
+    local dump = data and data.Offsets or {}
+    _G.__RSC_OFFSETS = {from = from or "built-in", version = data and data["Roblox Version"]}
+    dumpOff = function(class, field, default)
+        local c = dump[class]
+        local v = type(c) == "table" and tonumber(c[field])
+        if v and v > 0 and v < 0x4000 then return v end
+        return default
+    end
+end
+
 local OFF = {
-    Parent = 104,
-    NameContainer = 112,
-    Children = 120,
-    Transparency = 288
+    Parent = dumpOff("Instance", "Parent", 104),
+    NameContainer = dumpOff("Instance", "NameContainer", 112),
+    Children = dumpOff("Instance", "ChildrenStart", 120),
+    Transparency = dumpOff("BasePart", "Transparency", 288)
 }
+
+-- Check the Instance offsets on the live game; scan for any that are wrong.
+do
+    local fixed = {}
+    local function stdString(p)
+        if not p or p < 0x10000 then return nil end
+        local size, cap = rd(p + 16), rd(p + 24)
+        if not size or not cap or size > 200 or cap < size then return nil end
+        local ok, s = pcall(mrd, "string", cap > 15 and rd(p) or p)
+        if ok and type(s) == "string" then return s:sub(1, size) end
+    end
+    local function holdsChild(parent, child, off)
+        local n = rd(parent.Address + off)
+        local b, e = n and n > 0x10000 and rd(n), n and n > 0x10000 and rd(n + 8)
+        if not b or not e or e < b or (e - b) % 16 ~= 0 or e - b > 16 * 65536 then return false end
+        for s = b, math.min(e - 16, b + 16 * 4096), 16 do
+            if rd(s) == child.Address then return true end
+        end
+        return false
+    end
+    -- Parent: Weapons' parent is ViewModels, and ViewModels' is Assets.
+    local function parentOk(off) return rd(wf.Address + off) == vm.Address and rd(vm.Address + off) == A.Address end
+    if not parentOk(OFF.Parent) then
+        for off = 0x30, 0x200, 8 do
+            if parentOk(off) then OFF.Parent = off fixed[#fixed + 1] = "Parent" break end
+        end
+    end
+    -- Name: the name string of Weapons and ViewModels.
+    local function nameOk(off) return stdString(rd(wf.Address + off)) == "Weapons" and stdString(rd(vm.Address + off)) == "ViewModels" end
+    if not nameOk(OFF.NameContainer) then
+        for off = 0x30, 0x200, 8 do
+            if nameOk(off) then OFF.NameContainer = off fixed[#fixed + 1] = "Name" break end
+        end
+    end
+    -- Children: ViewModels' children list holds Weapons.
+    if not holdsChild(vm, wf, OFF.Children) then
+        for off = 0x30, 0x200, 8 do
+            if off ~= OFF.Parent and off ~= OFF.NameContainer and holdsChild(vm, wf, off) then
+                OFF.Children = off fixed[#fixed + 1] = "Children" break
+            end
+        end
+    end
+    -- Transparency: compared with what the game reports for a few parts.
+    local parts, seeThrough = {}, 0
+    for _, d in ipairs(wf:GetDescendants()) do
+        if d.ClassName == "Part" or d.ClassName == "MeshPart" then
+            local ok, t = pcall(function() return d.Transparency end)
+            if ok and type(t) == "number" then
+                parts[#parts + 1] = {d, t}
+                if t > 0.01 and t < 0.99 or t == 1 then seeThrough = seeThrough + 1 end
+            end
+            if #parts >= 40 and seeThrough >= 2 then break end
+        end
+    end
+    local function transpOk(off)
+        for _, p in ipairs(parts) do
+            local ok, v = pcall(mrd, "float", p[1].Address + off)
+            if not ok or not v or math.abs(v - p[2]) > 1e-4 then return false end
+        end
+        return true
+    end
+    -- All-opaque samples would match any zero float, so they prove nothing.
+    if seeThrough > 0 and not transpOk(OFF.Transparency) then
+        for off = 0x100, 0x200, 4 do
+            if transpOk(off) then OFF.Transparency = off fixed[#fixed + 1] = "Transparency" break end
+        end
+    end
+    local info = _G.__RSC_OFFSETS
+    print("[RivalsSkinChanger] Offsets: " .. info.from .. (info.version and (" (" .. info.version .. ")") or "")
+        .. (#fixed > 0 and (" - corrected on the live game: " .. table.concat(fixed, ", ")) or ""))
+end
 
 -- The undo data (what each swap overwrote) lives in _G, which a Matcha restart
 -- or update wipes while the game keeps the swaps. A run then would swap the
@@ -287,7 +399,7 @@ local function checkImgOffset()
     for _, d in ipairs(pg:GetDescendants()) do
         if d.ClassName == "ImageLabel" and d.Address then
             checked = checked + 1
-            for off = 0x980, 0xB00, 8 do
+            for off = 0x900, 0xC00, 8 do
                 local ptr = mrd("uintptr_t", d.Address + off)
                 if ptr and ptr > 0x10000000000 and ptr < 0x7FFFFFFFFFFF then
                     local s = mrd("string", ptr)
@@ -2979,7 +3091,9 @@ local SKYBOX_PRESETS = {
     ["classic"] = {"rbxasset://sky/sky512_bk.tex", "rbxasset://sky/sky512_dn.tex", "rbxasset://sky/sky512_ft.tex",
                    "rbxasset://sky/sky512_lf.tex", "rbxasset://sky/sky512_rt.tex", "rbxasset://sky/sky512_up.tex"}
 }
-local SKYBOX_FACES = {{"bk", 0xe8}, {"dn", 0x118}, {"ft", 0x148}, {"lf", 0x178}, {"rt", 0x1a8}, {"up", 0x1d8}}
+local SKYBOX_FACES = {{"bk", dumpOff("Sky", "SkyboxBk", 0xe8)}, {"dn", dumpOff("Sky", "SkyboxDn", 0x118)},
+    {"ft", dumpOff("Sky", "SkyboxFt", 0x148)}, {"lf", dumpOff("Sky", "SkyboxLf", 0x178)},
+    {"rt", dumpOff("Sky", "SkyboxRt", 0x1a8)}, {"up", dumpOff("Sky", "SkyboxUp", 0x1d8)}}
 
 local function skyboxAssetId(v)
     v = tostring(v):match("^%s*(.-)%s*$")
@@ -3182,9 +3296,10 @@ end
 -- at a fixed volume, so custom sounds come out louder or quieter. The game
 -- creates each hit, headshot and kill sound fresh, parented to the script
 -- that plays it (ClientViewModel for hits, EliminationSlots for kills); a
--- light watcher scales new ones by the chosen multiplier. Volume is the float
--- at +0x120 of a Sound.
-local SOUND_VOLUME_OFF = 0x120
+-- light watcher scales new ones by the chosen multiplier. Volume is a float
+-- on the Sound (offset from the dump, 0x120 on build cec3ad5).
+local SOUND_VOLUME_OFF = dumpOff("Sound", "Volume", 0x120)
+local SOUND_ID_OFF = dumpOff("Sound", "SoundId", 0xb8)
 local DEFAULT_SOUND_TEXT = {
     hit = {"rbxassetid://13110130082"},
     critical = {"rbxassetid://16537449730"},
@@ -3228,7 +3343,7 @@ local function startVolumeWatcher(conf)
                     local a = s.ClassName == "Sound" and s.Address
                     if a and not seen[a] then
                         seen[a] = now
-                        local ok, text = pcall(mrd, "string", rd(a + 0xb8))
+                        local ok, text = pcall(mrd, "string", rd(a + SOUND_ID_OFF))
                         local g = ok and gains[text]
                         if g then
                             local v = mrd("float", a + SOUND_VOLUME_OFF)
@@ -3267,7 +3382,7 @@ local SPOOF_ATTRS = {
 local NAME_EFFECTS = {prime = "Prime", gold = "Prime", contraband = "Contraband", purple = "Contraband",
     none = "", off = "", ["false"] = ""}
 local SPOOF_STATS = {level = "Level", streak = "Win Streak", elo = "Current ELO"}
-local DISPLAY_NAME_OFF = 0x128 -- Player.DisplayName, a std::string
+local DISPLAY_NAME_OFF = dumpOff("Player", "DisplayName", 0x128) -- Player.DisplayName, a std::string
 local GLYPHS, GLYPHS_END, GLYPH_SIZE = 0xc18, 0xc20, 56 -- laid-out glyphs, codepoint at +12
 local SPOOF_REAL_FILE = "rivals_spoof_real.txt"
 local DEVICES = {mousekeyboard = "MouseKeyboard", keyboard = "MouseKeyboard", pc = "MouseKeyboard",
@@ -3731,14 +3846,14 @@ end
 
 -- Lighting
 local LIGHTING_FIELDS = {
-    brightness = {off = 0x108, key = "Brightness"},
-    exposure = {off = 0x114, key = "ExposureCompensation"},
-    diffuse = {off = 0x10c, key = "EnvironmentDiffuseScale"},
-    specular = {off = 0x110, key = "EnvironmentSpecularScale"},
+    brightness = {off = dumpOff("Lighting", "Brightness", 0x108), key = "Brightness"},
+    exposure = {off = dumpOff("Lighting", "ExposureCompensation", 0x114), key = "ExposureCompensation"},
+    diffuse = {off = dumpOff("Lighting", "EnvironmentDiffuseScale", 0x10c), key = "EnvironmentDiffuseScale"},
+    specular = {off = dumpOff("Lighting", "EnvironmentSpecularScale", 0x110), key = "EnvironmentSpecularScale"},
     shadowsoftness = {off = nil, key = "ShadowSoftness"},
-    ambient = {off = 0xc0, key = "Ambient", color = true},
-    outdoor = {off = 0xf0, key = "OutdoorAmbient", color = true},
-    fogcolor = {off = 0xe4, key = "FogColor", color = true}
+    ambient = {off = dumpOff("Lighting", "Ambient", 0xc0), key = "Ambient", color = true},
+    outdoor = {off = dumpOff("Lighting", "OutdoorAmbient", 0xf0), key = "OutdoorAmbient", color = true},
+    fogcolor = {off = dumpOff("Lighting", "FogColor", 0xe4), key = "FogColor", color = true}
 }
 local LIGHTING_PRESETS = {
     ["dark"] = {brightness = 0.35, exposure = -1.3, diffuse = 0.15, specular = 0.2, ambient = 0.02, outdoor = 0.03, fogcolor = 0.02},
@@ -4311,7 +4426,7 @@ do
     if _G.__RIVALS_NOHANDS_CONN then pcall(function() _G.__RIVALS_NOHANDS_CONN:Disconnect() end) end
     _G.__RIVALS_NOHANDS_CONN = nil
 
-    local MESH_SCALE = 0xB4 -- SpecialMesh.Scale, three floats
+    local MESH_SCALE = dumpOff("SpecialMesh", "Scale", 0xB4) -- SpecialMesh.Scale, three floats
     local ARM_SIZE, TINY = Vector3.new(1.8, 0.45, 0.45), Vector3.new(0.001, 0.001, 0.001)
     local job = game.JobId
     -- What was hidden, kept across runs (same server) so it can be put back:
