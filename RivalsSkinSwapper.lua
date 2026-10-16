@@ -121,14 +121,18 @@ local wr = function(a, v)
     pcall(mwr, "uintptr_t", a, v)
 end
 
--- Offsets. Taken from the latest Roblox offsets dump (offsets.imtheo.lol),
--- which is saved to a file so the last good one is used when the site is
--- down. The numbers after each name are the fallback (Roblox build cec3ad5).
--- The Instance offsets are then checked on the live game and found by
--- scanning if they are wrong, so an update that moves them doesn't stop the
--- changer even before the dump has caught up.
+-- Offsets. From the Roblox offsets dump (offsets.imtheo.lol), but only one
+-- made for the Roblox build that is running: the site follows the newest
+-- Roblox, and Matcha users are often a build behind (pinned by a bootstrapper).
+-- A dump fits when its module pointer to the DataModel, which moves with
+-- nearly every build, leads to this game. Every dump is saved under its
+-- Roblox version, so an older build finds its own later; with none that
+-- fits, the numbers after each name are used (Roblox build cec3ad5). The
+-- Instance offsets are then checked on the live game and found by scanning
+-- if they are wrong, and the sky, lighting, sound and name writers check
+-- their fields before writing.
 local dumpOff = (function()
-    local OFFSETS_CACHE = "rivals_offsets_cache.json"
+    local LEGACY_CACHE, CACHE_DIR = "rivals_offsets_cache.json", "rivals_offsets"
     local URLS = {"https://offsets.imtheo.lol/Offsets.json"}
     local hs = game:GetService("HttpService")
     local function decode(raw)
@@ -136,23 +140,87 @@ local dumpOff = (function()
         local ok, data = pcall(function() return hs:JSONDecode(raw) end)
         if ok and type(data) == "table" and type(data.Offsets) == "table" then return data end
     end
-    local data, from
+    local function versionOf(data)
+        return tostring(data["Roblox Version"] or ""):match("^version%-%x+$")
+    end
+    -- The running build, where Matcha can tell it (e.g. "version-cec3ad5889b447cf").
+    local okV, running = pcall(function() return getrbxversion() end)
+    running = okV and type(running) == "string" and running:match("version%-%x+") or nil
+    -- true: the dump is for this build; false: it isn't; nil: can't be told.
+    -- The DataModel pointer is measured in the running game, so it decides
+    -- whenever it can; the reported version only when it can't (no getbase,
+    -- or the dump lacks the pointer).
+    local function fits(data)
+        local f = data.Offsets.FakeDataModel
+        local ptr = type(f) == "table" and tonumber(f.Pointer)
+        local real = type(f) == "table" and tonumber(f.RealDataModel)
+        local okB, base = pcall(function() return getbase() end)
+        local okG, dm = pcall(function() return game.Address end)
+        if ptr and ptr > 0 and real and real > 0 and okB and type(base) == "number" and base >= 0x10000
+            and okG and type(dm) == "number" and dm >= 0x10000 then
+            local fake = rd(base + ptr)
+            return fake ~= nil and fake >= 0x10000 and rd(fake + real) == dm
+        end
+        local v = versionOf(data)
+        if running and v then return v == running end
+        return nil
+    end
+
+    local online
     for _, url in ipairs(URLS) do
         local ok, raw = pcall(function() return game:HttpGet(url) end)
-        data = ok and decode(raw) or nil
-        if data then
-            from = "online"
-            pcall(writefile, OFFSETS_CACHE, raw)
+        online = ok and decode(raw) or nil
+        if online then
+            -- Right for its own build, whichever that is.
+            local v = versionOf(online)
+            if v then
+                pcall(makefolder, CACHE_DIR)
+                pcall(writefile, CACHE_DIR .. "/" .. v .. ".json", raw)
+            end
             break
         end
     end
+
+    local data, from, fit
+    if online then
+        fit = fits(online)
+        if fit ~= false then data, from = online, "online" end
+    end
     if not data then
-        local ok, raw = pcall(function() return isfile(OFFSETS_CACHE) and readfile(OFFSETS_CACHE) or nil end)
-        data = ok and decode(raw) or nil
-        if data then from = "saved copy" end
+        -- A saved dump that fits: one per Roblox version, plus the single
+        -- file earlier versions of the changer kept.
+        local paths = {running and (CACHE_DIR .. "/" .. running .. ".json") or nil}
+        local okL, list = pcall(listfiles, CACHE_DIR)
+        for _, p in ipairs(okL and type(list) == "table" and list or {}) do
+            if tostring(p):lower():find("%.json$") then paths[#paths + 1] = p end
+        end
+        paths[#paths + 1] = LEGACY_CACHE
+        local untested
+        for _, p in ipairs(paths) do
+            local okR, raw = pcall(function() return isfile(p) and readfile(p) or nil end)
+            local saved = okR and decode(raw) or nil
+            if saved then
+                local f = fits(saved)
+                if f == true then data, from, fit = saved, "saved copy", true break end
+                if f == nil and not untested then untested = saved end
+            end
+        end
+        -- The site also keeps each build's own list: fetch the running one's.
+        if not data and running then
+            local ok, raw = pcall(function() return game:HttpGet("https://offsets.imtheo.lol/" .. running .. "/offsets.json") end)
+            local own = ok and decode(raw) or nil
+            if own and versionOf(own) == running and fits(own) ~= false then
+                data, from, fit = own, "online, for this build", fits(own)
+                pcall(makefolder, CACHE_DIR)
+                pcall(writefile, CACHE_DIR .. "/" .. running .. ".json", raw)
+            end
+        end
+        -- No dump online and no way to check: the last saved one, as before.
+        if not data and not online and untested then data, from = untested, "saved copy" end
     end
     local dump = data and data.Offsets or {}
-    _G.__RSC_OFFSETS = {from = from or "built-in", version = data and data["Roblox Version"]}
+    _G.__RSC_OFFSETS = {from = from or "built-in", version = data and data["Roblox Version"], fits = fit,
+        skipped = online and data ~= online and online["Roblox Version"] or nil}
     return function(class, field, default)
         local c = dump[class]
         local v = type(c) == "table" and tonumber(c[field])
@@ -235,6 +303,8 @@ local function verifyOffsets()
     end
     local info = _G.__RSC_OFFSETS
     print("[RivalsSkinChanger] Offsets: " .. info.from .. (info.version and (" (" .. info.version .. ")") or "")
+        .. (info.fits == true and " - fits this Roblox build" or (info.fits == nil and info.version and " - fit not checked" or ""))
+        .. (info.skipped and (" - the online offsets are for " .. tostring(info.skipped) .. ", not this build") or "")
         .. (#fixed > 0 and (" - corrected on the live game: " .. table.concat(fixed, ", ")) or ""))
 end
 verifyOffsets()
@@ -3088,8 +3158,6 @@ local SKYBOX_PRESETS = {
     ["winterness"] = {"93314155085684", "86544552740075", "82163169918498", "113463592358754", "89545353728911", "112700328026196"},
     ["xen"] = {"138521026317896", "93370270064161", "77429040495782", "124709280024255", "117416468013692", "98120283931640"},
     ["zen end"] = {"109470247657976", "118949631704099", "122702664050796", "139189653780112", "125062544262187", "85640581945708"},
-    ["classic"] = {"rbxasset://sky/sky512_bk.tex", "rbxasset://sky/sky512_dn.tex", "rbxasset://sky/sky512_ft.tex",
-                   "rbxasset://sky/sky512_lf.tex", "rbxasset://sky/sky512_rt.tex", "rbxasset://sky/sky512_up.tex"}
 }
 local SKYBOX_FACES = {{"bk", dumpOff("Sky", "SkyboxBk", 0xe8)}, {"dn", dumpOff("Sky", "SkyboxDn", 0x118)},
     {"ft", dumpOff("Sky", "SkyboxFt", 0x148)}, {"lf", dumpOff("Sky", "SkyboxLf", 0x178)},
@@ -3102,55 +3170,79 @@ local function skyboxAssetId(v)
     return digits and ("rbxassetid://" .. digits) or nil
 end
 
-local function writeRobloxString(base, str)
-    local ptr, cap = rd(base), mrd("uint64_t", base + 24)
-    if not ptr or not cap or ptr < 0x10000 or #str > cap then return false end
-    for i = 1, #str do mwr("uint8_t", ptr + i - 1, string.byte(str, i)) end
-    mwr("uint8_t", ptr + #str, 0)
-    mwr("uint64_t", base + 16, #str)
-    return true
-end
-
+-- Returns patched, note, refused (true when the sky was turned down).
 local function applySkybox(conf)
-    local ids = {}
-    local preset = conf.preset or conf.skybox or conf.name
-    -- "gray" is Roblox's DebugSkyGray render flag, not a set of images: it
-    -- greys the sky at once, on every map. Any other choice turns it off.
-    local gray = preset and tostring(preset):lower() == "gray"
-    if type(setfflag) == "function" then pcall(setfflag, "DebugSkyGray", gray and 1 or 0) end
-    if gray then return 0, "gray sky on - shows straight away" end
-    -- Since Roblox build cec3ad5 (Oct 2026) a sky whose images Rivals isn't
-    -- allowed to load crashes the game on the next map load. New uploads are
-    -- private to their owner, so the community skies (uploaded by Martinikaws
-    -- in 2026) crash; the older public images Rivals can load still work.
-    -- Only those presets are applied until the uploads are made public.
-    do
-        local PUBLIC = {blue = true, station = true, graveyard = true, ["sudden death"] = true, space = true,
-            westown = true, black = true, classic = true}
-        if preset and not PUBLIC[tostring(preset):lower()] then
-            return 0, "the '" .. tostring(preset) .. "' sky can't load in Rivals right now (its images aren't public) and would crash the game - "
-                .. "these work: Blue, Station, Graveyard, Sudden Death, Space, Westown, Black, Classic"
+    -- A face is an MSVC std::string: the text at +0 (inline when the
+    -- capacity is 15 or less, otherwise a pointer to it), length at +16,
+    -- capacity at +24. Only a heap string that holds an image path is read
+    -- or rewritten, and only with text that fits its buffer.
+    local function isImagePath(s)
+        return (s:find("^rbxasset") or s:find("^https?://")) and not s:find("[^\32-\126]") and true or false
+    end
+    local function readFace(base)
+        local size, cap, ptr = rd(base + 16), rd(base + 24), rd(base)
+        if not size or not cap or not ptr or size < 1 or cap < 16 or cap > 0x1000 or size > cap or ptr < 0x10000 then return nil end
+        local ok, s = pcall(mrd, "string", ptr)
+        if not ok or type(s) ~= "string" or #s < size then return nil end
+        s = s:sub(1, size)
+        if not isImagePath(s) then return nil end
+        return s, ptr, cap
+    end
+    -- Only text readFace would accept back is written, so every write can be
+    -- undone. Each face also records which kind of address it holds, which
+    -- an in-place write can't change: rbxasset://sky/sky512_up.tex written
+    -- over an rbxassetid:// face was read as asset id "y/sky512_up.tex" and
+    -- crashed the game. So the new text must use the face's own scheme -
+    -- except when putting back a face's original image number (restoring),
+    -- the kind every map sky records, even over an old Classic write.
+    local function writeFace(base, str, restoring)
+        local cur, ptr, cap = readFace(base)
+        if not cur or #str > cap or not isImagePath(str) then return false end
+        if not restoring and (cur:match("^(%a+://)") or "") ~= (str:match("^(%a+://)") or "?") then return false end
+        for i = 1, #str do
+            if not pcall(mwr, "byte", ptr + i - 1, string.byte(str, i)) then
+                -- Half a new id could name some other image; put the old one back.
+                for j = 1, i - 1 do pcall(mwr, "byte", ptr + j - 1, string.byte(cur, j) or 0) end
+                return false
+            end
+        end
+        pcall(mwr, "byte", ptr + #str, 0)
+        wr(base + 16, #str)
+        return true
+    end
+
+    -- Put back the faces an earlier run in this server wrote, where they
+    -- still hold what it wrote, so Off or another sky needs no rejoin.
+    -- (_G is lost when Matcha restarts; rejoining always resets the skies.)
+    -- A face that still holds what was written but can't be put back stays
+    -- remembered for the next run. Only an image number may be put back over
+    -- a different scheme: an older changer that wrote over an unremembered
+    -- Classic sky recorded Classic's rbxasset:// text as the original, and
+    -- writing that back would crash the game, so the face keeps its image.
+    local restored, kept = 0, {}
+    local prev = _G.__RIVALS_SKY_WRITES
+    _G.__RIVALS_SKY_WRITES = nil
+    for addr, w in pairs(type(prev) == "table" and prev or {}) do
+        if type(w) == "table" and type(w[1]) == "string" and readFace(addr) == w[2] then
+            local toId = w[1]:find("^rbxassetid://%d+$") ~= nil
+            if writeFace(addr, w[1], toId) then restored = restored + 1 elseif toId then kept[addr] = w end
         end
     end
-    if preset then
-        local p = SKYBOX_PRESETS[tostring(preset):lower()]
-        if not p then return 0, "unknown skybox preset '" .. tostring(preset) .. "'" end
-        for i, v in ipairs(p) do ids[i] = skyboxAssetId(v) end
-    end
-    local all = conf.all and skyboxAssetId(conf.all)
-    if all then for i = 1, 6 do ids[i] = all end end
-    for i, f in ipairs(SKYBOX_FACES) do
-        local one = conf[f[1]] and skyboxAssetId(conf[f[1]])
-        if one then ids[i] = one end
-    end
+    if next(kept) then _G.__RIVALS_SKY_WRITES = kept end
+    local restoredNote = restored > 0 and "the game's own skies are back from the next map load" or nil
 
-    local given = 0
-    for i = 1, 6 do if ids[i] then given = given + 1 end end
-    if given == 0 then return 0, nil end
-
+    -- Only the map templates are rewritten, never the sky being drawn in
+    -- Lighting: a map load clones a template there, so the live sky gains
+    -- nothing from the change. Rewriting it did harm: the next map load
+    -- destroys it and frees its textures under the new ids, which the game
+    -- never loaded - the likely reason a sky with images the game hadn't
+    -- preloaded (the uploaded ones) crashed it, while its own skies didn't.
+    local lighting = game:GetService("Lighting").Address
     local skies, seen = {}, {}
     local function add(inst)
         if inst and inst.ClassName == "Sky" and inst.Address and not seen[inst.Address] then
+            local parent = inst.Parent
+            if parent and parent.Address == lighting then return end
             seen[inst.Address] = true
             skies[#skies + 1] = inst
         end
@@ -3177,18 +3269,121 @@ local function applySkybox(conf)
             if profiles and profiles.Name == "LightingProfiles" then add(d) end
         end
     end
-    for _, c in ipairs(game:GetService("Lighting"):GetChildren()) do add(c) end
 
-    local patched, skipped = 0, 0
+
+    -- A template still holding Classic's files that nothing remembers (Matcha
+    -- restarted since an older version wrote them) will crash the next map
+    -- load; only a rejoin clears it, so every outcome below says so.
+    local oldClassic = false
     for _, d in ipairs(skies) do
-        local ok = 0
-        for i, f in ipairs(SKYBOX_FACES) do
-            if ids[i] and writeRobloxString(d.Address + f[2], ids[i]) then ok = ok + 1 end
+        for _, f in ipairs(SKYBOX_FACES) do
+            local s = readFace(d.Address + f[2])
+            if s and s:find("^rbxasset://sky/sky512_") then oldClassic = true end
         end
-        if ok == given then patched = patched + 1 else skipped = skipped + 1 end
     end
-    if patched == 0 then return 0, "no sky templates found" end
-    return patched, (skipped > 0) and (skipped .. " sky templates were left alone (id too long for the game's buffer)") or nil
+    local classicNote = oldClassic and "an older run's Classic sky is still in the map skies - rejoin before the next map load, or the game will crash" or nil
+    local function withClassic(note)
+        return classicNote and ((note and (note .. ". Also, ") or "") .. classicNote) or note
+    end
+
+    local ids = {}
+    local preset = conf.preset or conf.skybox or conf.name
+    -- "gray" is Roblox's DebugSkyGray render flag, not a set of images: it
+    -- greys the sky at once, on every map. Any other choice turns it off.
+    local gray = preset and tostring(preset):lower() == "gray"
+    if type(setfflag) == "function" then pcall(setfflag, "DebugSkyGray", gray and 1 or 0) end
+    if gray then return 0, withClassic("gray sky on - shows straight away"), classicNote and true or nil end
+    if preset then
+        local p = SKYBOX_PRESETS[tostring(preset):lower()]
+        if not p and tostring(preset):lower() == "classic" then
+            conf.__refused = true
+            return 0, withClassic("the Classic sky is gone: its images are rbxasset:// files that ship with Roblox, while the map "
+                .. "skies hold rbxassetid:// ids, and Roblox read the one as the other and crashed. Pick another sky"), true
+        end
+        if not p then return 0, withClassic("unknown skybox preset '" .. tostring(preset) .. "'"), classicNote and true or nil end
+        for i, v in ipairs(p) do ids[i] = skyboxAssetId(v) end
+    end
+    local all = conf.all and skyboxAssetId(conf.all)
+    if all then for i = 1, 6 do ids[i] = all end end
+    for i, f in ipairs(SKYBOX_FACES) do
+        local one = conf[f[1]] and skyboxAssetId(conf[f[1]])
+        if one then ids[i] = one end
+    end
+
+    local given = 0
+    for i = 1, 6 do if ids[i] then given = given + 1 end end
+    if given == 0 then return 0, withClassic(restoredNote), classicNote and true or nil end
+
+    -- Only images from the skies listed above are written: the game's own
+    -- and the uploaded ones. Since Roblox build cec3ad5 (Oct 2026) a sky
+    -- the game can't load crashes it on the next map load, so an image id
+    -- from anywhere else is turned down. The id decides, not the preset
+    -- name, so All= and per-face lines are held to the same rule. Force=yes
+    -- writes them anyway, to test a sky.
+    local safe = {}
+    for _, faces in pairs(SKYBOX_PRESETS) do
+        for _, v in ipairs(faces) do safe[skyboxAssetId(v)] = true end
+    end
+    local force = tostring(conf.force or ""):lower():match("^%s*(%w+)")
+    force = force == "yes" or force == "true" or force == "on" or force == "1"
+    -- The map skies hold rbxassetid:// ids, and a face can't change the kind
+    -- of address it holds (see writeFace), so anything else - a local
+    -- rbxasset:// file or an http link - is turned down even with Force=yes.
+    for i = 1, 6 do
+        if ids[i] and not ids[i]:find("^rbxassetid://%d+$") then
+            conf.__refused = true
+            return 0, withClassic((preset and ("the '" .. tostring(preset) .. "' sky") or "the custom sky") .. " was not applied: '"
+                .. ids[i] .. "' isn't an rbxassetid:// image id, and the map skies can only take those - Roblox "
+                .. "reads anything else as a broken asset id and crashes. Use the image's number"), true
+        end
+    end
+    local foreign = 0
+    for i = 1, 6 do if ids[i] and not safe[ids[i]] then foreign = foreign + 1 end end
+    if foreign > 0 and not force then
+        conf.__refused = true
+        return 0, withClassic((preset and ("the '" .. tostring(preset) .. "' sky") or "the custom sky") .. " was not applied: "
+            .. foreign .. " of its faces aren't images from the changer's skies, and since Roblox build cec3ad5 a sky "
+            .. "the game can't load crashes it on the next map load. Pick one of the listed skies, or add Force=yes "
+            .. "under [Skybox] to try it anyway"), true
+    end
+
+    -- A template takes all the faces given or none of them, and every
+    -- change is remembered so the next run can put it back.
+    local patched, skipped, writes = 0, 0, {}
+    for _, d in ipairs(skies) do
+        local done = {}
+        for i, f in ipairs(SKYBOX_FACES) do
+            local addr = d.Address + f[2]
+            local orig = ids[i] and readFace(addr)
+            if orig and writeFace(addr, ids[i]) then done[#done + 1] = {addr, orig, ids[i]} end
+        end
+        if #done == given then
+            patched = patched + 1
+            for _, w in ipairs(done) do
+                if w[2] ~= w[3] then writes[w[1]] = {w[2], w[3]} end
+            end
+        else
+            skipped = skipped + 1
+            for _, w in ipairs(done) do writeFace(w[1], w[2], true) end
+        end
+    end
+    if next(writes) then
+        -- A face still remembered from a restore that failed keeps its
+        -- original, so a later undo goes back to the game's image.
+        local all = _G.__RIVALS_SKY_WRITES or {}
+        for addr, w in pairs(writes) do
+            local k = all[addr]
+            if k and k[2] == w[1] then w = {k[1], w[2]} end
+            all[addr] = w[1] ~= w[2] and w or nil
+        end
+        _G.__RIVALS_SKY_WRITES = next(all) and all or nil
+    end
+    if patched == 0 then
+        return 0, withClassic(skipped > 0 and (skipped .. " sky templates couldn't hold the new images - left as they were") or "no sky templates found"),
+            classicNote and true or nil
+    end
+    return patched, withClassic((skipped > 0) and (skipped .. " sky templates were left alone (a face couldn't hold the new image)") or nil),
+        classicNote and true or nil
 end
 
 -- Hit, headshot and kill sounds
@@ -3346,8 +3541,12 @@ local function startVolumeWatcher(conf)
                         local ok, text = pcall(mrd, "string", rd(a + SOUND_ID_OFF))
                         local g = ok and gains[text]
                         if g then
-                            local v = mrd("float", a + SOUND_VOLUME_OFF)
-                            if v then mwr("float", a + SOUND_VOLUME_OFF, v * g) end
+                            -- Only a value that looks like a volume (0-10): anything else
+                            -- means the offset doesn't fit this Roblox build.
+                            local okV, v = pcall(mrd, "float", a + SOUND_VOLUME_OFF)
+                            if okV and type(v) == "number" and v >= 0 and v <= 10 then
+                                pcall(mwr, "float", a + SOUND_VOLUME_OFF, math.min(v * g, 10))
+                            end
                         end
                     end
                 end
@@ -3585,17 +3784,38 @@ local function startSpoof(conf)
     -- The real values, read once before anything is changed. The display name
     -- is also kept in a file: after a Matcha restart the player object may
     -- still carry a spoofed one.
+    -- The DisplayName field sits at a fixed offset: it is only read or written
+    -- when it holds something that looks like a name and equals the property
+    -- (or the name this changer last wrote there); otherwise the offset
+    -- doesn't fit this build. Read byte by byte up to the string's own length,
+    -- since Matcha's string read stops at the first byte above 0x7E (a name
+    -- like "Niccolò" reads as "Niccol"). Without the property to compare
+    -- with, only a plain ASCII name is trusted.
+    local nameAddr = LP.Address + DISPLAY_NAME_OFF
+    local function nameBytes(n)
+        local cap = rd(nameAddr + 24)
+        local p = cap and (cap > 15 and rd(nameAddr) or nameAddr)
+        if not n or not cap or n > cap or not p or p == 0 then return nil end
+        local out = {}
+        for i = 0, n - 1 do
+            local ok, b = pcall(mrd, "byte", p + i)
+            if not ok or type(b) ~= "number" or b < 0 or b > 255 then return nil end
+            out[#out + 1] = string.char(b)
+        end
+        return table.concat(out)
+    end
+    local nameLen = rd(nameAddr + 16)
+    local nameNow = nameLen and nameLen >= 1 and nameLen <= 64 and nameBytes(nameLen) or nil
+    local okDN, dn = pcall(function() return LP.DisplayName end)
+    dn = okDN and type(dn) == "string" and dn ~= "" and dn or nil
+
     local real = _G.__RIVALS_SPOOF_REAL
     if not real or real.user ~= LP.Name then
         real = {user = LP.Name, attrs = {}, stats = {}}
+        -- Older versions' file; their names can be cut short (see below).
         local okF, saved = pcall(readfile, SPOOF_REAL_FILE)
         local savedUser, savedName = (okF and type(saved) == "string" and saved or ""):match("^(.-)\n(.-)\n?$")
-        if savedUser == LP.Name and savedName and savedName ~= "" then
-            real.display = savedName
-        else
-            real.display = readStdString(LP.Address + DISPLAY_NAME_OFF)
-            if real.display then pcall(writefile, SPOOF_REAL_FILE, LP.Name .. "\n" .. real.display .. "\n") end
-        end
+        if savedUser == LP.Name and savedName and savedName ~= "" then real.display = savedName end
         for key, attr in pairs(SPOOF_ATTRS) do real.attrs[key] = LP:GetAttribute(attr) end
         real.effectRead = true
         local ls = LP:FindFirstChild("CustomLeaderstats")
@@ -3614,6 +3834,31 @@ local function startSpoof(conf)
     end
     if real.attrs.effect == nil then real.attrs.effect = "" end
 
+    -- This version's name record, kept apart from the one above (older
+    -- versions read that, and expect their cut-short string read in it): the
+    -- real name, the name last written into the field, and the player object
+    -- it belongs to, in _G and in a file (a rerun, a Matcha restart). A new
+    -- player object means a rejoin, and a rejoin's field holds the game's name.
+    local nameFile = "rivals_spoof_name.txt"
+    local nm = _G.__RIVALS_SPOOF_NAME
+    if type(nm) ~= "table" or nm.user ~= LP.Name then
+        nm = {user = LP.Name}
+        local okN, rec = pcall(readfile, nameFile)
+        local u, d, w, lp = (okN and type(rec) == "string" and rec or ""):match("^(.-)\n(.-)\n(.-)\n(.-)\n?$")
+        if u == LP.Name and d ~= "" then nm.display, nm.wrote, nm.lp, nm.saved = d, w ~= "" and w or nil, tonumber(lp), rec end
+        _G.__RIVALS_SPOOF_NAME = nm
+    end
+    local function saveName()
+        local rec = LP.Name .. "\n" .. (nm.display or "") .. "\n" .. (nm.wrote or "") .. "\n"
+            .. (nm.lp and string.format("%.0f", nm.lp) or "") .. "\n"
+        if nm.display and rec ~= nm.saved then
+            nm.saved = rec
+            pcall(writefile, nameFile, rec)
+        end
+    end
+    local nameFits = nameNow and not nameNow:find("%c")
+        and (nameNow == dn or nameNow == nm.wrote or (not dn and nameNow == readStdString(nameAddr))) or false
+
     local want = {
         effect = conf.effect and NAME_EFFECTS[tostring(conf.effect):lower():gsub("%s", "")],
         name = conf.name and conf.name ~= "" and conf.name or nil,
@@ -3626,14 +3871,48 @@ local function startSpoof(conf)
     local any = device ~= nil
     for _, v in pairs(want) do if v ~= nil then any = true end end
 
+    if nameFits and nm.lp ~= LP.Address then
+        local realName = nameNow
+        if not nm.display then
+            -- First run of this version: an older one's record can hold the
+            -- name cut short at its first non-ASCII byte ("Niccol", or "" for
+            -- "Ñandu") while the field holds it whole - or the field can hold
+            -- that version's spoof, and the record the real name.
+            local old = real.display
+            if old and #nameNow > #old and nameNow:sub(1, #old) == old and nameNow:byte(#old + 1) > 126
+                and nameNow ~= want.name then
+                old = nameNow
+            end
+            if old == "" then realName = nil end
+            realName = old ~= "" and old or realName
+        end
+        nm.display, nm.wrote, nm.lp = realName, nil, LP.Address
+        saveName()
+    end
+    -- Older versions get the real name in their own form when it's plain text.
+    if not real.display and nm.display and not nm.display:find("[^\32-\126]") then
+        real.display = nm.display
+        if not (isfile and isfile(SPOOF_REAL_FILE)) then
+            pcall(writefile, SPOOF_REAL_FILE, LP.Name .. "\n" .. nm.display .. "\n")
+        end
+    end
+
     -- The name the player object should carry; the field has room for as many
     -- characters as the real name's storage (15 for a short name).
     local notes = {}
-    local shownName = want.name or real.display
-    local nameCap = rd(LP.Address + DISPLAY_NAME_OFF + 24)
-    if want.name and nameCap and #want.name > nameCap then
+    local shownName = nameFits and (want.name or nm.display) or nil
+    if want.name and not nameFits then
+        notes[#notes + 1] = "the display name field doesn't fit this Roblox build - name left alone"
+    end
+    local nameCap = nameFits and rd(LP.Address + DISPLAY_NAME_OFF + 24)
+    if shownName and want.name and nameCap and #want.name > nameCap then
         notes[#notes + 1] = "name longer than " .. nameCap .. " characters - kept the real one"
-        shownName = real.display
+        shownName = nm.display
+    end
+    -- An older version's spoof of the same name can already be there.
+    if shownName and shownName ~= nm.display and nameNow == shownName and nm.wrote ~= shownName then
+        nm.wrote = shownName
+        saveName()
     end
     -- The @username is redrawn over the real one's glyphs, so it can't be
     -- longer than the real one.
@@ -3656,8 +3935,10 @@ local function startSpoof(conf)
             local v = want[key] or real.stats[key]
             if obj and v ~= nil and obj.Value ~= v then pcall(function() obj.Value = v end) end
         end
-        if shownName and readStdString(LP.Address + DISPLAY_NAME_OFF) ~= shownName then
-            writeStdString(LP.Address + DISPLAY_NAME_OFF, shownName)
+        if shownName and (rd(nameAddr + 16) ~= #shownName or nameBytes(#shownName) ~= shownName)
+            and writeStdString(nameAddr, shownName) then
+            nm.wrote = shownName ~= nm.display and shownName or nil
+            saveName()
             -- The nametag and player list set your name again (through the
             -- game, so it redraws) whenever PlayerStatus changes: change it
             -- and put it back.
@@ -3976,6 +4257,7 @@ local function applyLighting(conf, cache)
     local values = {}
     local name = conf.preset and tostring(conf.preset):lower()
     if name == "match" then
+        if configSkybox.__refused then return 0, "the sky wasn't applied, so the lighting was left as it is" end
         local sky = configSkybox.preset or configSkybox.skybox or configSkybox.name
         name = sky and tostring(sky):lower()
         if not (name and LIGHTING_PRESETS[name]) then return 0, "no lighting preset matches this skybox - left as it is" end
@@ -3989,10 +4271,37 @@ local function applyLighting(conf, cache)
     if not next(values) then return 0, nil end
 
     local L = game:GetService("Lighting")
+    -- The Lighting fields sit at fixed offsets, so they are only written when
+    -- every one of them holds a value that looks like lighting (or equals the
+    -- property, where Matcha can read it); otherwise the offsets don't fit
+    -- this Roblox build and only the map profiles below are changed.
+    local RANGE = {Brightness = {0, 100}, ExposureCompensation = {-10, 10},
+        EnvironmentDiffuseScale = {0, 1.0001}, EnvironmentSpecularScale = {0, 1.0001}}
+    local function float(o)
+        local ok, v = pcall(mrd, "float", L.Address + o)
+        return ok and type(v) == "number" and v == v and v or nil
+    end
+    local fieldsFit = true
+    for _, field in pairs(LIGHTING_FIELDS) do
+        if field.off then
+            if field.color then
+                for i = 0, 2 do
+                    local v = float(field.off + i * 4)
+                    if not v or v < 0 or v > 1.0001 then fieldsFit = false end
+                end
+            else
+                local v, r = float(field.off), RANGE[field.key] or {-100, 100}
+                local okP, live = pcall(function() return L[field.key] end)
+                if not v or v < r[1] or v > r[2] or (okP and type(live) == "number" and math.abs(v - live) > 1e-3) then
+                    fieldsFit = false
+                end
+            end
+        end
+    end
     local applied = 0
     for name, raw in pairs(values) do
         local field = LIGHTING_FIELDS[name]
-        if field and field.off then
+        if field and field.off and fieldsFit then
             if field.color then
                 local r, g, b = lightingColor(raw)
                 if r then
@@ -4082,6 +4391,11 @@ local function applyLighting(conf, cache)
         end
         if wrote then profiles = profiles + 1 end
     end
+    if not fieldsFit then
+        return 0, (profiles > 0)
+            and ("set on " .. profiles .. " lighting profiles, from the next map load (the Lighting offsets don't fit this Roblox build)")
+            or "left as it is: the Lighting offsets don't fit this Roblox build and no lighting profiles were found"
+    end
     return applied, (profiles > 0) and ("kept across map changes on " .. profiles .. " lighting profiles")
         or "applied to the current area only (lighting profiles not found)"
 end
@@ -4142,13 +4456,15 @@ if ENABLE_SKIN_DATA_SYNC and (#skinDataPairs > 0 or #wrapPairs > 0) then
     end
 end
 local function applyPostEffects()
-    local okSky, patched, skyNote = pcall(applySkybox, configSkybox)
+    local okSky, patched, skyNote, skyRefused = pcall(applySkybox, configSkybox)
     if okSky and (patched or 0) > 0 then
         local msg = "Skybox set on " .. tostring(patched) .. " map profiles - it shows on the next map or area load"
         print("[RivalsSkinChanger] " .. msg .. (skyNote and (" (" .. skyNote .. ")") or ""))
         notifyUser("Rivals Skin Changer", msg, 6)
+        if skyRefused then notifyUser("Rivals Skin Changer", "Skybox: a sky here would crash the game - see the console", 8) end
     elseif okSky and skyNote then
         print("[RivalsSkinChanger] Skybox: " .. tostring(skyNote))
+        if skyRefused then notifyUser("Rivals Skin Changer", "Skybox: a sky here would crash the game - see the console", 8) end
     elseif not okSky then
         print("[RivalsSkinChanger] Skybox error: " .. tostring(patched))
     end

@@ -42,7 +42,9 @@ def upload(path, name, key, user, asset_type="Image"):
         "assetType": asset_type,
         "displayName": name[:50],
         "description": "Rivals skin changer " + ("sky face" if asset_type == "Image" else "sound"),
-        "creationContext": {"creator": {"userId": str(user)}},
+        # Open Use, so games other than your own (RIVALS) may load the image even
+        # if the account has Asset Privacy turned on.
+        "creationContext": {"creator": {"userId": str(user)}, "assetPrivacy": "openUse"},
     }
     with open(path, "rb") as f:
         data = f.read()

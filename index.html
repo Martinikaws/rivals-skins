@@ -4986,8 +4986,7 @@
             {id: "station", name: "Station", sub: "Station and Big Station", face: "2108482231"},
             {id: "westown", name: "Westown", sub: "The Westown sky", face: "12261809766"},
             {id: "black", name: "Black", sub: "Museum at night - a flat black sky", face: "91612392386438"},
-            {id: "gray", name: "Gray", sub: "A flat gray sky on every map, shows straight away (Roblox FFlag)", face: "gray"},
-            {id: "classic", name: "Classic Roblox", sub: "The old built-in sky, shipped with the client", face: "classic"}
+            {id: "gray", name: "Gray", sub: "A flat gray sky on every map, shows straight away (Roblox FFlag)", face: "gray"}
         ];
         let skyConfig = {};
 
@@ -5020,11 +5019,6 @@
         let sharedSkies = [];
 
         function loadSharedSkies() {
-            // Off: these skies' images are private uploads Rivals isn't allowed
-            // to load, and since Roblox build cec3ad5 (Oct 2026) that crashes
-            // the game. The list stays in assets/skyboxes.json for later.
-            sharedSkies = [];
-            if (true) return;
             fetch("assets/skyboxes.json", {cache: "no-cache"}).then(function (r) { return r.json(); }).then(function (d) {
                 sharedSkies = (d && d.skyboxes || []).filter(function (s) {
                     return s && s.name && s.faces && SKY_FACE_ORDER.every(function (k) { return s.faces[k]; });
@@ -5749,7 +5743,7 @@
             custom.className = "sky-card sky-custom" + (skyConfig.all ? " active" : "");
             custom.dataset.name = "custom asset id";
             const cinfo = document.createElement("div");
-            cinfo.innerHTML = '<div class="sky-name">Custom asset</div><div class="sky-sub">One image id on all six faces</div>';
+            cinfo.innerHTML = '<div class="sky-name">Custom asset</div><div class="sky-sub">One image id on all six faces - the changer only applies images from its own skies, unless the config adds Force=yes</div>';
             const input = document.createElement("input");
             input.placeholder = "e.g. 10196550367";
             input.value = skyConfig.all || "";
