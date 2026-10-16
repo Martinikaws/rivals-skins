@@ -2174,17 +2174,28 @@ ROUTE.detect = function(ms)
             end
         end
     end
-    -- A table's nodes: a pointer and a size byte (followed by its mask)
-    -- that lead to string keys.
     local function nodesOfTable(t)
+        -- A table's nodes: a pointer and a size byte (lsizenode) that lead to
+        -- string keys. Its mask (2^l - 1) sat right after it until Roblox build
+        -- 11f155f3 (Oct 2026) moved the two apart, so any other header byte may
+        -- hold the mask. The pair whose nodes are well filled with string keys,
+        -- and that finds the most, wins (walking too many nodes would read other
+        -- tables' memory, which a fill check catches).
+        local bestKeys, bestNo, bestB = 0, nil, nil
         for _, no in ipairs({ROUTE.node, 0x18, 0x20, 0x10, 0x28}) do
             local base = rd(t + no)
             if base and base > 0x10000 and base < 0x7fffffffffff then
-                for _, b in ipairs({tt == 0 and 6 or 4, 4, 6, 5, 7, 3, 2}) do
-                    local l, m = rbyte(t + b), rbyte(t + b + 1)
-                    if l and m and l >= 1 and l <= 24 and m == (2 ^ l - 1) % 256 then
-                        local keys = 0
-                        for i = 0, math.min(2 ^ l, 64) - 1 do
+                for _, b in ipairs({tt == 0 and 6 or 4, 3, 4, 6, 5, 7, 2}) do
+                    local l = rbyte(t + b)
+                    local masked = false
+                    if l and l >= 1 and l <= 24 then
+                        for mb = 1, 7 do
+                            if mb ~= b and rbyte(t + mb) == (2 ^ l - 1) % 256 then masked = true break end
+                        end
+                    end
+                    if masked then
+                        local keys, count = 0, math.min(2 ^ l, 256)
+                        for i = 0, count - 1 do
                             local n = base + i * 32
                             local kp = rd(n + 16)
                             if (rint(n + 28) or 0) % 16 == 6 and kp and kp > 0x10000 then
@@ -2192,11 +2203,12 @@ ROUTE.detect = function(ms)
                                 if ok and type(k) == "string" and #k > 0 and #k < 64 then keys = keys + 1 end
                             end
                         end
-                        if keys > 0 then return no, b end
+                        if keys > bestKeys and keys >= count / 4 then bestKeys, bestNo, bestB = keys, no, b end
                     end
                 end
             end
         end
+        if bestNo then return bestNo, bestB end
     end
     local function tryAt(g, x, y)
         local reg = rd(g + y)
