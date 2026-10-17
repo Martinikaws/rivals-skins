@@ -2670,6 +2670,7 @@ local function applySkinSwapper()
     local skippedNoScript = {}
     local vmMods = LP.PlayerScripts:FindFirstChild("Modules")
     vmMods = vmMods and vmMods:FindFirstChild("ViewModels")
+    _G.__RSC_VMS_LIVE = vmMods
 
     -- Family scripts by their real names, before any line trades them.
     local vmOrder = vmMods and vmMods:GetChildren() or {}
@@ -2685,6 +2686,16 @@ local function applySkinSwapper()
     -- script keeps its name for the require. It trades places with a spare script
     -- there that no config line uses, which keeps its own name.
     local spares = {}
+    -- Roblox's FindFirstChild(name, true) looks at direct children before
+    -- going deeper, so a skin script moved ahead is only found once the
+    -- family script stops answering to the weapon's name. It takes the
+    -- harmless name "Modules", and the live ViewModels folder then trades
+    -- places with the clean copy in StarterPlayerScripts: the game keeps its
+    -- own reference to the live folder for the lookup, while skin scripts
+    -- reach their base by path (ViewModels["Sniper"]) in the clean copy.
+    local familiesRenamed = false
+    local cleanVmParent = game:GetService("StarterPlayer"):FindFirstChild("StarterPlayerScripts")
+    cleanVmParent = cleanVmParent and cleanVmParent:FindFirstChild("Modules")
     local function moveAhead(sm, fam, inConfig)
         for _, host in ipairs(vmOrder) do
             if host == fam then return false end
@@ -2862,6 +2873,7 @@ local function applySkinSwapper()
                                         if moveAhead(sm, fam, inConfig) then
                                             scriptMoved = true
                                             table.insert(renamedScripts, {weaponName, skinTarget})
+                                            if cleanVmParent and copyName(fam, cleanVmParent) then familiesRenamed = true end
                                         end
                                     elseif sm and not fam:FindFirstChild(weaponName) and copyName(sm, fam) then
                                         scriptMoved = true
@@ -2944,6 +2956,13 @@ local function applySkinSwapper()
                     end
                 end
             end
+        end
+    end
+
+    if familiesRenamed then
+        local cleanVm = cleanVmParent and cleanVmParent:FindFirstChild("ViewModels")
+        if not (cleanVm and vmMods and swapTwoWay(vmMods, cleanVm, nil)) then
+            print("[RivalsSkinChanger] Couldn't set up the switch-mode scripts for " .. "Sniper / Energy Rifle / Freeze Ray skins - they keep the default effects")
         end
     end
 
@@ -4748,22 +4767,31 @@ local function applyTracersEffect()
         local f = nodesOf(te, 1024, {Play = true})
         local cl = f and f.Play and rd(f.Play)
         local proto = cl and cl > 0x10000 and rd(cl + 0x18)
-        local function constantsVia(protosOff, constOff, skip)
+        local function constantsVia(protosOff, constOff, skip, exact)
             local b = proto and proto > 0x10000 and (skip and rd(proto + skip) or proto)
             local arr = b and b > 0x10000 and rd(b + protosOff)
             local child = arr and arr > 0x10000 and rd(arr)
             local d = child and child > 0x10000 and (skip and rd(child + skip) or child)
             local k = d and d > 0x10000 and rd(d + constOff)
             if not k or k < 0x10000 then return nil end
-            -- Only a list that holds the speed (800, or an earlier run's value).
+            -- Only a list that holds the speed: 800 exactly, or (second pass)
+            -- an earlier run's value.
             for i = 0, 63 do
                 local okV, v = pcall(mrd, "double", k + i * 16)
-                if okV and isNumber(k + i * 16) and (v == 800 or (v / 8 >= 5 and v / 8 <= 300 and (v / 8) % 5 == 0)) then return k end
+                if okV and isNumber(k + i * 16) and (v == 800 or (not exact and v / 8 >= 5 and v / 8 <= 300 and (v / 8) % 5 == 0)) then return k end
             end
             return nil
         end
-        -- Proto layouts: build cec3ad5, then 02c37bc, then the older one.
-        local k = constantsVia(0x48, 0x20) or constantsVia(0x28, 0x48) or constantsVia(0x20, 0x38, 8)
+        -- Proto layouts: build 11f155f3, cec3ad5, 02c37bc, then the older one.
+        -- Every layout is tried for an exact 800 first, so a stray constant on
+        -- a wrong layout can't pass for an earlier run's speed.
+        local PATHS = {{0x18, 0x20}, {0x48, 0x20}, {0x28, 0x48}, {0x20, 0x38, 8}}
+        local k
+        for pass = 1, 2 do
+            for _, pth in ipairs(PATHS) do
+                k = k or constantsVia(pth[1], pth[2], pth[3], pass == 1)
+            end
+        end
         if not k then return nil end
         -- 800, or what an earlier run set it to (800 x a multiple of 5%)
         local fallbackSlot
@@ -4802,7 +4830,8 @@ local function applyTracersEffect()
             list[#list + 1] = seq
         end
         add(seqOf(te, "VerifyTracerData"))
-        local vms = mods:FindFirstChild("ViewModels")
+        -- The live folder: after a switch-mode folder trade the path leads to the clean copy.
+        local vms = _G.__RSC_VMS_LIVE or mods:FindFirstChild("ViewModels")
         for _, d in ipairs(vms and vms:GetDescendants() or {}) do
             if d.ClassName == "ModuleScript" then
                 local a = d.Address
