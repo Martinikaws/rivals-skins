@@ -369,6 +369,12 @@
       "cdnUrl": "https://tr.rbxcdn.com/180DAY-af988149f69c16e0a920796ef6d77919/150/150/Image/Png/noFilter",
       "assetId": "74401302514014",
       "rarity": "Rare"
+    },
+    "Spider Crossbow": {
+      "src": "assets/images/spider-crossbow.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-77b55dcaa5fb7293f9b48d57b7a214ee/150/150/Image/Png/noFilter",
+      "assetId": "127435004964157",
+      "rarity": "Legendary"
     }
   },
   "Daggers": {
@@ -442,6 +448,12 @@
       "src": "assets/images/toaster.png",
       "cdnUrl": "https://tr.rbxcdn.com/180DAY-df93619bcb78e7da5b7ce9306702cbcc/150/150/Image/Png/noFilter",
       "assetId": "103344379002564",
+      "rarity": "Legendary"
+    },
+    "Cursed Daggers": {
+      "src": "assets/images/cursed-daggers.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-8b4f8c9701bad967ac0a68860b96cd6f/150/150/Image/Png/noFilter",
+      "assetId": "118411124813458",
       "rarity": "Legendary"
     }
   },
@@ -753,6 +765,12 @@
       "cdnUrl": "https://tr.rbxcdn.com/180DAY-d3293b2ea6bf32888741e72cc4d5255f/150/150/Image/Png/noFilter",
       "assetId": "117198095640784",
       "rarity": "Common"
+    },
+    "Towerstone Fists": {
+      "src": "assets/images/towerstone-fists.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2c4bd3b8bdce9041f00f90685e2d194f/150/150/Image/Png/noFilter",
+      "assetId": "72219935395375",
+      "rarity": "Common"
     }
   },
   "Flamethrower": {
@@ -1021,6 +1039,12 @@
       "cdnUrl": "https://tr.rbxcdn.com/180DAY-608a60b50dd5ceddf8cef436c74b4e7b/150/150/Image/Png/noFilter",
       "assetId": "91214316625102",
       "rarity": "Common"
+    },
+    "Web Shooters": {
+      "src": "assets/images/web-shooters.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-02f6d3fb8c95207717eb6aadd1ad2d67/150/150/Image/Png/noFilter",
+      "assetId": "96604638344437",
+      "rarity": "Legendary"
     }
   },
   "Grenade": {
@@ -1088,6 +1112,12 @@
       "src": "assets/images/whoopee-cushion.png",
       "cdnUrl": "https://tr.rbxcdn.com/180DAY-3dd80c2beae45628ceb2bfdd0f4a40d4/150/150/Image/Png/noFilter",
       "assetId": "17672062933",
+      "rarity": "Legendary"
+    },
+    "Batnade": {
+      "src": "assets/images/batnade.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-8e45191499044f6655281b984eec116b/150/150/Image/Png/noFilter",
+      "assetId": "80166736095109",
       "rarity": "Legendary"
     }
   },
@@ -1201,6 +1231,12 @@
       "cdnUrl": "https://tr.rbxcdn.com/180DAY-203a87013864a4e7b0147662b0061a6f/150/150/Image/Png/noFilter",
       "assetId": "85479471132931",
       "rarity": "Common"
+    },
+    "Batblade": {
+      "src": "assets/images/batblade.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-2f4ed5f69ea2d55435746ac17afca957/150/150/Image/Png/noFilter",
+      "assetId": "77137375179306",
+      "rarity": "Legendary"
     }
   },
   "Handgun": {
@@ -1509,6 +1545,12 @@
       "cdnUrl": "https://tr.rbxcdn.com/180DAY-3c584193f98d3acbeb1cb05646d825ba/150/150/Image/Png/noFilter",
       "assetId": "78822531823097",
       "rarity": "Genuine"
+    },
+    "Karambat": {
+      "src": "assets/images/karambat.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e78f1467ef698183f3e897c2799be61d/150/150/Image/Png/noFilter",
+      "assetId": "77250751309827",
+      "rarity": "Legendary"
     }
   },
   "Maul": {
@@ -1565,6 +1607,12 @@
       "cdnUrl": "https://tr.rbxcdn.com/180DAY-fe0247e63525590fedf042c1e81bb434/150/150/Image/Png/noFilter",
       "assetId": "113691709735527",
       "rarity": "Rare"
+    },
+    "Jeremiah": {
+      "src": "assets/images/jeremiah.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3ed9642de727cfb532d358ccc3436b5d/150/150/Image/Png/noFilter",
+      "assetId": "109379867345162",
+      "rarity": "Legendary"
     }
   },
   "Medkit": {
@@ -1845,6 +1893,12 @@
       "cdnUrl": "https://tr.rbxcdn.com/180DAY-1d8b18e44ebaa6d86c16314131d94836/150/150/Image/Png/noFilter",
       "assetId": "124975247676715",
       "rarity": "Legendary"
+    },
+    "Xenofrost": {
+      "src": "assets/images/xenofrost.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-050e1373d22e4d22fc1926aab09e3dbe/150/150/Image/Png/noFilter",
+      "assetId": "97111256967007",
+      "rarity": "Rare"
     }
   },
   "RPG": {
@@ -2335,6 +2389,12 @@
       "cdnUrl": "https://tr.rbxcdn.com/180DAY-c40e7b1bfcf2752b79e2341b743594a2/150/150/Image/Png/noFilter",
       "assetId": "17672063048",
       "rarity": "Common"
+    },
+    "Slingshotula": {
+      "src": "assets/images/slingshotula.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-6f5076ff6e775fd6fe42cc11c94259b0/150/150/Image/Png/noFilter",
+      "assetId": "80781358359670",
+      "rarity": "Legendary"
     }
   },
   "Smoke Grenade": {
@@ -2503,6 +2563,12 @@
       "cdnUrl": "https://tr.rbxcdn.com/180DAY-00ec3dc96f936521562b7b9e22fca3ae/150/150/Image/Png/noFilter",
       "assetId": "137630900832105",
       "rarity": "Rare"
+    },
+    "Gravelight": {
+      "src": "assets/images/gravelight.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-e90d025ebb85d0d9a8de9bf7b819f713/150/150/Image/Png/noFilter",
+      "assetId": "132190257399523",
+      "rarity": "Common"
     }
   },
   "Spray": {
@@ -2915,6 +2981,24 @@
       "cdnUrl": "https://tr.rbxcdn.com/180DAY-cd2e3efdb86ae2587933032cb330358a/150/150/Image/Png/noFilter",
       "assetId": "86238922896100",
       "rarity": "Rare"
+    },
+    "Towerstone Wildcat": {
+      "src": "assets/images/towerstone-wildcat.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-3ddbcf4bedd0237463f080786d8c009d/150/150/Image/Png/noFilter",
+      "assetId": "129631144327641",
+      "rarity": "Common"
+    },
+    "Mimic Wildcat": {
+      "src": "assets/images/mimic-wildcat.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-c7eccc51b7b1722e2723627595341ee9/150/150/Image/Png/noFilter",
+      "assetId": "122326241760674",
+      "rarity": "Rare"
+    },
+    "Shadow Wildcat": {
+      "src": "assets/images/shadow-wildcat.png",
+      "cdnUrl": "https://tr.rbxcdn.com/180DAY-6a7a88a31e6dcf79fea2129efc3c49f8/150/150/Image/Png/noFilter",
+      "assetId": "72652070473236",
+      "rarity": "Mythical"
     }
   }
 }

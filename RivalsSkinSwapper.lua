@@ -584,6 +584,7 @@ local ITEM_ICONS = {
         ["Glorious Crossbow"] = "rbxassetid://70875146419725",
         ["Harpoon Crossbow"] = "rbxassetid://107460405492001",
         ["Pixel Crossbow"] = "rbxassetid://115931961841903",
+        ["Spider Crossbow"] = "rbxassetid://127435004964157",
         ["Violin Crossbow"] = "rbxassetid://74401302514014",
     },
     ["Daggers"] = {
@@ -593,6 +594,7 @@ local ITEM_ICONS = {
         ["Broken Hearts"] = "rbxassetid://74156924296351",
         ["Cookies"] = "rbxassetid://114482325531769",
         ["Crystal Daggers"] = "rbxassetid://126221748659600",
+        ["Cursed Daggers"] = "rbxassetid://118411124813458",
         ["Glorious Daggers"] = "rbxassetid://76023189104485",
         ["Keynais"] = "rbxassetid://84562761142610",
         ["Paper Planes"] = "rbxassetid://84003122595879",
@@ -659,6 +661,7 @@ local ITEM_ICONS = {
         ["Pirate Hook"] = "rbxassetid://116717593932616",
         ["Pumpkin Claws"] = "rbxassetid://90996407819750",
         ["Spy Gloves"] = "rbxassetid://117198095640784",
+        ["Towerstone Fists"] = "rbxassetid://72219935395375",
     },
     ["Flamethrower"] = {
         ["Standard"] = "rbxassetid://89455038280473",
@@ -712,9 +715,11 @@ local ITEM_ICONS = {
         ["Glorious Grappler"] = "rbxassetid://113576961532090",
         ["Lasso"] = "rbxassetid://77061966583531",
         ["Lifeguard Grappler"] = "rbxassetid://91214316625102",
+        ["Web Shooters"] = "rbxassetid://96604638344437",
     },
     ["Grenade"] = {
         ["Standard"] = "rbxassetid://17160801411",
+        ["Batnade"] = "rbxassetid://80166736095109",
         ["Cuddle Bomb"] = "rbxassetid://116801887274189",
         ["Dynamite"] = "rbxassetid://119066463640901",
         ["Fizz Bomb"] = "rbxassetid://123256093694497",
@@ -739,6 +744,7 @@ local ITEM_ICONS = {
     },
     ["Gunblade"] = {
         ["Standard"] = "rbxassetid://131231034374465",
+        ["Batblade"] = "rbxassetid://77137375179306",
         ["Boneblade"] = "rbxassetid://126327381608481",
         ["Crude Gunblade"] = "rbxassetid://126996645502136",
         ["Elf's Gunblade"] = "rbxassetid://114103306647123",
@@ -798,6 +804,7 @@ local ITEM_ICONS = {
         ["Candy Cane"] = "rbxassetid://124021545052910",
         ["Chancla"] = "rbxassetid://17672060795",
         ["Glorious Knife"] = "rbxassetid://77448895595314",
+        ["Karambat"] = "rbxassetid://77250751309827",
         ["Karambit"] = "rbxassetid://18766863586",
         ["Keylisong"] = "rbxassetid://100084654831857",
         ["Keyrambit"] = "rbxassetid://108512337101248",
@@ -814,6 +821,7 @@ local ITEM_ICONS = {
         ["Giant Popsicle"] = "rbxassetid://91916939347642",
         ["Glorious Maul"] = "rbxassetid://125917253783002",
         ["Ice Maul"] = "rbxassetid://100001888078290",
+        ["Jeremiah"] = "rbxassetid://109379867345162",
         ["Sleigh Maul"] = "rbxassetid://114892026951995",
         ["Starforge Maul"] = "rbxassetid://113691709735527",
     },
@@ -871,6 +879,7 @@ local ITEM_ICONS = {
         ["Snowman Permafrost"] = "rbxassetid://100890626643184",
         ["Starforge Permafrost"] = "rbxassetid://105290041968367",
         ["Temporal Permafrost"] = "rbxassetid://124975247676715",
+        ["Xenofrost"] = "rbxassetid://97111256967007",
     },
     ["RPG"] = {
         ["Standard"] = "rbxassetid://17160802243",
@@ -965,6 +974,7 @@ local ITEM_ICONS = {
         ["Lucky Horseshoe"] = "rbxassetid://131242126669282",
         ["Palmshot"] = "rbxassetid://109640024736812",
         ["Reindeer Slingshot"] = "rbxassetid://121612921203624",
+        ["Slingshotula"] = "rbxassetid://80781358359670",
         ["Stick"] = "rbxassetid://17672063048",
     },
     ["Smoke Grenade"] = {
@@ -996,6 +1006,7 @@ local ITEM_ICONS = {
         ["Fork"] = "rbxassetid://105821360943308",
         ["Giant Pencil"] = "rbxassetid://107812045486260",
         ["Glorious Spear"] = "rbxassetid://98259628954838",
+        ["Gravelight"] = "rbxassetid://132190257399523",
         ["Plunger"] = "rbxassetid://82393330699241",
         ["Studio Light"] = "rbxassetid://70443632958263",
         ["Thunderpike"] = "rbxassetid://137630900832105",
@@ -1080,7 +1091,10 @@ local ITEM_ICONS = {
     ["Wildcat"] = {
         ["Standard"] = "rbxassetid://77401164737509",
         ["Glorious Wildcat"] = "rbxassetid://115657943825380",
+        ["Mimic Wildcat"] = "rbxassetid://122326241760674",
         ["Plasma Wildcat"] = "rbxassetid://86238922896100",
+        ["Shadow Wildcat"] = "rbxassetid://72652070473236",
+        ["Towerstone Wildcat"] = "rbxassetid://129631144327641",
     },
 }
 
