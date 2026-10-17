@@ -308,6 +308,11 @@
         .misc-switch { display: inline-flex; align-self: flex-start; margin-bottom: -14px; }
         .sky-add input.tracer-speed { width: 180px; accent-color: var(--accent, #7aa8ff); }
         .tracer-speed-val { min-width: 118px; font-size: 12.5px; color: var(--txt); }
+        .hp-preview { grid-column: 1 / -1; position: relative; box-sizing: border-box; height: 28px; margin: 4px 0 12px; border-radius: 14px; background: #141418; border: 3px solid #1c1c22; overflow: hidden; }
+        .hp-preview .hp-fill { position: absolute; inset: 0; border-radius: 11px; }
+        .hp-preview span { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font: 700 14px/1 system-ui, sans-serif; color: #fff; text-shadow: 0 1px 2px #000; }
+        @keyframes hp-scroll { from { background-position: 0% 0; } to { background-position: -200% 0; } }
+        @keyframes hp-hue { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
         .sound-pick { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; color: var(--txt); padding: 8px 10px; font: inherit; font-size: 12.5px; }
         .sky-mini:disabled { opacity: .4; cursor: default; }
         .sky-add input { width: 150px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; color: var(--txt); padding: 8px 10px; font-size: 12.5px; }
@@ -4548,8 +4553,9 @@
             try { spoofConfig = JSON.parse(localStorage.getItem("rivals_spoof_saved") || "{}") || {}; } catch (e) { spoofConfig = {}; }
             try { tracerConfig = JSON.parse(localStorage.getItem("rivals_tracers_saved") || "{}") || {}; } catch (e) { tracerConfig = {}; }
             try { handsConfig = JSON.parse(localStorage.getItem("rivals_hands_saved") || "{}") || {}; } catch (e) { handsConfig = {}; }
+            try { healthConfig = JSON.parse(localStorage.getItem("rivals_healthbar_saved") || "{}") || {}; } catch (e) { healthConfig = {}; }
             loadCosmeticConfigs();
-            setDashMode(["wraps", "advanced", "skybox", "sounds", "spoof", "tracers", "hands", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
+            setDashMode(["wraps", "advanced", "skybox", "sounds", "spoof", "tracers", "hands", "healthbar", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
         }
 
         const CATEGORY_ORDER = ["Primary", "Secondary", "Melee", "Utility"];
@@ -4628,6 +4634,12 @@
             if (dashMode === "tracers") {
                 renderMiscSwitch(grid);
                 renderTracerGrid(grid);
+                updateFootCount();
+                return;
+            }
+            if (dashMode === "healthbar") {
+                renderMiscSwitch(grid);
+                renderHealthGrid(grid);
                 updateFootCount();
                 return;
             }
@@ -5402,7 +5414,7 @@
 
         // ---- Misc tab ----
         // Smaller features share one tab, each a tab of its own under it.
-        const MISC_MODES = {tracers: "Tracers", hands: "Hands", spoof: "Spoof"};
+        const MISC_MODES = {tracers: "Tracers", hands: "Hands", spoof: "Spoof", healthbar: "Health bar"};
         let lastMiscMode = "tracers";
         function renderMiscSwitch(grid) {
             const bar = document.createElement("div");
@@ -5619,6 +5631,179 @@
             if (!keys.length) return [];
             return ["", "[Tracers]", "-- Color = every gun; a gun's own line wins while it's out. Hex, rainbow or default. Speed in % (100 = the game's)."]
                 .concat(keys.map(function (k) { return k + "=" + tracerConfig[k]; }));
+        }
+
+        // ---- Health bar tab ----
+        // Your own health bar in the bottom HUD, saved as [HealthBar]. Only
+        // you see it; the game draws it, so no lag.
+        let healthConfig = {};
+        const HP_STYLES = [["", "Game's own", "The game's green-to-red bar"],
+            ["Color", "Color", "One colour of your choice"],
+            ["Rainbow", "Rainbow", "The whole bar cycles through the rainbow"],
+            ["Gradient", "Gradient", "Two colours along the bar, scrolling"],
+            ["Health", "By health", "Your colours for full, half and low health"]];
+        const HP_DEFAULTS = {Color: "9933ff", Color1: "ff2bd6", Color2: "3b5bff", Full: "64ff32", Mid: "ffd700", Low: "ff3232"};
+
+        function saveHealthConfig() {
+            try { localStorage.setItem("rivals_healthbar_saved", JSON.stringify(healthConfig)); } catch (e) {}
+        }
+        function setHealth(key, value) {
+            if (value) healthConfig[key] = value; else delete healthConfig[key];
+            saveHealthConfig();
+            updateFootCount();
+        }
+
+        function renderHealthGrid(grid) {
+            const card = document.createElement("div");
+            card.className = "weapon-card";
+            const label = document.createElement("div");
+            label.className = "card-label";
+            label.textContent = "Health bar - only you see it";
+            card.appendChild(label);
+
+            const style = healthConfig.Style || "";
+            const preview = document.createElement("div");
+            preview.className = "hp-preview";
+            preview.innerHTML = '<div class="hp-fill"></div><span>150</span>';
+            const fill = preview.querySelector(".hp-fill");
+            function hex(key) { return "#" + (/^[0-9a-f]{6}$/.test(healthConfig[key] || "") ? healthConfig[key] : HP_DEFAULTS[key]); }
+            function paintPreview() {
+                const s = healthConfig.Style || "";
+                const speed = healthConfig.Speed === undefined ? 100 : Number(healthConfig.Speed);
+                fill.style.animation = "none";
+                fill.style.filter = "";
+                if (s === "Color") {
+                    fill.style.background = hex("Color");
+                } else if (s === "Rainbow") {
+                    fill.style.background = "#ff3c3c";
+                    if (speed > 0) fill.style.animation = "hp-hue " + (4 / (speed / 100)) + "s linear infinite";
+                } else if (s === "Gradient") {
+                    fill.style.background = (healthConfig.Color1 === "rainbow")
+                        ? "linear-gradient(90deg, #ff3c3c, #ffd23c, #3cff6e, #3cc8ff, #8a3cff, #ff3cc8, #ff3c3c)"
+                        : "linear-gradient(90deg, " + hex("Color1") + ", " + hex("Color2") + ", " + hex("Color1") + ")";
+                    fill.style.backgroundSize = "200% 100%";
+                    if (speed > 0) fill.style.animation = "hp-scroll " + (2.5 / (speed / 100)) + "s linear infinite";
+                } else if (s === "Health") {
+                    fill.style.background = "linear-gradient(90deg, " + hex("Full") + ", " + hex("Mid") + ", " + hex("Low") + ")";
+                } else {
+                    fill.style.background = "#64ff32";
+                }
+            }
+            card.appendChild(preview);
+
+            function row(name, sub, control, active) {
+                const r = document.createElement("div");
+                r.className = "sky-card sky-custom" + (active ? " active" : "");
+                r.dataset.name = (name + " health bar").toLowerCase();
+                const info = document.createElement("div");
+                info.innerHTML = '<div class="sky-name"></div><div class="sky-sub"></div>';
+                info.querySelector(".sky-name").textContent = name;
+                info.querySelector(".sky-sub").textContent = sub;
+                r.appendChild(info);
+                const box = document.createElement("div");
+                box.className = "sky-add";
+                box.appendChild(control);
+                box.addEventListener("click", function (e) { e.stopPropagation(); });
+                r.appendChild(box);
+                card.appendChild(r);
+                return r;
+            }
+
+            const stylePick = document.createElement("select");
+            stylePick.className = "sound-pick";
+            stylePick.innerHTML = HP_STYLES.map(function (s) { return '<option value="' + s[0] + '">' + s[1] + '</option>'; }).join("");
+            stylePick.value = style;
+            stylePick.addEventListener("change", function () { setHealth("Style", stylePick.value); renderGrid(); });
+            const styleInfo = HP_STYLES.find(function (s) { return s[0] === style; }) || HP_STYLES[0];
+            row("Style", styleInfo[2], stylePick, !!style);
+
+            // A colour: the tracer colours, or any colour from the picker.
+            function colorRow(key, name, sub, withRainbow) {
+                const current = healthConfig[key] || "";
+                const wrap = document.createElement("div");
+                wrap.style.display = "flex";
+                wrap.style.gap = "6px";
+                const pick = document.createElement("select");
+                pick.className = "sound-pick";
+                pick.innerHTML = '<option value="">Default</option>'
+                    + (withRainbow ? '<option value="rainbow">Rainbow</option>' : "")
+                    + TRACER_COLORS.map(function (c) { return '<option value="' + c[1] + '">' + c[0] + '</option>'; }).join("")
+                    + '<option value="custom">Custom</option>';
+                const color = document.createElement("input");
+                color.type = "color";
+                color.className = "tracer-color";
+                color.title = "Any colour";
+                const isHex = /^[0-9a-f]{6}$/.test(current);
+                pick.value = !current ? "" : (current === "rainbow" || TRACER_COLORS.some(function (c) { return c[1] === current; }) ? current : "custom");
+                color.value = isHex ? "#" + current : "#" + HP_DEFAULTS[key];
+                color.hidden = !isHex;
+                pick.addEventListener("change", function () {
+                    const v = pick.value === "custom" ? color.value.slice(1).toLowerCase() : pick.value;
+                    const h = /^[0-9a-f]{6}$/.test(v);
+                    color.hidden = !h;
+                    if (h) color.value = "#" + v;
+                    setHealth(key, v);
+                    if (key === "Color1") renderGrid(); else paintPreview();
+                });
+                color.addEventListener("input", function () {
+                    const v = color.value.slice(1).toLowerCase();
+                    pick.value = TRACER_COLORS.some(function (c) { return c[1] === v; }) ? v : "custom";
+                    setHealth(key, v);
+                    paintPreview();
+                });
+                wrap.appendChild(color);
+                wrap.appendChild(pick);
+                row(name, sub, wrap, !!current);
+            }
+
+            if (style === "Color") colorRow("Color", "Colour", "The whole bar");
+            if (style === "Gradient") {
+                colorRow("Color1", "Colour 1", "Rainbow scrolls the whole spectrum instead", true);
+                if (healthConfig.Color1 !== "rainbow") colorRow("Color2", "Colour 2", "Blends with colour 1 along the bar");
+            }
+            if (style === "Health") {
+                colorRow("Full", "Full health", "Used at full health");
+                colorRow("Mid", "Half health", "Used at half health");
+                colorRow("Low", "Low health", "Used as you run out");
+            }
+            if (style === "Rainbow" || style === "Gradient") {
+                const sp = document.createElement("div");
+                sp.style.display = "flex";
+                sp.style.alignItems = "center";
+                sp.style.gap = "8px";
+                sp.innerHTML = '<input type="range" class="tracer-speed" min="0" max="300" step="10"><span class="tracer-speed-val"></span>';
+                const range = sp.querySelector("input");
+                const val = sp.querySelector(".tracer-speed-val");
+                const now = healthConfig.Speed === undefined ? 100 : Number(healthConfig.Speed);
+                function showSpeed(v) { val.textContent = v + "%" + (v === 0 ? " (still)" : (v === 100 ? " (normal)" : "")); }
+                range.value = now;
+                showSpeed(now);
+                range.addEventListener("input", function () { showSpeed(Number(range.value)); });
+                range.addEventListener("change", function () {
+                    const v = Number(range.value);
+                    setHealth("Speed", v === 100 ? "" : String(v));
+                    paintPreview();
+                });
+                row("Speed", "How fast it moves; 0 holds a gradient still", sp, healthConfig.Speed !== undefined);
+            }
+
+            const note = document.createElement("div");
+            note.className = "sky-card";
+            note.dataset.name = "health bar note";
+            note.innerHTML = '<div><div class="sky-name">How it works</div><div class="sky-sub">'
+                + 'The changer recolours your health bar in the bottom corner; the game keeps drawing it, so nothing lags. '
+                + 'Only you see it.</div></div>';
+            card.appendChild(note);
+            grid.appendChild(card);
+            paintPreview();
+        }
+
+        function generateHealthLines() {
+            if (!healthConfig.Style) return [];
+            const order = ["Style", "Color", "Color1", "Color2", "Full", "Mid", "Low", "Speed"];
+            const keys = order.filter(function (k) { return healthConfig[k]; });
+            return ["", "[HealthBar]", "-- Style = Color, Rainbow, Gradient or Health. Colours in hex; Color1=rainbow for a spectrum. Speed in % (0 = still)."]
+                .concat(keys.map(function (k) { return k + "=" + healthConfig[k]; }));
         }
 
         // ---- Spoof tab ----
@@ -6278,6 +6463,10 @@
                     : (tracerConfig.Speed ? "Tracer speed " + tracerConfig.Speed + "%" : "Tracers unchanged"));
                 return;
             }
+            if (dashMode === "healthbar") {
+                el.textContent = healthConfig.Style ? "Health bar: " + (healthConfig.Style === "Health" ? "by health" : healthConfig.Style.toLowerCase()) : "Health bar unchanged";
+                return;
+            }
             if (dashMode === "spoof") {
                 const k = Object.keys(spoofConfig).length;
                 el.textContent = k ? k + (k === 1 ? " thing spoofed" : " things spoofed") : "Nothing spoofed";
@@ -6361,7 +6550,7 @@
                 lines = lines.concat(swapLines);
             }
             return lines.concat(generateWrapLines()).concat(generateSkyLines()).concat(generateLightLines()).concat(generateSoundLines())
-                .concat(generateSpoofLines()).concat(generateTracerLines()).concat(generateHandsLines())
+                .concat(generateSpoofLines()).concat(generateTracerLines()).concat(generateHealthLines()).concat(generateHandsLines())
                 .concat(generateCosmeticLines("finishers")).concat(generateCosmeticLines("charms")).join("\n");
         }
 
@@ -6392,6 +6581,10 @@
             }
             if (dashMode === "tracers") {
                 if (presetType === "default") { tracerConfig = {}; saveTracerConfig(); renderGrid(); showToast("Tracers back to the game's colours"); }
+                return;
+            }
+            if (dashMode === "healthbar") {
+                if (presetType === "default") { healthConfig = {}; saveHealthConfig(); renderGrid(); showToast("Health bar back to the game's"); }
                 return;
             }
             if (dashMode === "spoof") {

@@ -256,7 +256,11 @@ local OFF = {
     Parent = dumpOff("Instance", "Parent", 104),
     NameContainer = dumpOff("Instance", "NameContainer", 112),
     Children = dumpOff("Instance", "ChildrenStart", 120),
-    Transparency = dumpOff("BasePart", "Transparency", 288)
+    Transparency = dumpOff("BasePart", "Transparency", 288),
+    -- UI frames (the health bar)
+    GuiColor = dumpOff("GuiObject", "BackgroundColor3", 0x530),
+    GuiSize = dumpOff("GuiObject", "Size", 0x520),
+    GuiVisible = dumpOff("GuiObject", "Visible", 0x59d)
 }
 
 local function verifyOffsets()
@@ -1401,6 +1405,7 @@ local configSpoof = {}
 
 local configLighting = {}
 local configTracers = {}
+_G.__RSC_HPBAR_CFG = {} -- [Health Bar]; a global, the main chunk is at its local limit
 local configNoHands = {}
 
 local configFinishers, configCharms = {}, {}
@@ -2726,7 +2731,7 @@ local function applySkinSwapper()
         if header then
             local h = header:lower()
 
-            section = h:find("wrap") and "wraps" or (h:find("sky") and "skybox"
+            section = h:find("health") and "healthbar" or h:find("wrap") and "wraps" or (h:find("sky") and "skybox"
                 or (h:find("light") and "lighting" or (h:find("finisher") and "finishers"
                 or (h:find("charm") and "charms" or (h:find("sound") and "sounds"
                 or (h:find("spoof") and "spoof" or (h:find("tracer") and "tracers" or (h:find("hand") and "nohands"
@@ -2760,6 +2765,9 @@ local function applySkinSwapper()
         elseif section == "lighting" then
             local key, value = parseConfigLine(rawLine)
             if key and value then configLighting[key:lower()] = value end
+        elseif section == "healthbar" then
+            local key, value = parseConfigLine(rawLine)
+            if key and value then _G.__RSC_HPBAR_CFG[key:lower()] = value end
         else
             local weaponName, skinTarget = parseConfigLine(rawLine)
             if weaponName and skinTarget then
@@ -5183,8 +5191,278 @@ do
     end
 end
 
+-- Health bar: your own bar in the bottom HUD, only you see it. The game sets
+-- its colours on every health change and the UI redraws from memory every
+-- frame, so a style writes them every frame.
+-- Gradient: Matcha can't make a UIGradient, but a frame draws the one its
+-- gradient slot points to, so the bar borrows the 11-stop gradient of the
+-- Hardcore Parkour progress bar (its reference count raised, so neither
+-- frame frees it). Its stops are then recoloured every frame. While it's
+-- linked, that mode's progress bar shows the same colours.
+pcall(function()
+    local conf = {}
+    for k, v in pairs(_G.__RSC_HPBAR_CFG or {}) do conf[k] = tostring(v) end
+    local style = (conf.style or ""):lower()
+    if style == "cycle" then style = "gradient" end
+    if not ({color = true, rainbow = true, gradient = true, health = true})[style] then style = "default" end
+    _G.__RSC_HPBAR = (_G.__RSC_HPBAR or 0) + 1
+    local token, job = _G.__RSC_HPBAR, game.JobId
+    local O = {col = OFF.GuiColor, size = OFF.GuiSize, vis = OFF.GuiVisible}
+
+    local function rgbOf(v, fallback)
+        local r, g, b = lightingColor(v or "")
+        if r then return {r, g, b} end
+        return fallback
+    end
+    local GAME = {{1, 50 / 255, 50 / 255}, {1, 215 / 255, 0}, {100 / 255, 1, 50 / 255}}
+    local function mix(a, b, t) return {a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t, a[3] + (b[3] - a[3]) * t} end
+    -- The game's own colour for a health fraction: low -> mid -> full.
+    local function byHealth(low, mid, full, a) return mix(low, mix(mid, full, a), a) end
+    local fixed = rgbOf(conf.color, {0.6, 0.2, 1})
+    local low, mid, full = rgbOf(conf.low, GAME[1]), rgbOf(conf.mid, GAME[2]), rgbOf(conf.full, GAME[3])
+    -- Gradient: Color1 -> Color2 along the bar, scrolling at Speed (0 holds
+    -- it still); Color1=Rainbow scrolls the whole spectrum.
+    local rainbowGrad = (conf.color1 or ""):lower() == "rainbow"
+    local g1, g2 = rgbOf(conf.color1, {1, 43 / 255, 214 / 255}), rgbOf(conf.color2, {59 / 255, 91 / 255, 1})
+    local speed = math.max(0, math.min(500, tonumber(conf.speed) or 100)) / 100
+    local function gradColor(t)
+        if rainbowGrad then
+            local c = Color3.fromHSV(t % 1, 0.85, 1)
+            return {c.R, c.G, c.B}
+        end
+        return mix(g1, g2, 0.5 - 0.5 * math.cos(2 * math.pi * t))
+    end
+
+    -- Finds the bar: FighterInterfaces.<you>.<Bottom side>.Container.Health,
+    -- moved between sides by the game's "Health Bar Display" setting.
+    local function find()
+        local lp = game:GetService("Players").LocalPlayer
+        local pg = lp and lp:FindFirstChild("PlayerGui")
+        local sg = pg and pg:FindFirstChild("MainGui")
+        local mf = sg and sg:FindFirstChild("MainFrame")
+        local fi = mf and mf:FindFirstChild("FighterInterfaces")
+        if not fi then return nil end
+        local list = fi:GetChildren()
+        table.sort(list, function(a, b) return a.Name == lp.Name and b.Name ~= lp.Name end)
+        for _, c in ipairs(list) do
+            for _, side in ipairs({"BottomLeft", "BottomCenter", "BottomRight"}) do
+                local s = c:FindFirstChild(side)
+                local box = s and s:FindFirstChild("Container")
+                local h = box and box:FindFirstChild("Health")
+                local cont = h and h:FindFirstChild("Container")
+                local b = cont and cont:FindFirstChild("Bar")
+                local bg = cont and cont:FindFirstChild("Background")
+                if b and bg then
+                    return {bar = b.Address, corner = b:FindFirstChild("UICorner"),
+                        frames = {{b.Address, 1}, {cont.Address, 0.5}, {bg.Address, 1 / 3}}}
+                end
+            end
+        end
+    end
+    -- Checks the colour offset on the bar (BorderColor3 right after it is
+    -- Roblox's default 27,42,53); otherwise looks for it nearby.
+    local function checkOffsets(b)
+        local function border(at)
+            local r, g, bl = mrd("float", b + at), mrd("float", b + at + 4), mrd("float", b + at + 8)
+            return r and math.abs(r - 27 / 255) < 0.002 and math.abs(g - 42 / 255) < 0.002 and math.abs(bl - 53 / 255) < 0.002
+        end
+        if border(O.col + 0xC) then return true end
+        for at = 0x400, 0x800, 4 do
+            if border(at) then
+                local d = at - 0xC - O.col
+                O.col, O.size, O.vis = O.col + d, O.size + d, O.vis + d
+                return true
+            end
+        end
+        return false
+    end
+
+    local function fraction(bar)
+        if mrd("byte", bar.bar + O.vis) == 0 then return 0 end
+        local s = mrd("float", bar.bar + O.size)
+        return s and math.max(0, math.min(1, s)) or 1
+    end
+    local function paint(bar, c)
+        for _, f in ipairs(bar.frames) do
+            for i = 0, 2 do mwr("float", f[1] + O.col + i * 4, c[i + 1] * f[2]) end
+        end
+    end
+
+    -- Gradient slots. A frame keeps its UICorner at one slot (found by its
+    -- address) and its UIGradient 0x30 before it, a flag 8 before.
+    -- A UIGradient keeps its transparency stops at +0xb8 (count +0xc0, 12
+    -- bytes each) and colour stops at +0xf8 (count +0x100, 20 bytes each:
+    -- time, r, g, b, envelope).
+    local GS = {}
+    local function slotsOf(bar)
+        if not bar.corner then return nil end
+        local ca = bar.corner.Address
+        for off = 0x600, 0xC00, 8 do
+            if rd(bar.bar + off) == ca then return off - 0x30, off - 8 end
+        end
+    end
+    local function stops(g)
+        local p, n = rd(g + 0xf8), mrd("int", g + 0x100)
+        if not p or p < 0x10000 or not n or n < 2 or n > 64 then return nil end
+        local t0, t1 = mrd("float", p), mrd("float", p + (n - 1) * 20)
+        if t0 ~= 0 or t1 ~= 1 then return nil end
+        return p, n
+    end
+    local function donor()
+        local pg = game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui")
+        local mf = pg and pg:FindFirstChild("MainGui")
+        mf = mf and mf:FindFirstChild("MainFrame")
+        local duels = mf and mf:FindFirstChild("DuelInterfaces")
+        local best, bestN
+        for _, d in ipairs(duels and duels:GetDescendants() or {}) do
+            if d.ClassName == "UIGradient" and d.Parent and d.Parent.ClassName ~= "UIStroke" then
+                local _, n = stops(d.Address)
+                if n and (not bestN or n > bestN) then best, bestN = d.Address, n end
+            end
+        end
+        return best
+    end
+    -- Links a gradient into the bar (or finds the one an earlier run linked).
+    local function link(bar)
+        local slot, flag = slotsOf(bar)
+        if not slot then return nil end
+        local g = rd(bar.bar + slot)
+        if not (g and g > 0x10000 and stops(g)) then
+            g = donor()
+            if not g then return nil end
+            local ctrl = rd(g + 0x10)
+            local uses = ctrl and ctrl > 0x10000 and mrd("int", ctrl + 8)
+            if not uses or uses < 1 or uses > 1000 then return nil end
+            if not GS.saved then
+                -- Its own look, put back when it's unlinked.
+                local p, n = stops(g)
+                GS.saved = {g = g, cols = {}, tr = {}}
+                for i = 0, n - 1 do
+                    for j = 1, 3 do GS.saved.cols[#GS.saved.cols + 1] = mrd("float", p + i * 20 + j * 4) end
+                end
+                local tp, tn = rd(g + 0xb8), mrd("int", g + 0xc0)
+                for i = 0, (tn or 0) - 1 do GS.saved.tr[i] = mrd("float", tp + i * 12 + 4) end
+            end
+            mwr("int", ctrl + 8, uses + 1)
+            wr(bar.bar + slot + 8, ctrl)
+            wr(bar.bar + slot, g)
+            mwr("byte", bar.bar + flag, 1)
+        end
+        -- Opaque all along.
+        local tp, tn = rd(g + 0xb8), mrd("int", g + 0xc0)
+        if tp and tp > 0x10000 and tn and tn > 0 and tn < 64 then
+            for i = 0, tn - 1 do mwr("float", tp + i * 12 + 4, 0) end
+        end
+        return {g = g, slot = slot, flag = flag}
+    end
+    local function unlink(bar)
+        local slot, flag = slotsOf(bar)
+        if not slot then return end
+        local g, ctrl = rd(bar.bar + slot), rd(bar.bar + slot + 8)
+        if not g or g < 0x10000 then return end
+        wr(bar.bar + slot, 0)
+        wr(bar.bar + slot + 8, 0)
+        mwr("byte", bar.bar + flag, 0)
+        if ctrl and ctrl > 0x10000 then mwr("int", ctrl + 8, math.max(1, mrd("int", ctrl + 8) - 1)) end
+        local s = GS.saved
+        if s and s.g == g then
+            local p, n = stops(g)
+            for i = 0, (n or 0) - 1 do
+                for j = 1, 3 do mwr("float", p + i * 20 + j * 4, s.cols[i * 3 + j]) end
+            end
+            local tp = rd(g + 0xb8)
+            for i, v in pairs(s.tr) do mwr("float", tp + i * 12 + 4, v) end
+        end
+    end
+
+    local bar = find()
+    if bar and not checkOffsets(bar.bar) then
+        print("[RivalsSkinChanger] Health bar: couldn't find its colour in memory on this Roblox build - left as it is")
+        return
+    end
+    -- Puts the game's look back: its colour for the current health, no gradient.
+    local function restore()
+        if bar then
+            pcall(unlink, bar)
+            pcall(paint, bar, byHealth(GAME[1], GAME[2], GAME[3], fraction(bar)))
+        end
+    end
+    if style == "default" then
+        restore()
+        return
+    end
+    if style ~= "gradient" and bar then pcall(unlink, bar) end
+
+    local grad
+    if style == "gradient" and bar then
+        local okL, l = pcall(link, bar)
+        grad = okL and l or nil
+        if not grad then
+            print("[RivalsSkinChanger] Health bar: couldn't link a gradient on this Roblox build - using Color1 instead")
+            style, fixed = "color", g1
+        end
+    end
+
+    local acc = 0
+    local conn
+    conn = game:GetService("RunService").Heartbeat:Connect(function(dt)
+        if _G.__RSC_HPBAR ~= token or game.JobId ~= job then
+            pcall(function() conn:Disconnect() end)
+            return
+        end
+        acc = acc + (dt or 1 / 60)
+        -- Looks for the bar again now and then: it moves with the setting and
+        -- is rebuilt on respawn.
+        if acc > 1 then
+            acc = 0
+            local okF, b = pcall(find)
+            if okF and b and (not bar or b.bar ~= bar.bar) then
+                bar = b
+                if style == "gradient" then
+                    local okL, l = pcall(link, bar)
+                    grad = okL and l or nil
+                end
+            end
+        end
+        if not bar then return end
+        pcall(function()
+            if style == "gradient" then
+                if not grad then return end
+                local p, n = stops(grad.g)
+                if not p then return end
+                local ph = tick() * 0.4 * speed
+                local span = rainbowGrad and 0.6 or 0.5
+                for i = 0, n - 1 do
+                    local c = gradColor(mrd("float", p + i * 20) * span - ph)
+                    for j = 1, 3 do mwr("float", p + i * 20 + j * 4, c[j]) end
+                end
+                -- White under the gradient; the frame and its inside take its
+                -- middle colour, darker, as the game does.
+                local m = gradColor(span / 2 - ph)
+                for k, f in ipairs(bar.frames) do
+                    local c = k == 1 and {1, 1, 1} or m
+                    for i = 0, 2 do mwr("float", f[1] + O.col + i * 4, c[i + 1] * f[2]) end
+                end
+                return
+            end
+            local c
+            if style == "rainbow" then
+                local col = Color3.fromHSV((tick() * 0.25 * speed) % 1, 0.8, 1)
+                c = {col.R, col.G, col.B}
+            elseif style == "health" then
+                c = byHealth(low, mid, full, fraction(bar))
+            else
+                c = fixed
+            end
+            paint(bar, c)
+        end)
+    end)
+    _G.__RSC_HPBAR_CONN = conn
+    print("[RivalsSkinChanger] Health bar: " .. style .. (bar and "" or ", once the bar shows up") .. " - only you see it")
+end)
+
 -- Save state
-_G.__RIVALS_SKIN_CHANGER_STATE = {restores = memoryRestores, wfAddr = wf.Address, nameCopies = nameCopies, dicts = dictCache, floats = floatRestores}
+_G.__RIVALS_SKIN_CHANGER_STATE ={restores = memoryRestores, wfAddr = wf.Address, nameCopies = nameCopies, dicts = dictCache, floats = floatRestores}
 saveUndo()
 _G.__RIVALS_SKIN_CHANGER_BUSY = nil
 
