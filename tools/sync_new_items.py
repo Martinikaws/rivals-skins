@@ -141,6 +141,32 @@ if added_map:
     write(map_path, json.dumps(icon_map, indent=2, ensure_ascii=False).replace("\n", nl) + ("\n" if icon_map_raw.endswith("\n") else ""))
 print("skin_icon_map entries added:", added_map)
 
+# index.html carries its own copy of that map (SKIN_ICON_MAP), which the skin
+# pickers use; a skin missing there shows the Standard picture as "Common".
+html = read(html_path)
+k = html.index("const SKIN_ICON_MAP = ") + len("const SKIN_ICON_MAP = ")
+depth = 0
+for kend in range(k, len(html)):
+    if html[kend] == "{":
+        depth += 1
+    elif html[kend] == "}":
+        depth -= 1
+        if depth == 0:
+            break
+inline_raw = html[k:kend + 1]
+inline = json.loads(inline_raw)
+assert json.dumps(inline, indent=2, ensure_ascii=False) == inline_raw.replace("\r\n", "\n"), "SKIN_ICON_MAP would not round-trip"
+copied = 0
+for w, skins_ in icon_map.items():
+    for n, data in skins_.items():
+        if n not in inline.setdefault(w, {}):
+            inline[w][n] = data
+            copied += 1
+print("index.html SKIN_ICON_MAP entries added:", copied)
+if copied:
+    nl = "\r\n" if "\r\n" in inline_raw else "\n"
+    write(html_path, html[:k] + json.dumps(inline, indent=2, ensure_ascii=False).replace("\n", nl) + html[kend + 1:])
+
 # --- Wraps: assets/wraps.js --------------------------------------------------
 wraps_path = os.path.join(SITE, "assets", "wraps.js")
 wraps_js = read(wraps_path)
