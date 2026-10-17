@@ -1,6 +1,29 @@
 -- Rivals skin changer (Matcha)
 local t_start = tick()
 
+-- Health: every warning the run prints is also noted, and the run ends with
+-- one line saying whether everything applied, for players to paste back.
+_G.__RSC_PROBLEMS = {}
+local print = (function(realPrint)
+    local PROBLEM = {"error", "Error", "Couldn't", "couldn't", "can't", "not applied", "Not swapped",
+        "Not in the game's", "Skipped", "Left default", "not loaded yet", "still isn't reporting",
+        "slow memory scan", "no longer fits", "isn't a"}
+    return function(...)
+        realPrint(...)
+        local parts = {}
+        for i = 1, select("#", ...) do parts[#parts + 1] = tostring((select(i, ...))) end
+        local msg = table.concat(parts, " ")
+        if not msg:find("^%[RivalsSkinChanger%]") or msg:find("^%[RivalsSkinChanger%] Health:") then return end
+        msg = msg:gsub("^%[RivalsSkinChanger%]%s*", "")
+        local bad = false
+        for _, k in ipairs(PROBLEM) do if msg:find(k, 1, true) then bad = true break end end
+        for got, total in msg:gmatch("applied: (%d+)/(%d+)") do
+            if tonumber(got) < tonumber(total) then bad = true end
+        end
+        if bad then table.insert(_G.__RSC_PROBLEMS, msg) end
+    end
+end)(print)
+
 if not pcall(memory_read, "int", game.Address) then
     return
 end
@@ -5135,3 +5158,16 @@ end
 _G.__RIVALS_SKIN_CHANGER_STATE = {restores = memoryRestores, wfAddr = wf.Address, nameCopies = nameCopies, dicts = dictCache, floats = floatRestores}
 saveUndo()
 _G.__RIVALS_SKIN_CHANGER_BUSY = nil
+
+pcall(function()
+    local probs = _G.__RSC_PROBLEMS or {}
+    local secs = string.format("%.1fs", tick() - t_start)
+    if #probs == 0 then
+        print("[RivalsSkinChanger] Health: everything applied (" .. secs .. ")")
+        return
+    end
+    local short = {}
+    for i, m in ipairs(probs) do short[i] = #m > 110 and (m:sub(1, 107) .. "...") or m end
+    print("[RivalsSkinChanger] Health: " .. #probs .. " problem" .. (#probs == 1 and "" or "s") .. " (" .. secs .. ") - " .. table.concat(short, " | "))
+    notifyUser("Rivals Skin Changer", #probs .. " problem" .. (#probs == 1 and "" or "s") .. " - see the Health line in the console", 8)
+end)
