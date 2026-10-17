@@ -5597,6 +5597,103 @@ pcall(function()
     print("[RivalsSkinChanger] Health bar: " .. (conf.label or style) .. (bar and "" or ", once the bar shows up") .. " - only you see it")
 end)
 
+-- Scope setups. Mouse.Scope._Setup picks a scope by the viewmodel's name:
+-- "Pixel Sniper" (pixel images, pixelated scaling, square dot), "Keyper"
+-- (its images at 1.25x, no turning while sliding) or "Pixel Crossbow", and
+-- the plain one otherwise. Copying images alone leaves the rest wrong, so
+-- the names it compares are pointed at the right ones instead: the target
+-- skin's check gets the name the game will see (the owned skin in swap
+-- mode, the weapon in switch mode), and an owned special skin's check gets a
+-- name no viewmodel has. Luau compares strings by pointer, so each constant
+-- is set to the game's own string (a key in ItemLibrary.ViewModels). The
+-- scope is set up when your loadout's UI is built, so it shows from your
+-- next respawn.
+pcall(function()
+    local function tstr(p)
+        if not p or p < 0x10000 then return nil end
+        local okL, len = pcall(mrd, "int", p + 20)
+        if not okL or not len or len <= 0 or len > 64 then return nil end
+        local ok, s = pcall(mrd, "string", p + STRING_DATA)
+        return ok and type(s) == "string" and s:sub(1, len) or nil
+    end
+    -- An earlier run's changes, put back when the slot and the original
+    -- string still read as they should.
+    local job = game.JobId
+    local undo = _G.__RSC_SCOPE_UNDO
+    if type(undo) == "table" and undo.job == job then
+        for _, u in ipairs(undo.list) do
+            if tstr(u[2]) == u[3] then pcall(mwr, "uintptr_t", u[1], u[2]) end
+        end
+    end
+    _G.__RSC_SCOPE_UNDO = nil
+    if not next(scopeSkins) then return end
+
+    local SPECIAL = {["Pixel Sniper"] = true, ["Keyper"] = true, ["Pixel Crossbow"] = true}
+
+    -- What the game will compare, and what each check should then match.
+    local want = {} -- special name -> name the game sees (or false: never)
+    local names = {}
+    for weapon, pick in pairs(scopeSkins) do
+        local target, owned = pick[1], pick[2]
+        local seen = owned or weapon
+        if seen ~= target then
+            if SPECIAL[target] then want[target] = seen; names[seen] = true end
+            if SPECIAL[seen] and want[seen] == nil then want[seen] = false end
+        end
+    end
+    if not next(want) then return end
+
+    local ps = LP:FindFirstChild("PlayerScripts")
+    local scope = ps
+    for _, n in ipairs({"Modules", "ClientReplicatedClasses", "ClientFighter", "ClientItem", "ItemInterface", "Mouse", "Scope"}) do
+        scope = scope and scope:FindFirstChild(n)
+    end
+    local f = nodesOf(moduleTable(scope), 64, {_Setup = true})
+    local cl = f and f._Setup and rd(f._Setup)
+    local proto = cl and cl > 0x10000 and rd(cl + 0x18)
+    -- The constants list: the offset moves between Roblox builds, so it's the
+    -- one that holds the scope names.
+    local k, slots
+    for _, off in ipairs({0x20, 0x48, 0x38, 0x28, 0x30, 0x40, 0x18, 0x50}) do
+        local arr = proto and proto > 0x10000 and rd(proto + off)
+        if arr and arr > 0x10000 then
+            local found, n = {}, 0
+            for i = 0, 47 do
+                local s = tstr(rd(arr + i * 16))
+                if s and SPECIAL[s] and not found[s] then found[s] = arr + i * 16; n = n + 1 end
+            end
+            if n >= 2 then k, slots = arr, found break end
+        end
+    end
+    if not k then
+        print("[RivalsSkinChanger] Scopes: couldn't find the scope setup on this Roblox build - only the scope images are changed")
+        return
+    end
+
+    -- The game's own strings for those names.
+    local mods = game:GetService("ReplicatedStorage"):FindFirstChild("Modules")
+    local lib = nodesOf(moduleTable(mods and mods:FindFirstChild("ItemLibrary")), 256, {ViewModels = true, ViewModelOrder = true})
+    local dict = lib and lib.ViewModels and rd(lib.ViewModels)
+    local found = dict and nodesOf(dict, 8192, names) or {}
+    local never = lib and lib.ViewModelOrder and rd(lib.ViewModelOrder + NODE_KEY)
+    local list, done = {}, {}
+    for special, seen in pairs(want) do
+        local slot = slots[special]
+        local str = seen and found[seen] and rd(found[seen] + NODE_KEY) or (seen == false and never) or nil
+        if slot and str and str > 0x10000 and (seen == false or tstr(str) == seen) then
+            local old = rd(slot)
+            list[#list + 1] = {slot, old, special}
+            mwr("uintptr_t", slot, str)
+            done[#done + 1] = seen and (special .. " scope on " .. seen) or ("plain scope on " .. special)
+        end
+    end
+    _G.__RSC_SCOPE_UNDO = #list > 0 and {job = job, list = list} or nil
+    if #done > 0 then
+        table.sort(done)
+        print("[RivalsSkinChanger] Scopes: " .. table.concat(done, ", ") .. " - from your next respawn")
+    end
+end)
+
 -- Buttons: the menu's coloured buttons (green Play and prices, blue View,
 -- yellow and gold) get their shine from a UIGradient with a fixed set of
 -- colour stops per style. Those stops are recoloured in place, in the
