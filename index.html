@@ -5541,6 +5541,8 @@
                 pick.className = "sound-pick";
                 pick.innerHTML = '<option value="">' + (key === "Color" ? "Game's own" : "Same as all guns") + '</option>'
                     + '<option value="rainbow">Rainbow</option>'
+                    + '<option value="sky">Match sky</option>'
+                    + '<option value="wrap">Match wrap</option>'
                     + TRACER_COLORS.map(function (c) { return '<option value="' + c[1] + '">' + c[0] + '</option>'; }).join("")
                     + '<option value="custom">Custom</option>';
                 const color = document.createElement("input");
@@ -5548,7 +5550,7 @@
                 color.className = "tracer-color";
                 color.title = "Any colour";
                 const isHex = /^[0-9a-f]{6}$/.test(current);
-                pick.value = !current ? "" : (current === "rainbow" || TRACER_COLORS.some(function (c) { return c[1] === current; }) ? current : "custom");
+                pick.value = !current ? "" : (["rainbow", "sky", "wrap"].indexOf(current) >= 0 || TRACER_COLORS.some(function (c) { return c[1] === current; }) ? current : "custom");
                 color.value = "#" + (isHex ? current : "ffffff");
                 color.hidden = !isHex;
                 [pick, color].forEach(function (el) { el.addEventListener("click", function (e) { e.stopPropagation(); }); });
@@ -5572,7 +5574,7 @@
                 card.appendChild(r);
             }
 
-            row("Color", "All guns", "Every gun you fire, unless it has its own colour below");
+            row("Color", "All guns", "Every gun you fire, unless it has its own colour below. Match sky uses your sky preset's colour, Match wrap the colour of the weapon in your hands");
 
             // Speed, for every gun: 100% is the game's own, low is slow like the Keyper.
             const speedRow = document.createElement("div");
@@ -5629,7 +5631,7 @@
             const keys = Object.keys(tracerConfig).filter(function (k) { return tracerConfig[k]; })
                 .sort(function (a, b) { return a === "Color" ? -1 : (b === "Color" ? 1 : a.localeCompare(b)); });
             if (!keys.length) return [];
-            return ["", "[Tracers]", "-- Color = every gun; a gun's own line wins while it's out. Hex, rainbow or default. Speed in % (100 = the game's)."]
+            return ["", "[Tracers]", "-- Color = every gun; a gun's own line wins while it's out. Hex, rainbow, sky, wrap or default. Speed in % (100 = the game's)."]
                 .concat(keys.map(function (k) { return k + "=" + tracerConfig[k]; }));
         }
 
@@ -5641,7 +5643,8 @@
             ["Color", "Color", "One colour of your choice"],
             ["Rainbow", "Rainbow", "The whole bar cycles through the rainbow"],
             ["Gradient", "Gradient", "Two colours along the bar, scrolling"],
-            ["Health", "By health", "Your colours for full, half and low health"]];
+            ["Health", "By health", "Your colours for full, half and low health"],
+            ["Sky", "Match sky", "Your sky preset's colours, scrolling (skies with matching lighting)"]];
         const HP_DEFAULTS = {Color: "9933ff", Color1: "ff2bd6", Color2: "3b5bff", Full: "64ff32", Mid: "ffd700", Low: "ff3232"};
 
         function saveHealthConfig() {
@@ -5681,6 +5684,10 @@
                     fill.style.background = (healthConfig.Color1 === "rainbow")
                         ? "linear-gradient(90deg, #ff3c3c, #ffd23c, #3cff6e, #3cc8ff, #8a3cff, #ff3cc8, #ff3c3c)"
                         : "linear-gradient(90deg, " + hex("Color1") + ", " + hex("Color2") + ", " + hex("Color1") + ")";
+                    fill.style.backgroundSize = "200% 100%";
+                    if (speed > 0) fill.style.animation = "hp-scroll " + (2.5 / (speed / 100)) + "s linear infinite";
+                } else if (s === "Sky") {
+                    fill.style.background = "linear-gradient(90deg, #c44cff, #668aff, #c44cff)";
                     fill.style.backgroundSize = "200% 100%";
                     if (speed > 0) fill.style.animation = "hp-scroll " + (2.5 / (speed / 100)) + "s linear infinite";
                 } else if (s === "Health") {
@@ -5766,7 +5773,13 @@
                 colorRow("Mid", "Half health", "Used at half health");
                 colorRow("Low", "Low health", "Used as you run out");
             }
-            if (style === "Rainbow" || style === "Gradient") {
+            if (style === "Sky") {
+                const sky = document.createElement("span");
+                sky.className = "sky-sub";
+                sky.textContent = skyConfig.preset ? skyConfig.preset : "Pick a sky preset first";
+                row("Sky", "The colours come from your sky preset's lighting", sky, !!skyConfig.preset);
+            }
+            if (style === "Rainbow" || style === "Gradient" || style === "Sky") {
                 const sp = document.createElement("div");
                 sp.style.display = "flex";
                 sp.style.alignItems = "center";
@@ -5802,7 +5815,7 @@
             if (!healthConfig.Style) return [];
             const order = ["Style", "Color", "Color1", "Color2", "Full", "Mid", "Low", "Speed"];
             const keys = order.filter(function (k) { return healthConfig[k]; });
-            return ["", "[HealthBar]", "-- Style = Color, Rainbow, Gradient or Health. Colours in hex; Color1=rainbow for a spectrum. Speed in % (0 = still)."]
+            return ["", "[HealthBar]", "-- Style = Color, Rainbow, Gradient, Health or Sky. Colours in hex; Color1=rainbow for a spectrum. Speed in % (0 = still)."]
                 .concat(keys.map(function (k) { return k + "=" + healthConfig[k]; }));
         }
 

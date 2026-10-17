@@ -4621,6 +4621,38 @@ local function applyLighting(conf, cache)
         or "applied to the current area only (lighting profiles not found)"
 end
 
+-- The sky preset's colours (fog, outdoor and ambient from its lighting
+-- preset), at full brightness and a little more vivid, most vivid first; nil
+-- when the sky has no lighting preset or wasn't applied. Color=sky (tracers)
+-- and Style=Sky (health bar) use them. A global: the main chunk is at Luau's
+-- local limit.
+_G.__RSC_SKY_COLORS = function()
+    if configSkybox.__refused then return nil end
+    local sky = configSkybox.preset or configSkybox.skybox or configSkybox.name
+    local p = sky and LIGHTING_PRESETS[tostring(sky):lower()]
+    if not p then return nil end
+    local out = {}
+    for _, k in ipairs({"fogcolor", "outdoor", "ambient"}) do
+        local r, g, b = lightingColor(p[k] or "")
+        if r then
+            local mx, mn = math.max(r, g, b), math.min(r, g, b)
+            local s = mx > 0 and (mx - mn) / mx or 0
+            local h = 0
+            if mx > mn then
+                if mx == r then h = ((g - b) / (mx - mn)) % 6
+                elseif mx == g then h = (b - r) / (mx - mn) + 2
+                else h = (r - g) / (mx - mn) + 4 end
+                h = h / 6
+            end
+            -- Greys stay grey; colours get at least some saturation.
+            local c = Color3.fromHSV(h, s < 0.06 and s or math.max(s, 0.5), 1)
+            out[#out + 1] = {c.R, c.G, c.B, s}
+        end
+    end
+    table.sort(out, function(a, b) return a[4] > b[4] end)
+    return #out > 0 and out or nil
+end
+
 local wrapPairs = readWrapPairs()
 if ENABLE_SKIN_DATA_SYNC and (#skinDataPairs > 0 or #wrapPairs > 0) then
     print("[RivalsSkinChanger] Applying skin animations, offsets, icons" .. (#wrapPairs > 0 and " + wraps" or "") .. "...")
@@ -4912,6 +4944,37 @@ local function applyTracersEffect()
             for p in tostring(name or ""):gmatch("[^%-]+") do parts[#parts + 1] = p:match("^%s*(.-)%s*$"):lower() end
             return (parts[3] and conf[parts[3]]) or (parts[2] and conf[parts[2]]) or fallback
         end
+        -- Color=sky: the sky preset's most vivid colour.
+        local skyCols = _G.__RSC_SKY_COLORS and _G.__RSC_SKY_COLORS()
+        -- Color=wrap: the most vivid colour on the weapon in your hands (its
+        -- wrap's, or the skin's own without one), read again every second
+        -- as the game paints the wrap on just after you equip it.
+        local function weaponColor()
+            local vmf = workspace:FindFirstChild("ViewModels")
+            local fp = vmf and vmf:FindFirstChild("FirstPerson")
+            local m = fp and fp:GetChildren()[1]
+            if not m then return nil end
+            local best, bestScore, bright, brightV, seen = nil, 0, nil, -1, {}
+            for _, d in ipairs(m:GetDescendants()) do
+                local cn = d.ClassName
+                if (cn == "MeshPart" or cn == "Part" or cn == "UnionOperation") and not d.Name:find("Arm") then
+                    local okC, c = pcall(function() return d.Color end)
+                    if okC and c then
+                        local r, g, b = c.R, c.G, c.B
+                        if r > 1 or g > 1 or b > 1 then r, g, b = r / 255, g / 255, b / 255 end
+                        local key = math.floor(r * 255) .. "," .. math.floor(g * 255) .. "," .. math.floor(b * 255)
+                        seen[key] = (seen[key] or 0) + 1
+                        local mx, mn = math.max(r, g, b), math.min(r, g, b)
+                        local score = (mx > 0 and (mx - mn) / mx or 0) * mx * math.sqrt(seen[key])
+                        if score > bestScore then best, bestScore = {r, g, b}, score end
+                        if mx > brightV then bright, brightV = {r, g, b}, mx end
+                    end
+                end
+            end
+            -- An all-grey weapon gives its brightest grey.
+            return (bestScore > 0.08 and best) or bright
+        end
+        local wrapCol
         local conn
         conn = game:GetService("RunService").Heartbeat:Connect(function(dt)
             if _G.__RIVALS_TRACERS ~= token then pcall(function() conn:Disconnect() end) return end
@@ -4921,6 +4984,7 @@ local function applyTracersEffect()
             acc = 0
             if sinceCheck >= 1 then
                 sinceCheck, lastRgb = 0, nil -- rewrite once a second in case the game reset one
+                if current == "wrap" then wrapCol = weaponColor() end
                 if game.JobId ~= job or tracerModule() ~= te then
                     pcall(function() conn:Disconnect() end)
                     return
@@ -4931,11 +4995,16 @@ local function applyTracersEffect()
                 lastName, lastRgb = name, nil
                 seqs = collect()
                 current = pick(name)
+                wrapCol = current == "wrap" and weaponColor() or nil
             end
             local r, g, b
             if current == "rainbow" then
                 local c = Color3.fromHSV(tick() * 0.25 % 1, 1, 1)
                 r, g, b = c.R, c.G, c.B
+            elseif current == "sky" then
+                if skyCols then r, g, b = skyCols[1][1], skyCols[1][2], skyCols[1][3] end
+            elseif current == "wrap" then
+                if wrapCol then r, g, b = wrapCol[1], wrapCol[2], wrapCol[3] end
             elseif current and current ~= "off" and current ~= "default" then
                 r, g, b = lightingColor(current)
             end
@@ -4949,6 +5018,11 @@ local function applyTracersEffect()
         end)
         _G.__RIVALS_TRACER_CONN = conn
         print("[RivalsSkinChanger] Tracers: recolouring " .. #seqs .. " tracer colours (more load as you equip skins)")
+        local wantsSky = false
+        for _, v in pairs(conf) do if v == "sky" then wantsSky = true end end
+        if wantsSky and not skyCols then
+            print("[RivalsSkinChanger] Tracers: Color=sky needs a sky preset with matching lighting - those tracers keep the game's colour")
+        end
     elseif any then
         print("[RivalsSkinChanger] Tracers: TracerEffect not loaded yet - fire once and run again")
     end
@@ -5204,7 +5278,7 @@ pcall(function()
     for k, v in pairs(_G.__RSC_HPBAR_CFG or {}) do conf[k] = tostring(v) end
     local style = (conf.style or ""):lower()
     if style == "cycle" then style = "gradient" end
-    if not ({color = true, rainbow = true, gradient = true, health = true})[style] then style = "default" end
+    if not ({color = true, rainbow = true, gradient = true, health = true, sky = true})[style] then style = "default" end
     _G.__RSC_HPBAR = (_G.__RSC_HPBAR or 0) + 1
     local token, job = _G.__RSC_HPBAR, game.JobId
     local O = {col = OFF.GuiColor, size = OFF.GuiSize, vis = OFF.GuiVisible}
@@ -5231,6 +5305,25 @@ pcall(function()
             return {c.R, c.G, c.B}
         end
         return mix(g1, g2, 0.5 - 0.5 * math.cos(2 * math.pi * t))
+    end
+    -- Sky: a gradient in the sky preset's colours, its two most vivid ones
+    -- (or one and a darker shade of it when they're alike).
+    if style == "sky" then
+        local cols = _G.__RSC_SKY_COLORS and _G.__RSC_SKY_COLORS()
+        if cols then
+            local a = cols[1]
+            local b
+            for i = 2, #cols do
+                local c = cols[i]
+                if math.abs(c[1] - a[1]) + math.abs(c[2] - a[2]) + math.abs(c[3] - a[3]) > 0.3 then b = c break end
+            end
+            b = b or {a[1] * 0.4, a[2] * 0.4, a[3] * 0.4}
+            g1, g2, rainbowGrad = {a[1], a[2], a[3]}, {b[1], b[2], b[3]}, false
+            style, conf.label = "gradient", "sky colours"
+        else
+            print("[RivalsSkinChanger] Health bar: Style=Sky needs a sky preset with matching lighting - left the game's bar")
+            style = "default"
+        end
     end
 
     -- Finds the bar: FighterInterfaces.<you>.<Bottom side>.Container.Health,
@@ -5458,7 +5551,7 @@ pcall(function()
         end)
     end)
     _G.__RSC_HPBAR_CONN = conn
-    print("[RivalsSkinChanger] Health bar: " .. style .. (bar and "" or ", once the bar shows up") .. " - only you see it")
+    print("[RivalsSkinChanger] Health bar: " .. (conf.label or style) .. (bar and "" or ", once the bar shows up") .. " - only you see it")
 end)
 
 -- Save state
