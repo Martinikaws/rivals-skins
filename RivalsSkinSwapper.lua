@@ -2266,8 +2266,132 @@ ROUTE.detect = function(ms)
     return false
 end
 
+-- A layout this PC learned for the running Roblox build, kept in a file.
+-- When ROUTE.detect can't read a new build but the slow scan still finds
+-- the item tables, ROUTE.learn works the layout out from what the scan found
+-- and saves it, so the next run on this build is fast again.
+ROUTE.FIELDS = {"tt", "globalState", "registry", "lsize", "sizearray", "array", "node"}
+ROUTE.savedFile = function()
+    local okV, v = pcall(function() return getrbxversion() end)
+    return "rivals_layout_" .. ((okV and type(v) == "string" and v:match("[%w%-]+")) or "unknown") .. ".json"
+end
+ROUTE.apply = function(lay, from)
+    for _, k in ipairs(ROUTE.FIELDS) do ROUTE[k] = lay[k] end
+    ROUTE.ok = true
+    _G.__RSC_LAYOUT = {tt = lay.tt, globalState = lay.globalState, registry = lay.registry, lsize = lay.lsize,
+        sizearray = lay.sizearray, array = lay.array, node = lay.node}
+    print(string.format("[RivalsSkinChanger] Memory layout (%s): type byte +%d, global state +0x%x, registry +0x%x, size byte +%d, array +0x%x/+%d, nodes +0x%x",
+        from, lay.tt, lay.globalState, lay.registry, lay.lsize, lay.array, lay.sizearray, lay.node))
+end
+-- The module table a layout leads to, or nil.
+ROUTE.tableWith = function(ms, lay)
+    local thread = rd(ms.Address + ROUTE.thread)
+    local slot = rint(ms.Address + ROUTE.slot)
+    if not thread or thread < 0x10000 or not slot or slot < 1 or rbyte(thread + lay.tt) ~= TAG_THREAD then return nil end
+    local g = rd(thread + lay.globalState)
+    local reg = g and g > 0x10000 and rd(g + lay.registry)
+    if not reg or reg < 0x10000 or rint(g + lay.registry + 12) ~= TAG_TABLE or rbyte(reg + lay.tt) ~= TAG_TABLE then return nil end
+    local size, arr = rint(reg + lay.sizearray), rd(reg + lay.array)
+    if not size or not arr or arr < 0x10000 or slot > size or rint(arr + (slot - 1) * 16 + 12) ~= TAG_TABLE then return nil end
+    local t = rd(arr + (slot - 1) * 16)
+    return t and t > 0x10000 and rbyte(t + lay.tt) == TAG_TABLE and t or nil
+end
+-- The value under a string key in table t, walking its nodes with lay.
+ROUTE.valueOf = function(t, lay, key)
+    local base, l = rd(t + lay.node), rbyte(t + lay.lsize)
+    if not base or base < 0x10000 or not l or l < 1 or l > 16 then return nil end
+    for i = 0, 2 ^ l - 1 do
+        local n = base + i * 32
+        local kp = rd(n + 16)
+        if (rint(n + 28) or 0) % 16 == 6 and kp and kp > 0x10000 then
+            local ok, k = pcall(mrd, "string", kp + 24)
+            if ok and k == key then return rd(n) end
+        end
+    end
+end
+ROUTE.useSaved = function(ms)
+    if ROUTE.triedSaved then return false end
+    ROUTE.triedSaved = true
+    local okF, raw = pcall(function() local f = ROUTE.savedFile() return isfile(f) and readfile(f) or nil end)
+    if not okF or type(raw) ~= "string" then return false end
+    local okJ, lay = pcall(function() return game:GetService("HttpService"):JSONDecode(raw) end)
+    if not okJ or type(lay) ~= "table" then return false end
+    for _, k in ipairs(ROUTE.FIELDS) do if type(lay[k]) ~= "number" then return false end end
+    local t = ROUTE.tableWith(ms, lay)
+    if not t or not ROUTE.valueOf(t, lay, "ViewModels") then
+        print("[RivalsSkinChanger] The saved memory layout for this Roblox build no longer fits - looking again")
+        return false
+    end
+    ROUTE.apply(lay, "saved on this PC")
+    return true
+end
+-- nodes: addresses the slow scan found that may be nodes of
+-- ItemLibrary.ViewModels (several tables share its keys, so there are usually
+-- a few). A layout candidate counts only if it leads from the module's
+-- registry slot to the "ViewModels" table and one of these exact nodes.
+ROUTE.learn = function(ms, nodes)
+    if ROUTE.ok or not ms or type(nodes) ~= "table" or #nodes == 0 then return false end
+    local thread = rd(ms.Address + ROUTE.thread)
+    if not thread or thread < 0x10000 then return false end
+    local tts = {}
+    for b = 0, 3 do if rbyte(thread + b) == TAG_THREAD then tts[#tts + 1] = b end end
+    local steps = 0
+    local function fits(lay)
+        steps = steps + 1
+        if steps % 400 == 0 then pcall(task.wait) end
+        local t = ROUTE.tableWith(ms, lay)
+        if not t then return false end
+        for _, no in ipairs({0x18, 0x20, 0x10, 0x28, 0x30, 0x8}) do
+            for b = 2, 7 do
+                lay.node, lay.lsize = no, b
+                local d = ROUTE.valueOf(t, lay, "ViewModels")
+                if d and d > 0x10000 and rbyte(d + lay.tt) == TAG_TABLE then
+                    local base, l = rd(d + no), rbyte(d + b)
+                    if base and l and l >= 1 and l <= 16 then
+                        for _, node in ipairs(nodes) do
+                            if node >= base and node < base + 32 * 2 ^ l and (node - base) % 32 == 0 then return true end
+                        end
+                    end
+                end
+            end
+        end
+        return false
+    end
+    for _, tt in ipairs(tts) do
+        for pass = 1, 2 do
+            for x = 0, 0x100, 8 do
+                local g = rd(thread + x)
+                if g and g > 0x10000 and g < 0x7fffffffffff then
+                    local ys = {0x620}
+                    if pass == 2 then ys = {} for y = 0, 0x1000, 8 do ys[#ys + 1] = y end end
+                    for _, y in ipairs(ys) do
+                        if rint(g + y + 12) == TAG_TABLE then
+                            for _, so in ipairs({8, 12, 4}) do
+                                for _, ao in ipairs({0x20, 0x18, 0x28, 0x10, 0x30}) do
+                                    local lay = {tt = tt, globalState = x, registry = y, sizearray = so, array = ao}
+                                    if fits(lay) then
+                                        ROUTE.apply(lay, "learned from the slow scan")
+                                        local okW = pcall(writefile, ROUTE.savedFile(),
+                                            game:GetService("HttpService"):JSONEncode(lay))
+                                        print("[RivalsSkinChanger] " .. (okW and ("Saved it as " .. ROUTE.savedFile() .. " - the next run on this Roblox build is fast again")
+                                            or "Couldn't save the learned layout"))
+                                        return true
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    print("[RivalsSkinChanger] Couldn't work out the memory layout from the slow scan either")
+    return false
+end
+
 local function moduleTable(ms)
     if not ms or not ms.Address then return nil end
+    if not ROUTE.ok then ROUTE.useSaved(ms) end
     if not ROUTE.ok then ROUTE.detect(ms) end
     local GC_TT = ROUTE.tt
     local thread = rd(ms.Address + ROUTE.thread)
@@ -2341,10 +2465,13 @@ local function findDictionaries(cache, needVm, needCos)
 
     local job = game.JobId
     local okG, rows = pcall(getgc, {SCAN_KEY})
+    local learnFrom = {}
 
     if game.JobId ~= job then return nil, nil, "server changed during the scan" end
     for _, r in ipairs(okG and type(rows) == "table" and rows or {}) do
-
+        -- Every match is a candidate for learning the layout: checking its
+        -- fields needs the layout, and learning checks each one strictly.
+        learnFrom[#learnFrom + 1] = r.addr
         local f = tableFields(rd(r.addr), 32, {Animations = true, Rarity = true, Type = true})
         if f and f.Animations then
             if needVm and not vm and select(2, walkAround(r.addr, 2048, VM_ANCHOR)) > 0 then vm = r.addr end
@@ -2368,6 +2495,24 @@ local function findDictionaries(cache, needVm, needCos)
         if game.JobId ~= job then return nil, nil, "server changed during the scan" end
     end
     cache.vm, cache.cos = vm or cache.vm, cos or cache.cos
+    -- The fast route failed but the scan found the table: learn the layout
+    -- from it and save it for this Roblox build.
+    if not ROUTE.ok and (vm or #learnFrom > 0) then
+        if vm then learnFrom[#learnFrom + 1] = vm end
+        local mods = game:GetService("ReplicatedStorage"):FindFirstChild("Modules")
+        local okL, learned = pcall(ROUTE.learn, mods and mods:FindFirstChild("ItemLibrary"), learnFrom)
+        -- With the layout known, take the tables from the fast route: the
+        -- scan's first match is often a copy, not the table the game uses.
+        if okL and learned then
+            local okR2, rvm2, rcos2, rvmBase2, rcosBase2, rvmCount2, rcosCount2 = pcall(dictionariesViaRegistry, needVm, needCos)
+            if okR2 and (rvm2 or not needVm) and (rcos2 or not needCos) then
+                vm, cos = rvm2 or vm, rcos2 or cos
+                cache.vmBase, cache.vmCount, cache.cosBase, cache.cosCount = rvmBase2, rvmCount2, rcosBase2, rcosCount2
+                cache.vm, cache.cos = vm, cos
+                cache.route = "registry"
+            end
+        end
+    end
     return vm, cos, (not okG) and "gc scan failed" or nil
 end
 
