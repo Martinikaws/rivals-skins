@@ -311,6 +311,7 @@
         .hp-preview { grid-column: 1 / -1; position: relative; box-sizing: border-box; height: 28px; margin: 4px 0 12px; border-radius: 14px; background: #141418; border: 3px solid #1c1c22; overflow: hidden; }
         .hp-preview .hp-fill { position: absolute; inset: 0; border-radius: 11px; }
         .hp-preview span { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font: 700 14px/1 system-ui, sans-serif; color: #fff; text-shadow: 0 1px 2px #000; }
+        .btn-preview { width: 84px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font: 800 15px/1 system-ui, sans-serif; color: #fff; text-shadow: 0 1px 2px #0008; flex: none; }
         @keyframes hp-scroll { from { background-position: 0% 0; } to { background-position: -200% 0; } }
         @keyframes hp-hue { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
         .sound-pick { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; color: var(--txt); padding: 8px 10px; font: inherit; font-size: 12.5px; }
@@ -4554,8 +4555,9 @@
             try { tracerConfig = JSON.parse(localStorage.getItem("rivals_tracers_saved") || "{}") || {}; } catch (e) { tracerConfig = {}; }
             try { handsConfig = JSON.parse(localStorage.getItem("rivals_hands_saved") || "{}") || {}; } catch (e) { handsConfig = {}; }
             try { healthConfig = JSON.parse(localStorage.getItem("rivals_healthbar_saved") || "{}") || {}; } catch (e) { healthConfig = {}; }
+            try { buttonsConfig = JSON.parse(localStorage.getItem("rivals_buttons_saved") || "{}") || {}; } catch (e) { buttonsConfig = {}; }
             loadCosmeticConfigs();
-            setDashMode(["wraps", "advanced", "skybox", "sounds", "spoof", "tracers", "hands", "healthbar", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
+            setDashMode(["wraps", "advanced", "skybox", "sounds", "spoof", "tracers", "hands", "healthbar", "buttons", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
         }
 
         const CATEGORY_ORDER = ["Primary", "Secondary", "Melee", "Utility"];
@@ -4640,6 +4642,12 @@
             if (dashMode === "healthbar") {
                 renderMiscSwitch(grid);
                 renderHealthGrid(grid);
+                updateFootCount();
+                return;
+            }
+            if (dashMode === "buttons") {
+                renderMiscSwitch(grid);
+                renderButtonsGrid(grid);
                 updateFootCount();
                 return;
             }
@@ -5414,7 +5422,7 @@
 
         // ---- Misc tab ----
         // Smaller features share one tab, each a tab of its own under it.
-        const MISC_MODES = {tracers: "Tracers", hands: "Hands", spoof: "Spoof", healthbar: "Health bar"};
+        const MISC_MODES = {tracers: "Tracers", hands: "Hands", spoof: "Spoof", healthbar: "Health bar", buttons: "Buttons"};
         let lastMiscMode = "tracers";
         function renderMiscSwitch(grid) {
             const bar = document.createElement("div");
@@ -5817,6 +5825,116 @@
             const keys = order.filter(function (k) { return healthConfig[k]; });
             return ["", "[HealthBar]", "-- Style = Color, Rainbow, Gradient, Health or Sky. Colours in hex; Color1=rainbow for a spectrum. Speed in % (0 = still)."]
                 .concat(keys.map(function (k) { return k + "=" + healthConfig[k]; }));
+        }
+
+        // ---- Buttons tab ----
+        // The menu's coloured buttons, saved as [Buttons]. Each style takes
+        // one colour, two (a gradient), sky or rainbow. They stay still:
+        // Roblox draws a button's gradient once.
+        let buttonsConfig = {};
+        const BTN_STYLES = [["Green", "Green buttons", "Play, prices and confirm buttons", "74df32", "c6ff0a"],
+            ["Blue", "Blue buttons", "View and info buttons", "0059ff", "00d0ff"],
+            ["Yellow", "Yellow buttons", "Buy and free buttons", "ffff00", "ebc015"],
+            ["Gold", "Gold buttons", "Party leader and similar", "fdff72", "ebb102"]];
+
+        function saveButtonsConfig() {
+            try { localStorage.setItem("rivals_buttons_saved", JSON.stringify(buttonsConfig)); } catch (e) {}
+        }
+        function setButtons(key, value) {
+            if (value) buttonsConfig[key] = value; else delete buttonsConfig[key];
+            saveButtonsConfig();
+            updateFootCount();
+        }
+
+        function renderButtonsGrid(grid) {
+            const card = document.createElement("div");
+            card.className = "weapon-card";
+            const label = document.createElement("div");
+            label.className = "card-label";
+            label.textContent = "Menu buttons - only you see them";
+            card.appendChild(label);
+            BTN_STYLES.forEach(function (st) {
+                const key = st[0];
+                const raw = (buttonsConfig[key] || "").toLowerCase();
+                const m = raw.match(/^([0-9a-f]{6})>([0-9a-f]{6})$/);
+                const c1 = m ? m[1] : (/^[0-9a-f]{6}$/.test(raw) ? raw : "");
+                const c2 = m ? m[2] : "";
+
+                const r = document.createElement("div");
+                r.className = "sky-card sky-custom" + (raw ? " active" : "");
+                r.dataset.name = (st[1] + " button").toLowerCase();
+                const info = document.createElement("div");
+                info.style.display = "flex";
+                info.style.alignItems = "center";
+                info.style.gap = "12px";
+                const pv = document.createElement("div");
+                pv.className = "btn-preview";
+                pv.textContent = "Play";
+                let a = "#" + st[3], b = "#" + st[4];
+                if (raw === "sky") { a = "#c44cff"; b = "#668aff"; }
+                else if (c1) { a = "#" + c1; b = c2 ? "#" + c2 : "#" + c1; }
+                if (raw === "rainbow") {
+                    pv.style.background = "linear-gradient(90deg, #ff3c3c, #ffd23c, #3cff6e, #3cc8ff, #8a3cff)";
+                } else if (c1 && !c2) {
+                    pv.style.background = "linear-gradient(90deg, " + a + "c8, " + a + ")";
+                } else {
+                    pv.style.background = "linear-gradient(90deg, " + a + ", " + b + ")";
+                }
+                const txt = document.createElement("div");
+                txt.innerHTML = '<div class="sky-name"></div><div class="sky-sub"></div>';
+                txt.querySelector(".sky-name").textContent = st[1];
+                txt.querySelector(".sky-sub").textContent = st[2];
+                info.appendChild(pv);
+                info.appendChild(txt);
+                r.appendChild(info);
+
+                const box = document.createElement("div");
+                box.className = "sky-add";
+                box.addEventListener("click", function (e) { e.stopPropagation(); });
+                function colorSelect(first, current) {
+                    const sel = document.createElement("select");
+                    sel.className = "sound-pick";
+                    sel.innerHTML = (first ? '<option value="">Game\'s own</option><option value="sky">Match sky</option><option value="rainbow">Rainbow</option>'
+                        : '<option value="">One colour</option>')
+                        + TRACER_COLORS.map(function (c) { return '<option value="' + c[1] + '">' + (first ? "" : "to ") + c[0] + '</option>'; }).join("")
+                        + '<option value="custom">Custom</option>';
+                    const known = ["", "sky", "rainbow"].indexOf(current) >= 0 || TRACER_COLORS.some(function (c) { return c[1] === current; });
+                    sel.value = known ? current : "custom";
+                    return sel;
+                }
+                const pick1 = colorSelect(true, (raw === "sky" || raw === "rainbow") ? raw : c1);
+                const col1 = document.createElement("input");
+                col1.type = "color"; col1.className = "tracer-color"; col1.value = "#" + (c1 || "ff4fd8"); col1.hidden = !c1 || pick1.value !== "custom";
+                const pick2 = colorSelect(false, c2);
+                pick2.hidden = !c1;
+                const col2 = document.createElement("input");
+                col2.type = "color"; col2.className = "tracer-color"; col2.value = "#" + (c2 || "3b5bff"); col2.hidden = !c2 || pick2.value !== "custom";
+                function save(v1, v2) {
+                    setButtons(key, !v1 ? "" : (v1 === "sky" || v1 === "rainbow" || !v2 ? v1 : v1 + ">" + v2));
+                    renderGrid();
+                }
+                pick1.addEventListener("change", function () {
+                    const v = pick1.value === "custom" ? col1.value.slice(1).toLowerCase() : pick1.value;
+                    save(v, (v === "sky" || v === "rainbow") ? "" : c2);
+                });
+                col1.addEventListener("change", function () { save(col1.value.slice(1).toLowerCase(), c2); });
+                pick2.addEventListener("change", function () {
+                    save(c1, pick2.value === "custom" ? col2.value.slice(1).toLowerCase() : pick2.value);
+                });
+                col2.addEventListener("change", function () { save(c1, col2.value.slice(1).toLowerCase()); });
+                [col1, pick1, col2, pick2].forEach(function (el) { box.appendChild(el); });
+                r.appendChild(box);
+                card.appendChild(r);
+            });
+
+            grid.appendChild(card);
+        }
+
+        function generateButtonsLines() {
+            const keys = ["Green", "Blue", "Yellow", "Gold"].filter(function (k) { return buttonsConfig[k]; });
+            if (!keys.length) return [];
+            return ["", "[Buttons]", "-- Green/Blue/Yellow/Gold = hex, two hex as a gradient (ff4fd8>3b5bff), sky or rainbow."]
+                .concat(keys.map(function (k) { return k + "=" + buttonsConfig[k]; }));
         }
 
         // ---- Spoof tab ----
@@ -6476,6 +6594,11 @@
                     : (tracerConfig.Speed ? "Tracer speed " + tracerConfig.Speed + "%" : "Tracers unchanged"));
                 return;
             }
+            if (dashMode === "buttons") {
+                const k = ["Green", "Blue", "Yellow", "Gold"].filter(function (x) { return buttonsConfig[x]; }).length;
+                el.textContent = k ? k + (k === 1 ? " button style recoloured" : " button styles recoloured") : "Buttons unchanged";
+                return;
+            }
             if (dashMode === "healthbar") {
                 el.textContent = healthConfig.Style ? "Health bar: " + (healthConfig.Style === "Health" ? "by health" : healthConfig.Style.toLowerCase()) : "Health bar unchanged";
                 return;
@@ -6563,7 +6686,7 @@
                 lines = lines.concat(swapLines);
             }
             return lines.concat(generateWrapLines()).concat(generateSkyLines()).concat(generateLightLines()).concat(generateSoundLines())
-                .concat(generateSpoofLines()).concat(generateTracerLines()).concat(generateHealthLines()).concat(generateHandsLines())
+                .concat(generateSpoofLines()).concat(generateTracerLines()).concat(generateHealthLines()).concat(generateButtonsLines()).concat(generateHandsLines())
                 .concat(generateCosmeticLines("finishers")).concat(generateCosmeticLines("charms")).join("\n");
         }
 
@@ -6594,6 +6717,10 @@
             }
             if (dashMode === "tracers") {
                 if (presetType === "default") { tracerConfig = {}; saveTracerConfig(); renderGrid(); showToast("Tracers back to the game's colours"); }
+                return;
+            }
+            if (dashMode === "buttons") {
+                if (presetType === "default") { buttonsConfig = {}; saveButtonsConfig(); renderGrid(); showToast("Buttons back to the game's colours"); }
                 return;
             }
             if (dashMode === "healthbar") {

@@ -1406,6 +1406,27 @@ local configSpoof = {}
 local configLighting = {}
 local configTracers = {}
 _G.__RSC_HPBAR_CFG = {} -- [Health Bar]; a global, the main chunk is at its local limit
+_G.__RSC_BTN_CFG = {} -- [Buttons]
+-- Keeps an instance alive while the changer writes to it every frame: the
+-- game frees UI it rebuilds, and writing into freed memory crashes Roblox.
+-- An Instance points to itself at +8 and to its shared_ptr control block at
+-- +0x10 (strong count at +8). Returns the control block for __RSC_RELEASE.
+_G.__RSC_HOLD = function(addr)
+    local okS, me = pcall(memory_read, "uintptr_t", addr + 8)
+    local okC, ctrl = pcall(memory_read, "uintptr_t", addr + 0x10)
+    if not (okS and me == addr and okC and ctrl and ctrl > 0x10000) then return nil end
+    local okU, uses = pcall(memory_read, "int", ctrl + 8)
+    if not okU or not uses or uses < 1 or uses > 100000 then return nil end
+    pcall(memory_write, "int", ctrl + 8, uses + 1)
+    return ctrl
+end
+-- Never down to 0: if the game has let go meanwhile, the object stays (a
+-- small leak) instead of being freed without its destructor running.
+_G.__RSC_RELEASE = function(ctrl)
+    if not ctrl then return end
+    local ok, uses = pcall(memory_read, "int", ctrl + 8)
+    if ok and uses and uses > 1 then pcall(memory_write, "int", ctrl + 8, uses - 1) end
+end
 local configNoHands = {}
 
 local configFinishers, configCharms = {}, {}
@@ -2731,7 +2752,7 @@ local function applySkinSwapper()
         if header then
             local h = header:lower()
 
-            section = h:find("health") and "healthbar" or h:find("wrap") and "wraps" or (h:find("sky") and "skybox"
+            section = h:find("health") and "healthbar" or h:find("button") and "buttons" or h:find("wrap") and "wraps" or (h:find("sky") and "skybox"
                 or (h:find("light") and "lighting" or (h:find("finisher") and "finishers"
                 or (h:find("charm") and "charms" or (h:find("sound") and "sounds"
                 or (h:find("spoof") and "spoof" or (h:find("tracer") and "tracers" or (h:find("hand") and "nohands"
@@ -2768,6 +2789,9 @@ local function applySkinSwapper()
         elseif section == "healthbar" then
             local key, value = parseConfigLine(rawLine)
             if key and value then _G.__RSC_HPBAR_CFG[key:lower()] = value end
+        elseif section == "buttons" then
+            local key, value = parseConfigLine(rawLine)
+            if key and value then _G.__RSC_BTN_CFG[key:lower()] = value end
         else
             local weaponName, skinTarget = parseConfigLine(rawLine)
             if weaponName and skinTarget then
@@ -5386,7 +5410,6 @@ pcall(function()
     -- A UIGradient keeps its transparency stops at +0xb8 (count +0xc0, 12
     -- bytes each) and colour stops at +0xf8 (count +0x100, 20 bytes each:
     -- time, r, g, b, envelope).
-    local GS = {}
     local function slotsOf(bar)
         if not bar.corner then return nil end
         local ca = bar.corner.Address
@@ -5401,19 +5424,26 @@ pcall(function()
         if t0 ~= 0 or t1 ~= 1 then return nil end
         return p, n
     end
+    -- The duel UI's 11-stop gradient, or (right after joining, before that
+    -- UI exists) the 7-stop hue bar in the settings template under
+    -- PlayerScripts, which is always there.
     local function donor()
-        local pg = game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui")
+        local lp = game:GetService("Players").LocalPlayer
+        local pg = lp:FindFirstChild("PlayerGui")
         local mf = pg and pg:FindFirstChild("MainGui")
         mf = mf and mf:FindFirstChild("MainFrame")
-        local duels = mf and mf:FindFirstChild("DuelInterfaces")
-        local best, bestN
-        for _, d in ipairs(duels and duels:GetDescendants() or {}) do
-            if d.ClassName == "UIGradient" and d.Parent and d.Parent.ClassName ~= "UIStroke" then
-                local _, n = stops(d.Address)
-                if n and (not bestN or n > bestN) then best, bestN = d.Address, n end
+        local ps = lp:FindFirstChild("PlayerScripts")
+        local ui = ps and ps:FindFirstChild("UserInterface")
+        for _, root in ipairs({mf and mf:FindFirstChild("DuelInterfaces"), ui and ui:FindFirstChild("SettingFrame")}) do
+            local best, bestN
+            for _, d in ipairs(root and root:GetDescendants() or {}) do
+                if d.ClassName == "UIGradient" and d.Parent and d.Parent.ClassName ~= "UIStroke" then
+                    local _, n = stops(d.Address)
+                    if n and n >= 5 and (not bestN or n > bestN) then best, bestN = d.Address, n end
+                end
             end
+            if best then return best end
         end
-        return best
     end
     -- Links a gradient into the bar (or finds the one an earlier run linked).
     local function link(bar)
@@ -5426,16 +5456,6 @@ pcall(function()
             local ctrl = rd(g + 0x10)
             local uses = ctrl and ctrl > 0x10000 and mrd("int", ctrl + 8)
             if not uses or uses < 1 or uses > 1000 then return nil end
-            if not GS.saved then
-                -- Its own look, put back when it's unlinked.
-                local p, n = stops(g)
-                GS.saved = {g = g, cols = {}, tr = {}}
-                for i = 0, n - 1 do
-                    for j = 1, 3 do GS.saved.cols[#GS.saved.cols + 1] = mrd("float", p + i * 20 + j * 4) end
-                end
-                local tp, tn = rd(g + 0xb8), mrd("int", g + 0xc0)
-                for i = 0, (tn or 0) - 1 do GS.saved.tr[i] = mrd("float", tp + i * 12 + 4) end
-            end
             mwr("int", ctrl + 8, uses + 1)
             wr(bar.bar + slot + 8, ctrl)
             wr(bar.bar + slot, g)
@@ -5448,23 +5468,22 @@ pcall(function()
         end
         return {g = g, slot = slot, flag = flag}
     end
+    -- Turning the gradient off leaves it linked (removing it while Roblox
+    -- may still be drawing it crashed the game once) and makes every stop
+    -- white and opaque, which draws the bar exactly as the game would. A
+    -- rejoin starts without it.
     local function unlink(bar)
-        local slot, flag = slotsOf(bar)
+        local slot = slotsOf(bar)
         if not slot then return end
-        local g, ctrl = rd(bar.bar + slot), rd(bar.bar + slot + 8)
+        local g = rd(bar.bar + slot)
         if not g or g < 0x10000 then return end
-        wr(bar.bar + slot, 0)
-        wr(bar.bar + slot + 8, 0)
-        mwr("byte", bar.bar + flag, 0)
-        if ctrl and ctrl > 0x10000 then mwr("int", ctrl + 8, math.max(1, mrd("int", ctrl + 8) - 1)) end
-        local s = GS.saved
-        if s and s.g == g then
-            local p, n = stops(g)
-            for i = 0, (n or 0) - 1 do
-                for j = 1, 3 do mwr("float", p + i * 20 + j * 4, s.cols[i * 3 + j]) end
-            end
-            local tp = rd(g + 0xb8)
-            for i, v in pairs(s.tr) do mwr("float", tp + i * 12 + 4, v) end
+        local p, n = stops(g)
+        for i = 0, (n or 0) - 1 do
+            for j = 1, 3 do mwr("float", p + i * 20 + j * 4, 1) end
+        end
+        local tp, tn = rd(g + 0xb8), mrd("int", g + 0xc0)
+        if tp and tp > 0x10000 and tn and tn > 0 and tn < 64 then
+            for i = 0, tn - 1 do mwr("float", tp + i * 12 + 4, 0) end
         end
     end
 
@@ -5496,11 +5515,33 @@ pcall(function()
         end
     end
 
+    -- The frames written every frame are held (see __RSC_HOLD), so a bar
+    -- the game rebuilds on respawn is never written after it's freed.
+    local function holdBar(b)
+        b.holds = {}
+        for _, f in ipairs(b.frames) do
+            local c = _G.__RSC_HOLD(f[1])
+            if not c then
+                for _, h in ipairs(b.holds) do _G.__RSC_RELEASE(h) end
+                b.holds = nil
+                return false
+            end
+            b.holds[#b.holds + 1] = c
+        end
+        return true
+    end
+    local function releaseBar(b)
+        for _, h in ipairs(b and b.holds or {}) do _G.__RSC_RELEASE(h) end
+        if b then b.holds = nil end
+    end
+    if bar and not holdBar(bar) then bar = nil end
+
     local acc = 0
     local conn
     conn = game:GetService("RunService").Heartbeat:Connect(function(dt)
         if _G.__RSC_HPBAR ~= token or game.JobId ~= job then
             pcall(function() conn:Disconnect() end)
+            if game.JobId == job then releaseBar(bar) end
             return
         end
         acc = acc + (dt or 1 / 60)
@@ -5509,12 +5550,14 @@ pcall(function()
         if acc > 1 then
             acc = 0
             local okF, b = pcall(find)
-            if okF and b and (not bar or b.bar ~= bar.bar) then
+            if okF and b and (not bar or b.bar ~= bar.bar) and holdBar(b) then
+                releaseBar(bar)
                 bar = b
-                if style == "gradient" then
-                    local okL, l = pcall(link, bar)
-                    grad = okL and l or nil
-                end
+                grad = nil
+            end
+            if style == "gradient" and bar and not grad then
+                local okL, l = pcall(link, bar)
+                grad = okL and l or nil
             end
         end
         if not bar then return end
@@ -5552,6 +5595,121 @@ pcall(function()
     end)
     _G.__RSC_HPBAR_CONN = conn
     print("[RivalsSkinChanger] Health bar: " .. (conf.label or style) .. (bar and "" or ", once the bar shows up") .. " - only you see it")
+end)
+
+-- Buttons: the menu's coloured buttons (green Play and prices, blue View,
+-- yellow and gold) get their shine from a UIGradient with a fixed set of
+-- colour stops per style. Those stops are recoloured in place, in the
+-- templates under PlayerScripts too, so buttons made later come out in the
+-- new colour. [Buttons] Green/Blue/Yellow/Gold = a hex colour (shaded dark
+-- to light like the game's), two as a gradient (ff4fd8>3b5bff), sky (the
+-- sky preset's two colours) or rainbow. They stay still: Roblox draws a
+-- button's gradient once, so later changes to it never show (unlike the
+-- health bar's). Only gradients found alive in this run's scan are written:
+-- the game frees UI it rebuilds, and writing into freed memory crashes Roblox.
+pcall(function()
+    local conf = {}
+    for k, v in pairs(_G.__RSC_BTN_CFG or {}) do conf[k] = tostring(v):lower() end
+    local job = game.JobId
+    conf.speed = nil
+    -- An earlier run's colours, by gradient address, put back as those
+    -- gradients turn up in the scan below.
+    local prev = _G.__RSC_BTN_UNDO
+    prev = type(prev) == "table" and prev.job == job and prev.map or {}
+
+    local STYLES = {
+        ["74df32>7df930>c6ff0a"] = "green", ["0059ff>0673f9>00d0ff"] = "blue",
+        ["ffff00>fbf304>ebc015"] = "yellow", ["fdff72>fcfb6c>edba0e>ebb102"] = "gold",
+    }
+    local skyCols = _G.__RSC_SKY_COLORS and _G.__RSC_SKY_COLORS()
+    -- style -> {first colour, second colour or nil, rainbow = bool}
+    local want = {}
+    for _, style in pairs(STYLES) do
+        local v = conf[style]
+        if v == "rainbow" then
+            want[style] = {{1, 0, 0}, {0, 0, 1}, rainbow = true}
+        elseif v == "sky" then
+            if skyCols then
+                local a = skyCols[1]
+                local b2 = skyCols[2] or a
+                want[style] = {{a[1], a[2], a[3]}, {b2[1], b2[2], b2[3]}}
+            end
+        elseif v then
+            local h1, h2 = v:match("^%s*(#?%x+)%s*>%s*(#?%x+)%s*$")
+            local r1, g1, b1 = lightingColor(h1 or v)
+            local r2, g2, b2 = lightingColor(h2 or "")
+            if r1 then want[style] = {{r1, g1, b1}, r2 and {r2, g2, b2} or nil} end
+        end
+    end
+
+    -- One colour: dark to light across the stops, like the game's own
+    -- buttons. Two: from the first to the second.
+    local function stopColor(w2, t)
+        if w2.rainbow then
+            local h = Color3.fromHSV(t * 0.8, 0.85, 1)
+            return {h.R, h.G, h.B}
+        end
+        local c, c2 = w2[1], w2[2]
+        if c2 then
+            return {c[1] + (c2[1] - c[1]) * t, c[2] + (c2[2] - c[2]) * t, c[3] + (c2[3] - c[3]) * t}
+        end
+        local k = 0.78 + 0.22 * t
+        local w = 0.35 * t
+        return {math.min(1, c[1] * k + (1 - c[1] * k) * w), math.min(1, c[2] * k + (1 - c[2] * k) * w),
+            math.min(1, c[3] * k + (1 - c[3] * k) * w)}
+    end
+    local function stopsOf(g)
+        local p, n = rd(g + 0xf8), mrd("int", g + 0x100)
+        if p and p > 0x10000 and n and n >= 3 and n <= 4 then return p, n end
+    end
+
+    local map, count = {}, {}
+    local lp = game:GetService("Players").LocalPlayer
+    for _, root in ipairs({lp:FindFirstChild("PlayerScripts"), lp:FindFirstChild("PlayerGui")}) do
+        for _, d in ipairs(root and root:GetDescendants() or {}) do
+            if d.ClassName == "UIGradient" then
+                local g = d.Address
+                local p, n = stopsOf(g)
+                local old = prev[g]
+                if p and old and #old == n then
+                    for i, c in ipairs(old) do
+                        for j = 1, 3 do mwr("float", p + (i - 1) * 20 + j * 4, c[j]) end
+                    end
+                end
+                if p then
+                    local sig, cols = {}, {}
+                    for i = 0, n - 1 do
+                        local c = {mrd("float", p + i * 20 + 4), mrd("float", p + i * 20 + 8), mrd("float", p + i * 20 + 12)}
+                        cols[i + 1] = c
+                        sig[i + 1] = string.format("%02x%02x%02x", math.floor(c[1] * 255 + 0.5), math.floor(c[2] * 255 + 0.5), math.floor(c[3] * 255 + 0.5))
+                    end
+                    local style = STYLES[table.concat(sig, ">")]
+                    local c = style and want[style]
+                    if c then
+                        map[g] = cols
+                        for i = 0, n - 1 do
+                            local s2 = stopColor(c, i / (n - 1))
+                            for j = 1, 3 do mwr("float", p + i * 20 + j * 4, s2[j]) end
+                        end
+                        count[style] = (count[style] or 0) + 1
+                    end
+                end
+            end
+        end
+    end
+    _G.__RSC_BTN_UNDO = next(map) and {job = job, map = map} or nil
+
+    if not next(want) then
+        if next(conf) then
+            print("[RivalsSkinChanger] Buttons: no colour to use (hex like ff4fd8, ff4fd8>3b5bff, rainbow, or sky with a sky preset that has lighting) - left as they are")
+        end
+        return
+    end
+    local parts = {}
+    for _, style in ipairs({"green", "blue", "yellow", "gold"}) do
+        if count[style] then parts[#parts + 1] = style .. " " .. count[style] end
+    end
+    print("[RivalsSkinChanger] Buttons: recoloured " .. (#parts > 0 and table.concat(parts, ", ") or "none (no matching buttons found)") .. " - only you see it")
 end)
 
 -- Save state
