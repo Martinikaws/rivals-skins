@@ -253,6 +253,16 @@ if new_wraps:
     wraps.sort(key=lambda r: (r[1], r[0].lower()))
     write(wraps_path, wraps_js[:m.start(1)] + json.dumps(wraps, separators=(",", ":"), ensure_ascii=False) + wraps_js[m.end(1):])
 
+# The site paints a wrap layer's texture from assets/images/wraps/<id>.png
+# (a 150x150 Roblox thumbnail); fetch any that are missing.
+tex_dir = os.path.join(SITE, "assets", "images", "wraps")
+missing_tex = sorted({str(l[3]) for w in wraps for l in w[3]
+                      if l[3] and not os.path.exists(os.path.join(tex_dir, "%s.png" % l[3]))})
+if missing_tex:
+    th = thumbnails(missing_tex)
+    got = [t for t in missing_tex if th.get(t) and download(th[t], os.path.join(tex_dir, t + ".png"))]
+    print("wrap textures downloaded:", got, "| no thumbnail:", [t for t in missing_tex if not th.get(t)])
+
 # --- Finishers and charms: assets/cosmetics.js --------------------------------
 cos_path = os.path.join(SITE, "assets", "cosmetics.js")
 cos_js = read(cos_path)
