@@ -311,6 +311,9 @@
         .hp-preview { grid-column: 1 / -1; position: relative; box-sizing: border-box; height: 28px; margin: 4px 0 12px; border-radius: 14px; background: #141418; border: 3px solid #1c1c22; overflow: hidden; }
         .hp-preview .hp-fill { position: absolute; inset: 0; border-radius: 11px; }
         .hp-preview span { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font: 700 14px/1 system-ui, sans-serif; color: #fff; text-shadow: 0 1px 2px #000; }
+        .avatar-preview { display: flex; align-items: center; gap: 10px; }
+        .avatar-preview img { width: 64px; height: 64px; border-radius: 10px; background: #1b1d26; object-fit: cover; }
+        .avatar-preview-name { font-size: 13px; color: var(--txt); max-width: 220px; }
         .btn-preview { width: 84px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font: 800 15px/1 system-ui, sans-serif; color: #fff; text-shadow: 0 1px 2px #0008; flex: none; }
         @keyframes hp-scroll { from { background-position: 0% 0; } to { background-position: -200% 0; } }
         @keyframes hp-hue { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
@@ -5966,6 +5969,13 @@
             updateFootCount();
         }
 
+        // Profile picture presets (same list as the in-game GUIs; accounts checked
+        // with Roblox 2026-10-20). The live Ranked top 20 is only in game.
+        const AVATAR_PRESETS = [
+            ["Roblox", [["Roblox", 1], ["builderman", 156]]],
+            ["RIVALS devs", [["Nosniy", 20349956], ["SenseiWarrior", 15941965], ["GreatGuyBoom", 8034104], ["nekoanims", 780350915]]],
+            ["YouTubers", [["8sty", 172669397], ["Applino", 1010680683], ["atorix", 1212564846], ["Bandites", 64516], ["Blizmid", 266340204], ["BobbVX", 301707243], ["Brian1KB", 1730213868], ["CarbonMeister", 487532097], ["Chex", 2528007458], ["Cruz", 42306452], ["D_reamz", 42477697], ["Darktru", 121130556], ["DV", 964088769], ["elixir", 147139016], ["enriquebruv", 72777686], ["Hoopie", 264355696], ["hoppy819", 15315966], ["Incublox", 4323727470], ["KaiM", 527669241], ["Karful", 103070346], ["Kashy", 4378716640], ["Kaye", 4891355965], ["Khayri", 19737278], ["Milo", 6114260623], ["MiniBloxia", 52392831], ["Mixedify", 152334685], ["Mud", 324386852], ["oPixel", 341006533], ["philhood", 3410760577], ["RODNY", 317520373], ["ShadowTrojan", 13108868], ["SharkTactics", 18394211], ["SlingshotBwai", 719253194], ["Stefan", 7474730049], ["TanqR", 84743203], ["viecti", 68729698], ["WE1RD", 2466113945]]]
+        ];
         function renderSpoofGrid(grid) {
             const card = document.createElement("div");
             card.className = "weapon-card";
@@ -6042,6 +6052,95 @@
             });
             row("Device Icon (Pro Matcha Only)", "Everyone sees this one: it is sent to the server. Needs Matcha's Hybrid Mode.", device, !!spoofConfig.Device);
 
+            // ---- Profile card: wins, win rate and picture ----
+            // Wins and win rate can't be longer than the real ones (the card
+            // only reuses its own letters). The picture is a preset person, a
+            // user id (their avatar) or a decal / image id.
+            const cardLabel = document.createElement("div");
+            cardLabel.className = "card-label";
+            cardLabel.textContent = "Profile card - only on your own card";
+            card.appendChild(cardLabel);
+            const CARD_FIELDS = [
+                {key: "Wins", name: "Casual wins", sub: "Not longer than your real number", number: true},
+                {key: "WinRate", name: "Casual win rate %", sub: "e.g. 99.9 - not longer than your real one"},
+                {key: "RankedWins", name: "Ranked wins", sub: "Not longer than your real number", number: true},
+                {key: "RankedWinRate", name: "Ranked win rate %", sub: "e.g. 88.8"},
+                {key: "Avatar", name: "Picture: user id", sub: "Shows that player's avatar on your card", number: true},
+                {key: "Picture", name: "Picture: decal or image id", sub: "Wins over the user id", number: true}
+            ];
+            const preview = document.createElement("div");
+            preview.className = "avatar-preview";
+            preview.innerHTML = '<img alt=""><div class="avatar-preview-name"></div>';
+            const pImg = preview.querySelector("img"), pName = preview.querySelector(".avatar-preview-name");
+            function showPreview() {
+                const pic = (spoofConfig.Picture || "").trim(), uid = (spoofConfig.Avatar || "").trim();
+                pImg.removeAttribute("src");
+                pImg.hidden = true;
+                if (!pic && !uid) { pName.textContent = "Your own picture"; return; }
+                const url = pic
+                    ? "https://thumbnails.roproxy.com/v1/assets?assetIds=" + pic + "&returnPolicy=PlaceHolder&size=150x150&format=Png"
+                    : "https://thumbnails.roproxy.com/v1/users/avatar-headshot?userIds=" + uid + "&size=150x150&format=Png&isCircular=false";
+                pName.textContent = "Loading...";
+                fetch(url).then(function (r) { return r.json(); }).then(function (d) {
+                    const img = d && d.data && d.data[0] && d.data[0].imageUrl;
+                    if (img) { pImg.src = img; pImg.hidden = false; }
+                    if (pic) pName.textContent = img ? "Decal / image " + pic : "No picture found";
+                }).catch(function () { pName.textContent = "Couldn't load the preview"; });
+                if (!pic) {
+                    fetch("https://users.roproxy.com/v1/users/" + uid).then(function (r) { return r.json(); }).then(function (u) {
+                        pName.textContent = u && u.name ? "@" + u.name + (u.displayName && u.displayName !== u.name ? " (" + u.displayName + ")" : "") : "No such user";
+                    }).catch(function () {});
+                }
+            }
+            const cardInputs = {};
+            CARD_FIELDS.forEach(function (f) {
+                const input = document.createElement("input");
+                input.placeholder = "Real";
+                input.value = spoofConfig[f.key] || "";
+                input.addEventListener("click", function (e) { e.stopPropagation(); });
+                input.addEventListener("change", function () {
+                    const v = input.value.trim().replace(/%$/, "");
+                    if (v && !(f.number ? /^\d{1,12}$/ : /^\d{1,3}(\.\d)?$/).test(v)) {
+                        showToast(f.name + (f.number ? " takes a whole number" : " takes a number like 99.9"));
+                        input.value = spoofConfig[f.key] || "";
+                        return;
+                    }
+                    setSpoof(f.key, v);
+                    input.closest(".sky-card").classList.toggle("active", !!v);
+                    if (f.key === "Avatar" || f.key === "Picture") showPreview();
+                });
+                cardInputs[f.key] = input;
+                row(f.name, f.sub, input, !!spoofConfig[f.key]);
+            });
+            // Presets: a group, then a person; picking one fills the user id.
+            const presetBox = document.createElement("div");
+            presetBox.style.display = "flex";
+            presetBox.style.gap = "6px";
+            const groupPick = document.createElement("select");
+            groupPick.className = "sound-pick";
+            groupPick.innerHTML = AVATAR_PRESETS.map(function (g, i) { return '<option value="' + i + '">' + g[0] + '</option>'; }).join("");
+            const personPick = document.createElement("select");
+            personPick.className = "sound-pick";
+            function fillPeople() {
+                const list = AVATAR_PRESETS[Number(groupPick.value)][1];
+                personPick.innerHTML = '<option value="">Pick someone</option>' + list.map(function (p) {
+                    return '<option value="' + p[1] + '"' + (String(p[1]) === String(spoofConfig.Avatar || "") ? " selected" : "") + '>' + p[0] + '</option>';
+                }).join("");
+            }
+            groupPick.addEventListener("change", fillPeople);
+            personPick.addEventListener("change", function () {
+                if (!personPick.value) return;
+                setSpoof("Avatar", personPick.value);
+                cardInputs.Avatar.value = personPick.value;
+                cardInputs.Avatar.closest(".sky-card").classList.add("active");
+                showPreview();
+            });
+            [groupPick, personPick].forEach(function (el) { el.addEventListener("click", function (e) { e.stopPropagation(); }); presetBox.appendChild(el); });
+            fillPeople();
+            row("Picture presets", "Roblox, RIVALS developers and YouTubers with a charm. The live Ranked top 20 is in the in-game GUI.", presetBox, false);
+            row("Preview", "What your card will show", preview, false);
+            showPreview();
+
             const note = document.createElement("div");
             note.className = "sky-card";
             note.dataset.name = "spoof note";
@@ -6053,7 +6152,7 @@
         }
 
         function generateSpoofLines() {
-            const keys = SPOOF_TEXT.concat(SPOOF_BADGES).map(function (f) { return f.key; }).concat(["Effect", "Device"])
+            const keys = SPOOF_TEXT.concat(SPOOF_BADGES).map(function (f) { return f.key; }).concat(["Effect", "Device", "Wins", "WinRate", "RankedWins", "RankedWinRate", "Avatar", "Picture"])
                 .filter(function (k) { return spoofConfig[k]; });
             if (!keys.length) return [];
             return ["", "[Spoof]", "-- Only you see these, except Device (sent to the server). Empty = your real one."]

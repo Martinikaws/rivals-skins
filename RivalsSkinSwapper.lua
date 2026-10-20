@@ -3862,7 +3862,7 @@ end
 -- stay real, and so does the @username (your account name).
 local SPOOF_ATTRS = {
     level = "Level", streak = "StatisticDuelsWinStreak", elo = "DisplayELO",
-    influencer = "IsInfluencer", employee = "IsRobloxEmployee", trustworthy = "IsTrustWorthy",
+    influencer = "IsInfluencer", employee = "IsRobloxEmployee", trustworthy = "IsTrustworthy",
     -- The name effect (gold Prime, purple Contraband) on the nametag, player
     -- list and profile: the game draws it from this attribute.
     effect = "PlayerStatus",
@@ -3871,7 +3871,10 @@ local NAME_EFFECTS = {prime = "Prime", gold = "Prime", contraband = "Contraband"
     none = "", off = "", ["false"] = ""}
 local SPOOF_STATS = {level = "Level", streak = "Win Streak", elo = "Current ELO"}
 local DISPLAY_NAME_OFF = dumpOff("Player", "DisplayName", 0x128) -- Player.DisplayName, a std::string
-local GLYPHS, GLYPHS_END, GLYPH_SIZE = 0xc18, 0xc20, 56 -- laid-out glyphs, codepoint at +12
+-- A TextLabel's laid-out glyphs: a list of 56-byte entries, codepoint at +12.
+-- Where the list sits moves between Roblox builds (+0xc18, +0xc30 on
+-- 11f155f3), so startSpoof looks for it on labels whose text it knows.
+local GLYPHS, GLYPHS_END, GLYPH_SIZE = 0xc18, 0xc20, 56
 local SPOOF_REAL_FILE = "rivals_spoof_real.txt"
 local DEVICES = {mousekeyboard = "MouseKeyboard", keyboard = "MouseKeyboard", pc = "MouseKeyboard",
     touch = "Touch", mobile = "Touch", gamepad = "Gamepad", controller = "Gamepad", vr = "VR"}
@@ -4070,6 +4073,38 @@ local function startSpoof(conf)
     _G.__RIVALS_SPOOF = (_G.__RIVALS_SPOOF or 0) + 1
     local token = _G.__RIVALS_SPOOF
 
+    -- The glyph list's offset: the pointer pair whose entries spell a
+    -- label's own text. Checked on a few labels; two that agree decide it.
+    pcall(function()
+        if _G.__RSC_GLYPHS then GLYPHS, GLYPHS_END = _G.__RSC_GLYPHS, _G.__RSC_GLYPHS + 8 return end
+        local main = LP:FindFirstChild("PlayerGui")
+        main = main and main:FindFirstChild("MainGui")
+        local votes, checked = {}, 0
+        for _, d in ipairs(main and main:GetDescendants() or {}) do
+            if d.ClassName == "TextLabel" then
+                local okT, text = pcall(function() return d.Text end)
+                if okT and type(text) == "string" and #text >= 3 and #text <= 24 and not text:find("[^-V]") then
+                    checked = checked + 1
+                    local a = d.Address
+                    for off = 0xb00, 0xe00, 8 do
+                        local b, e = rd(a + off), rd(a + off + 8)
+                        if b and e and b > 0x10000 and e - b == #text * GLYPH_SIZE then
+                            local ok = true
+                            for i = 1, #text do
+                                if rint(b + (i - 1) * GLYPH_SIZE + 12) ~= string.byte(text, i) then ok = false break end
+                            end
+                            if ok then votes[off] = (votes[off] or 0) + 1 end
+                        end
+                    end
+                    for off, n in pairs(votes) do
+                        if n >= 2 then GLYPHS, GLYPHS_END, _G.__RSC_GLYPHS = off, off + 8, off return end
+                    end
+                    if checked > 60 then return end
+                end
+            end
+        end
+    end)
+
     -- The real values, read once before anything is changed. The display name
     -- is also kept in a file: after a Matcha restart the player object may
     -- still carry a spoofed one.
@@ -4156,8 +4191,32 @@ local function startSpoof(conf)
         influencer = spoofFlag(conf.influencer), employee = spoofFlag(conf.employee),
         trustworthy = spoofFlag(conf.trustworthy),
     }
+    -- Profile card wins and win rate (Casual and Ranked tabs), redrawn like
+    -- the level: no longer than the real text (the glyph count can't grow).
+    local function rateText(v)
+        local n = tonumber((tostring(v or ""):gsub("%%", "")))
+        if not n then return nil end
+        n = math.max(0, math.min(100, n))
+        return (n == math.floor(n) and tostring(math.floor(n)) or string.format("%.1f", n)) .. "%"
+    end
+    local cardStats = {
+        Casual = {wins = tonumber(conf.wins) and prettyNumber(tonumber(conf.wins)), rate = rateText(conf.winrate)},
+        Ranked = {wins = tonumber(conf.rankedwins) and prettyNumber(tonumber(conf.rankedwins)), rate = rateText(conf.rankedwinrate)},
+    }
+    local anyCardStat = false
+    for _, st in pairs(cardStats) do if st.wins or st.rate then anyCardStat = true end end
+    -- Profile picture on the card: Picture= a decal or image id (as a
+    -- thumbnail, which works for decals too) or Avatar= a user id (that
+    -- user's headshot). Written into the image's link, which the card
+    -- draws when it opens.
+    local picId = tostring(conf.picture or ""):match("(%d+)")
+    local avatarId = tostring(conf.avatar or ""):match("(%d+)")
+    local wantPicture = picId and ("rbxthumb://type=Asset&id=" .. picId .. "&w=420&h=420")
+        or (avatarId and ("https://www.roblox.com/headshot-thumbnail/image?userId=" .. avatarId .. "&width=420&height=420&format=png"))
+        or nil
+    if wantPicture then anyCardStat = true end
     local device = conf.device and DEVICES[conf.device:lower():gsub("[%s&/_-]", "")]
-    local any = device ~= nil
+    local any = device ~= nil or anyCardStat
     for _, v in pairs(want) do if v ~= nil then any = true end end
 
     if nameFits and nm.lp ~= LP.Address then
@@ -4248,14 +4307,23 @@ local function startSpoof(conf)
     -- font's (its text stays real - that is how your own profile card is told
     -- apart from others). Only on the nametag and profile card, which stay put.
     local lastHeal = 0
-    local function mapFor(label, samples)
-        local own = {}
+    -- strict: the shared characters' widths must match too. Other weights
+    -- and sizes of the same font family number their glyphs alike, so only
+    -- the widths tell them apart (a bold "O" in a regular rank name).
+    local function mapFor(label, samples, strict)
+        local own, ownW = {}, {}
         for _, g in ipairs(glyphList(label) or {}) do
-            if g.cp and g.cp > 32 and g.cp < 127 then own[string.char(g.cp)] = g.glyph end
+            if g.cp and g.cp > 32 and g.cp < 127 then own[string.char(g.cp)], ownW[string.char(g.cp)] = g.glyph, g.width end
+        end
+        local function widthsMatch(s)
+            for c, w in pairs(ownW) do
+                if s.widths[c] ~= nil and s.widths[c] ~= w then return false end
+            end
+            return true
         end
         local map = {glyph = {}, labels = {}}
         for _, s in ipairs(samples) do
-            if sameFont(own, s.glyph) then
+            if sameFont(own, s.glyph) and (not strict or widthsMatch(s)) then
                 for c, g in pairs(s.glyph) do map.glyph[c] = map.glyph[c] or g end
                 map.labels[#map.labels + 1] = s.widths
             end
@@ -4313,9 +4381,9 @@ local function startSpoof(conf)
     local wantLevel = want.level and prettyNumber(want.level)
     local wantRank, wantRankImage
     if want.elo then wantRank, wantRankImage = rankFor(want.elo) end
-    local cardMap
+    local cardMap, rankMap, rankSamples
     local function profilePass()
-        if not (wantLevel or wantRank or shownUser ~= realUser) or not parked then return end
+        if not (wantLevel or wantRank or anyCardStat or shownUser ~= realUser) or not parked then return end
         if not page then
             page = parked:FindFirstChild("ViewProfile")
             if not page then
@@ -4326,7 +4394,7 @@ local function startSpoof(conf)
             end
             if not page then return end
         end
-        if page.Parent == parked then cardMap = nil return end -- closed
+        if page.Parent == parked then cardMap, rankMap = nil, nil return end -- closed
         local player = page:FindFirstChild("Active")
         player = player and player:FindFirstChild("Player")
         local user = player and player:FindFirstChild("Username")
@@ -4349,6 +4417,23 @@ local function startSpoof(conf)
             end
         end
         if shownText(user) ~= shownUser then patchGlyphs(user, shownUser, cardMap, true) end
+        local headshot = wantPicture and player:FindFirstChild("Headshot")
+        if headshot then
+            for _, off in ipairs({IMG_OFF, 0x9a8, 0xA18, 0xA10}) do
+                local current = readStdString(headshot.Address + off)
+                if current and (current:find("^https?://") or current:find("^rbx")) then
+                    if current ~= wantPicture then writeStdString(headshot.Address + off, wantPicture) end
+                    break
+                end
+            end
+        end
+        for frameName, st in pairs(cardStats) do
+            local f = player:FindFirstChild(frameName)
+            local winsLabel = f and f:FindFirstChild("Wins")
+            local rateLabel = f and f:FindFirstChild("WinPercent")
+            if winsLabel and st.wins then patchGlyphs(winsLabel, st.wins, cardMap, true) end
+            if rateLabel and st.rate then patchGlyphs(rateLabel, st.rate, cardMap, true) end
+        end
         local bragging = player:FindFirstChild("Bragging")
         if not bragging then return end
         local level = bragging:FindFirstChild("Level")
@@ -4357,7 +4442,14 @@ local function startSpoof(conf)
         local rank = bragging:FindFirstChild("Rank")
         if rank and wantRank then
             local title = rank:FindFirstChild("Title")
-            if title then patchGlyphs(title, wantRank, cardMap) end
+            -- Rank names need letters the card may not have (Onyx: O, y, x):
+            -- borrowed from any label in the same font, sampled once.
+            if title and not rankMap then
+                local mg = LP.PlayerGui:FindFirstChild("MainGui")
+                rankSamples = rankSamples or (mg and glyphSamples({mg})) or {}
+                rankMap = mapFor(title, rankSamples, true)
+            end
+            if title then patchGlyphs(title, wantRank, rankMap or cardMap) end
             -- The icon's image, wherever the ImageLabel keeps it (images do
             -- redraw from memory, unlike text).
             local container = rank:FindFirstChild("Container")
