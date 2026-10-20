@@ -525,12 +525,25 @@ local function fixViewModelRoots()
         table.insert(containers, sp.StarterPlayerScripts.Assets.Misc)
     end
 
+    -- A real RightArm to copy the name from: Matcha's Name setter writes into
+    -- the shared name holder, which corrupts every other object with that name.
+    local source
     for _, misc in ipairs(containers) do
         local vmr = misc:FindFirstChild("ViewModelRoot")
-        if vmr and not vmr:FindFirstChild("RightArm") then
+        source = source or (vmr and vmr:FindFirstChild("RightArm"))
+    end
+    for _, misc in ipairs(containers) do
+        local vmr = misc:FindFirstChild("ViewModelRoot")
+        if source and vmr and not vmr:FindFirstChild("RightArm") then
             for _, c in ipairs(vmr:GetChildren()) do
                 if c.ClassName == "Part" and (c.Name == "" or c.Name == "_fake") then
-                    pcall(function() c.Name = "RightArm" end)
+                    -- The name pointer, with one more count on its holder (see copyName).
+                    local holder = rd(source.Address + OFF.NameContainer)
+                    local okC, count = pcall(mrd, "int", (holder or 0) + 48)
+                    if holder and holder > 0x10000 and okC and count and count >= 1 and count < 100000000 then
+                        pcall(mwr, "int", holder + 48, count + 1)
+                        wr(c.Address + OFF.NameContainer, holder)
+                    end
                     break
                 end
             end
@@ -1381,12 +1394,28 @@ local function saveUndo()
     for _, f in ipairs(floatRestores) do out[#out + 1] = "F " .. n(f[1]) .. " " .. string.format("%.9g", f[2]) end
     pcall(writefile, UNDO_FILE, table.concat(out, "\n") .. "\n")
 end
+-- A name is a pointer to a shared, counted holder (text std::string at +8,
+-- hash at +40, reference count at +48: "MainGui" with 2 objects holds 2). A
+-- copied pointer gets one more count: without it, destroying the
+-- renamed object on a rejoin or teleport released the holder once too often,
+-- and a common name like "Modules" was freed while Roblox's own UI still used
+-- it (no top bar, menu, chat or player list, and the game's UI shifted down).
+-- The holder the object had before keeps its count, so it's never freed
+-- either; the next run's undo points the object back at it.
 local function copyName(target, nameSource)
     if not ENABLE_NAME_COPIES or not target or not nameSource then return false end
     local slot = target.Address + OFF.NameContainer
     local orig, name = rd(slot), rd(nameSource.Address + OFF.NameContainer)
     if not orig or not name or orig == 0 or name == 0 then return false end
     if orig ~= name then
+        local okC, count = pcall(mrd, "int", name + 48)
+        local okN, srcName = pcall(function() return nameSource.Name end)
+        local okT, text = pcall(mrd, "string", name + 8)
+        if not (okC and count and count >= 1 and count < 100000000) then return false end
+        if okN and okT and type(text) == "string" and #srcName > 0 and #srcName <= 15 and text:sub(1, #srcName) ~= srcName then
+            return false
+        end
+        pcall(mwr, "int", name + 48, count + 1)
         table.insert(nameCopies, {slot, orig})
         wr(slot, name)
     end
