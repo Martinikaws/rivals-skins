@@ -120,11 +120,16 @@ if not wf then
     return
 end
 
+-- Until the weapon and skin models stop arriving. The skin models sit one
+-- level down (ViewModels.<folder>.<skin>), so the folders' children are
+-- counted: a few hundred objects, where all descendants are some 30,000 and
+-- took about a second per count (20-60 s on a fresh join).
 local function waitForAssets()
     local lastWf, lastVm = -1, -1
     for _ = 1, 20 do
         local wfCount = #wf:GetChildren()
-        local vmCount = #vm:GetDescendants()
+        local vmCount = 0
+        for _, folder in ipairs(vm:GetChildren()) do vmCount = vmCount + 1 + #folder:GetChildren() end
         if wfCount == lastWf and vmCount == lastVm then break end
         lastWf, lastVm = wfCount, vmCount
         task.wait(0.3)
@@ -2389,6 +2394,11 @@ ROUTE.valueOf = function(t, lay, key)
 end
 ROUTE.useSaved = function(ms)
     if ROUTE.triedSaved then return false end
+    -- Right after joining the game may not have loaded the module yet (no
+    -- thread or registry slot): that says nothing about the layout, so it's
+    -- tried again on the next call instead of being called wrong.
+    local th, sl = rd(ms.Address + ROUTE.thread), rint(ms.Address + ROUTE.slot)
+    if not th or th < 0x10000 or not sl or sl < 1 then return false end
     ROUTE.triedSaved = true
     local okF, raw = pcall(function() local f = ROUTE.savedFile() return isfile(f) and readfile(f) or nil end)
     if not okF or type(raw) ~= "string" then return false end
@@ -2723,7 +2733,8 @@ local function applySkinSwapper()
     local missingSkinModels = {}
     local swappedCount = 0
     local skippedNoScript = {}
-    local vmMods = LP.PlayerScripts:FindFirstChild("Modules")
+    local vmMods = LP:FindFirstChild("PlayerScripts")
+    vmMods = vmMods and vmMods:FindFirstChild("Modules")
     vmMods = vmMods and vmMods:FindFirstChild("ViewModels")
     _G.__RSC_VMS_LIVE = vmMods
 
@@ -3090,8 +3101,11 @@ do
             print("[RivalsSkinChanger] Waiting for the game to finish loading...")
         end
         -- The tables load within seconds; if the route itself still can't be
-        -- worked out after 8, waiting longer won't help.
-        if not ROUTE.ok and tick() - t0 > 8 then
+        -- worked out after 8, waiting longer won't help - unless the game just
+        -- hasn't loaded the module yet (common right after joining), which the
+        -- slow lookup wouldn't fix any faster.
+        local notLoaded = (_G.__RSC_ROUTE_TRACE or {}).stop == "no thread/slot on the module"
+        if not ROUTE.ok and tick() - t0 > 8 and not notLoaded then
             local tr = _G.__RSC_ROUTE_TRACE or {}
             print("[RivalsSkinChanger] Couldn't read this Roblox build's memory layout (" .. tostring(tr.stop)
                 .. ") - going ahead with the slower lookup")
@@ -3656,7 +3670,7 @@ local function applySkybox(conf)
         return 0, withClassic(skipped > 0 and (skipped .. " sky templates couldn't hold the new images - left as they were") or "no sky templates found"),
             classicNote and true or nil
     end
-    return patched, withClassic((skipped > 0) and (skipped .. " sky templates were left alone (a face couldn't hold the new image)") or nil),
+    return patched, withClassic((skipped > 0) and (skipped .. " sky templates kept their own sky: the new image's id is longer than they have room for") or nil),
         classicNote and true or nil
 end
 
@@ -3793,7 +3807,8 @@ local function startVolumeWatcher(conf)
     end
     if not next(gains) then return 0 end
 
-    local fighter = LP.PlayerScripts:FindFirstChild("Modules")
+    local fighter = LP:FindFirstChild("PlayerScripts")
+    fighter = fighter and fighter:FindFirstChild("Modules")
     fighter = fighter and fighter:FindFirstChild("ClientReplicatedClasses")
     fighter = fighter and fighter:FindFirstChild("ClientFighter")
     local item = fighter and fighter:FindFirstChild("ClientItem")
@@ -5077,7 +5092,26 @@ local function applyTracersEffect()
             print("[RivalsSkinChanger] Tracers: Color=sky needs a sky preset with matching lighting - those tracers keep the game's colour")
         end
     elseif any then
-        print("[RivalsSkinChanger] Tracers: TracerEffect not loaded yet - fire once and run again")
+        -- Right after joining the game hasn't loaded TracerEffect yet: look
+        -- again every 2 s for 2 minutes and apply as soon as it's there.
+        print("[RivalsSkinChanger] Tracers: waiting for the game to load its tracers - they apply by themselves")
+        local acc, waited, conn = 0, 0, nil
+        conn = game:GetService("RunService").Heartbeat:Connect(function(dt)
+            if _G.__RIVALS_TRACERS ~= token or game.JobId ~= job then pcall(function() conn:Disconnect() end) return end
+            dt = dt or 1 / 60
+            acc, waited = acc + dt, waited + dt
+            if acc < 2 then return end
+            acc = 0
+            local okM, t = pcall(tracerModule)
+            if okM and t then
+                pcall(function() conn:Disconnect() end)
+                pcall(applyTracersEffect)
+            elseif waited > 120 then
+                pcall(function() conn:Disconnect() end)
+                print("[RivalsSkinChanger] Tracers: the game still hasn't loaded its tracers - fire once, then Save & Apply")
+            end
+        end)
+        _G.__RIVALS_TRACER_CONN = conn
     end
 end
 applyTracersEffect()
@@ -5790,9 +5824,17 @@ pcall(function()
     end
 
     local map, count = {}, {}
+    -- The templates live in PlayerScripts.UserInterface and the buttons in
+    -- PlayerGui; PlayerScripts.Assets (some 30,000 objects, no buttons) is
+    -- left out. A short pause every 2,000 objects lets the health bar, the
+    -- tracer retry and the GUI run meanwhile.
     local lp = game:GetService("Players").LocalPlayer
-    for _, root in ipairs({lp:FindFirstChild("PlayerScripts"), lp:FindFirstChild("PlayerGui")}) do
+    local ps = lp:FindFirstChild("PlayerScripts")
+    local seen = 0
+    for _, root in ipairs({ps and ps:FindFirstChild("UserInterface") or false, lp:FindFirstChild("PlayerGui") or false}) do
         for _, d in ipairs(root and root:GetDescendants() or {}) do
+            seen = seen + 1
+            if seen % 2000 == 0 then pcall(task.wait) end
             if d.ClassName == "UIGradient" then
                 local g = d.Address
                 local p, n = stopsOf(g)
