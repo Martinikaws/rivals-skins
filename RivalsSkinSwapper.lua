@@ -1441,6 +1441,48 @@ local configLighting = {}
 local configTracers = {}
 _G.__RSC_HPBAR_CFG = {} -- [Health Bar]; a global, the main chunk is at its local limit
 _G.__RSC_BTN_CFG = {} -- [Buttons]
+-- Where a UIGradient keeps its colour stops (list pointer, then the count 8
+-- bytes on; 20-byte stops: time, r, g, b, envelope) and its transparency
+-- stops (12 bytes: time, value, envelope). They moved between builds (+0xf8 /
+-- +0xb8, then +0xf0 / +0xb0 on 9ac8595), so they're read off a real gradient:
+-- the list whose first stop is at time 0 and last at time 1. Nil when no
+-- gradient shows them - then nothing is written.
+_G.__RSC_GRADOFF = function()
+    if _G.__RSC_GRAD_C then return _G.__RSC_GRAD_C, _G.__RSC_GRAD_T end
+    local function rdp(a) local ok, v = pcall(memory_read, "uintptr_t", a) return ok and v or nil end
+    local function stopsAt(a, off, stride)
+        local p, okN, n = rdp(a + off), pcall(memory_read, "int", a + off + 8)
+        if not p or p < 0x10000 or not okN or not n or n < 2 or n > 64 then return false end
+        local ok0, t0 = pcall(memory_read, "float", p)
+        local ok1, t1 = pcall(memory_read, "float", p + (n - 1) * stride)
+        return ok0 and ok1 and t0 == 0 and t1 == 1
+    end
+    local lp = game:GetService("Players").LocalPlayer
+    local ps = lp and lp:FindFirstChild("PlayerScripts")
+    local ui = ps and ps:FindFirstChild("UserInterface")
+    local votes, seen = {}, 0
+    for _, d in ipairs(ui and ui:GetDescendants() or {}) do
+        if d.ClassName == "UIGradient" then
+            seen = seen + 1
+            for c = 0x80, 0x180, 8 do
+                if stopsAt(d.Address, c, 20) then
+                    for t = c - 0x60, c - 8, 8 do
+                        if stopsAt(d.Address, t, 12) then
+                            local k = c .. ":" .. t
+                            votes[k] = (votes[k] or 0) + 1
+                            if votes[k] >= 3 then
+                                _G.__RSC_GRAD_C, _G.__RSC_GRAD_T = c, t
+                                return c, t
+                            end
+                        end
+                    end
+                end
+            end
+            if seen > 40 then break end
+        end
+    end
+    return nil
+end
 -- Keeps an instance alive while the changer writes to it every frame: the
 -- game frees UI it rebuilds, and writing into freed memory crashes Roblox.
 -- An Instance points to itself at +8 and to its shared_ptr control block at
@@ -2234,8 +2276,10 @@ end
 -- thread keeps its global state. Build 02c37bc (Sep 30 2026) had tt +1,
 -- lsizenode +4, global state +0x68; cec3ad5 (Oct 2026) moved tt back to +0.
 -- So they are found at runtime (ROUTE.detect) instead of being hard-coded.
-local ROUTE = {thread = 0x170, slot = 0x178, globalState = 0x68, registry = 0x620, node = 0x18, array = 0x20,
-    sizearray = 8, tt = 1, lsize = 4}
+-- Defaults: Roblox build 9ac8595 (ModuleScript thread +0x150, registry slot
+-- +0x170, thread tag at byte +2); ROUTE.detect looks again when they don't fit.
+local ROUTE = {thread = 0x150, slot = 0x170, globalState = 0x78, registry = 0x618, node = 0x18, array = 0x20,
+    sizearray = 8, tt = 2, lsize = 4}
 local TAG_TABLE, TAG_THREAD = 7, 10
 
 local function rbyte(a) local ok, v = pcall(mrd, "byte", a) return ok and v or nil end
@@ -2244,7 +2288,7 @@ local function rint(a) local ok, v = pcall(mrd, "int", a) return ok and v or nil
 -- Finds tt, the global-state offset, the registry offset and lsizenode from
 -- one module: its thread's header says where tt is; the right global state
 -- leads to a registry whose slot for this module holds a table.
-ROUTE.detect = function(ms)
+ROUTE.detectAt = function(ms)
     -- What was seen, for the debug copy ("why did detection fail").
     local trace = {}
     _G.__RSC_ROUTE_TRACE = trace
@@ -2318,7 +2362,8 @@ ROUTE.detect = function(ms)
         if not no then trace.stop = "module table found but its nodes weren't" return false end
         ROUTE.tt, ROUTE.globalState, ROUTE.registry, ROUTE.lsize = tt, x, y, lsize
         ROUTE.sizearray, ROUTE.array, ROUTE.node, ROUTE.ok = so, ao, no, true
-        _G.__RSC_LAYOUT = {tt = tt, globalState = x, registry = y, lsize = lsize, sizearray = so, array = ao, node = no}
+        _G.__RSC_LAYOUT = {tt = tt, globalState = x, registry = y, lsize = lsize, sizearray = so, array = ao, node = no,
+            thread = ROUTE.thread, slot = ROUTE.slot}
         print(string.format("[RivalsSkinChanger] Memory layout: type byte +%d, global state +0x%x, registry +0x%x, size byte +%d, array +0x%x/+%d, nodes +0x%x",
             tt, x, y, lsize, ao, so, no))
         return true
@@ -2348,6 +2393,43 @@ ROUTE.detect = function(ms)
         or (trace.tagged > 0 and "registry-like tables found, but none held this module" or "no registry found"))
     return false
 end
+-- Where a ModuleScript keeps its thread and registry slot moves between
+-- builds too (+0x170/+0x178, then +0x150/+0x170 on 9ac8595). When the
+-- current pair doesn't lead anywhere, every pointer to a thread in the
+-- ModuleScript is tried with the slot a few bytes after it; no thread at all
+-- means the game hasn't loaded the module yet.
+ROUTE.detect = function(ms)
+    if ROUTE.detectAt(ms) then return true end
+    local a = ms and ms.Address
+    if not a then return false end
+    local th0, sl0 = ROUTE.thread, ROUTE.slot
+    local tried, anyThread = {[th0 .. ":" .. sl0] = true}, false
+    for th = 0x100, 0x200, 8 do
+        local p = rd(a + th)
+        local isThread = false
+        if p and p > 0x10000 and p < 0x7fffffffffff then
+            for b = 0, 3 do if rbyte(p + b) == TAG_THREAD then isThread = true end end
+        end
+        if isThread then
+            anyThread = true
+            for _, d in ipairs({8, 0x20, 0x10, 0x18, 0x28}) do
+                local sl = th + d
+                local v = rint(a + sl)
+                if not tried[th .. ":" .. sl] and v and v >= 1 and v < 10000000 then
+                    tried[th .. ":" .. sl] = true
+                    ROUTE.thread, ROUTE.slot, ROUTE.nextFull = th, sl, nil
+                    if ROUTE.detectAt(ms) then
+                        print(string.format("[RivalsSkinChanger] Module thread/slot moved: +0x%x/+0x%x", th, sl))
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    ROUTE.thread, ROUTE.slot = th0, sl0
+    if not anyThread then (_G.__RSC_ROUTE_TRACE or {}).stop = "no thread/slot on the module" end
+    return false
+end
 
 -- A layout this PC learned for the running Roblox build, kept in a file.
 -- When ROUTE.detect can't read a new build but the slow scan still finds
@@ -2360,9 +2442,10 @@ ROUTE.savedFile = function()
 end
 ROUTE.apply = function(lay, from)
     for _, k in ipairs(ROUTE.FIELDS) do ROUTE[k] = lay[k] end
+    if type(lay.thread) == "number" and type(lay.slot) == "number" then ROUTE.thread, ROUTE.slot = lay.thread, lay.slot end
     ROUTE.ok = true
     _G.__RSC_LAYOUT = {tt = lay.tt, globalState = lay.globalState, registry = lay.registry, lsize = lay.lsize,
-        sizearray = lay.sizearray, array = lay.array, node = lay.node}
+        sizearray = lay.sizearray, array = lay.array, node = lay.node, thread = ROUTE.thread, slot = ROUTE.slot}
     print(string.format("[RivalsSkinChanger] Memory layout (%s): type byte +%d, global state +0x%x, registry +0x%x, size byte +%d, array +0x%x/+%d, nodes +0x%x",
         from, lay.tt, lay.globalState, lay.registry, lay.lsize, lay.array, lay.sizearray, lay.node))
 end
@@ -2456,7 +2539,8 @@ ROUTE.learn = function(ms, nodes)
                         if rint(g + y + 12) == TAG_TABLE then
                             for _, so in ipairs({8, 12, 4}) do
                                 for _, ao in ipairs({0x20, 0x18, 0x28, 0x10, 0x30}) do
-                                    local lay = {tt = tt, globalState = x, registry = y, sizearray = so, array = ao}
+                                    local lay = {tt = tt, globalState = x, registry = y, sizearray = so, array = ao,
+                                        thread = ROUTE.thread, slot = ROUTE.slot}
                                     if fits(lay) then
                                         ROUTE.apply(lay, "learned from the slow scan")
                                         local okW = pcall(writefile, ROUTE.savedFile(),
@@ -4982,10 +5066,10 @@ local function applyTracersEffect()
             end
             return nil
         end
-        -- Proto layouts: build 11f155f3, cec3ad5, 02c37bc, then the older one.
+        -- Proto layouts: build 9ac8595, 11f155f3, cec3ad5, 02c37bc, then the older one.
         -- Every layout is tried for an exact 800 first, so a stray constant on
         -- a wrong layout can't pass for an earlier run's speed.
-        local PATHS = {{0x18, 0x20}, {0x48, 0x20}, {0x28, 0x48}, {0x20, 0x38, 8}}
+        local PATHS = {{0x30, 0x48}, {0x18, 0x20}, {0x48, 0x20}, {0x28, 0x48}, {0x20, 0x38, 8}}
         local k
         for pass = 1, 2 do
             for _, pth in ipairs(PATHS) do
@@ -5572,8 +5656,10 @@ pcall(function()
             if rd(bar.bar + off) == ca then return off - 0x30, off - 8 end
         end
     end
+    local GC, GT = _G.__RSC_GRADOFF()
     local function stops(g)
-        local p, n = rd(g + 0xf8), mrd("int", g + 0x100)
+        if not GC then return nil end
+        local p, n = rd(g + GC), mrd("int", g + GC + 8)
         if not p or p < 0x10000 or not n or n < 2 or n > 64 then return nil end
         local t0, t1 = mrd("float", p), mrd("float", p + (n - 1) * 20)
         if t0 ~= 0 or t1 ~= 1 then return nil end
@@ -5617,7 +5703,7 @@ pcall(function()
             mwr("byte", bar.bar + flag, 1)
         end
         -- Opaque all along.
-        local tp, tn = rd(g + 0xb8), mrd("int", g + 0xc0)
+        local tp, tn = rd(g + GT), mrd("int", g + GT + 8)
         if tp and tp > 0x10000 and tn and tn > 0 and tn < 64 then
             for i = 0, tn - 1 do mwr("float", tp + i * 12 + 4, 0) end
         end
@@ -5636,7 +5722,7 @@ pcall(function()
         for i = 0, (n or 0) - 1 do
             for j = 1, 3 do mwr("float", p + i * 20 + j * 4, 1) end
         end
-        local tp, tn = rd(g + 0xb8), mrd("int", g + 0xc0)
+        local tp, tn = rd(g + GT), mrd("int", g + GT + 8)
         if tp and tp > 0x10000 and tn and tn > 0 and tn < 64 then
             for i = 0, tn - 1 do mwr("float", tp + i * 12 + 4, 0) end
         end
@@ -5910,8 +5996,10 @@ pcall(function()
         return {math.min(1, c[1] * k + (1 - c[1] * k) * w), math.min(1, c[2] * k + (1 - c[2] * k) * w),
             math.min(1, c[3] * k + (1 - c[3] * k) * w)}
     end
+    local GC = _G.__RSC_GRADOFF()
     local function stopsOf(g)
-        local p, n = rd(g + 0xf8), mrd("int", g + 0x100)
+        if not GC then return nil end
+        local p, n = rd(g + GC), mrd("int", g + GC + 8)
         if p and p > 0x10000 and n and n >= 3 and n <= 4 then return p, n end
     end
 
