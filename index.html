@@ -559,6 +559,66 @@
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { animation: none !important; transition: none !important; }
         }
+
+        /* Light theme: the same tokens, daylight values. */
+        :root[data-theme="light"] {
+            --bg: #f2f4f9; --nav: rgba(255, 255, 255, .88); --card: #ffffff; --card-2: #f1f4fa; --rail: #e3e8f1;
+            --line: #d3dae6; --line-soft: #e4e8f0; --txt: #161c28; --muted: #586377; --muted-2: #8b95a7;
+            --blue-ink: #ffffff;
+        }
+        :root[data-theme="light"] {
+            --glass: linear-gradient(160deg, rgba(255,255,255,.92), rgba(255,255,255,.78) 45%, rgba(255,255,255,.84));
+            --glass-strong: linear-gradient(160deg, rgba(255,255,255,.98), rgba(255,255,255,.9));
+            --glass-edge: rgba(20, 30, 50, .12);
+            --glass-shine: inset 0 1px 0 rgba(255,255,255,.9), inset 0 0 0 1px rgba(20,30,50,.04);
+        }
+        :root[data-theme="light"] body { background: #eef1f7; }
+        :root[data-theme="light"] .glass-field i { opacity: .16; }
+        :root[data-theme="light"] .nav { background: var(--nav); box-shadow: none; border-bottom-color: var(--line); }
+        :root[data-theme="light"] .modal-overlay { background: rgba(30, 36, 50, .35); }
+        :root[data-theme="light"] .nav, :root[data-theme="light"] .dash-switch, :root[data-theme="light"] .filter-pills,
+        :root[data-theme="light"] .search-box input, :root[data-theme="light"] .weapon-row, :root[data-theme="light"] .sky-card,
+        :root[data-theme="light"] .empty-note, :root[data-theme="light"] .wrap-search { box-shadow: var(--glass-shine), 0 8px 22px rgba(30, 40, 70, .08); }
+        :root[data-theme="light"] .modal { background-color: rgba(255, 255, 255, .96); }
+        :root[data-theme="light"] .footbar { background-color: rgba(255, 255, 255, .85); }
+        :root[data-theme="light"] .toast { background-color: rgba(255, 255, 255, .95); color: var(--txt); }
+        :root[data-theme="light"] .weapon-icon, :root[data-theme="light"] .skin-option-icon,
+        :root[data-theme="light"] .weapon-row:not(.is-set) .weapon-icon { background-color: rgba(40, 55, 90, .08); }
+        :root[data-theme="light"] .weapon-row.is-set .weapon-icon {
+            background: radial-gradient(75% 60% at 50% 100%, color-mix(in srgb, var(--rar) 35%, transparent), transparent 72%), rgba(40, 55, 90, .08);
+        }
+        :root[data-theme="light"] .skin-option:hover, :root[data-theme="light"] .btn-ghost:hover,
+        :root[data-theme="light"] .btn-secondary:hover, :root[data-theme="light"] .modal-close { background: rgba(20, 30, 50, .06); }
+        :root[data-theme="light"] .code-preview { background: #f4f6fb; color: var(--txt); }
+        :root[data-theme="light"] .seg-ind { background: linear-gradient(180deg, #ffffff, #e9eef8); box-shadow: 0 2px 8px rgba(30, 40, 70, .14); }
+        :root[data-theme="light"] .weapon-row:hover { box-shadow: var(--glass-shine), 0 18px 34px rgba(30, 40, 70, .16); }
+        :root[data-theme="light"] .weapon-row::after { background: radial-gradient(260px circle at var(--mx) var(--my), rgba(91,147,255,.10), transparent 45%); }
+        :root[data-theme="light"] .sky-card.active { background: #e6eeff; border-color: #9dbbff; }
+        .nav-sub { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+        .nav-tools { flex: none; }
+        @media (max-width: 760px) { .nav-sub { display: none; } }
+        :root[data-theme="light"] ::selection { background: #bcd2ff; }
+        .nav-tools { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+        .nav-tools .btn-ghost { white-space: nowrap; }
+        /* Drop a config file anywhere on the page. */
+        .drop-veil {
+            display: none; position: fixed; inset: 0; z-index: 300; pointer-events: none;
+            background: rgba(91, 147, 255, .14); border: 3px dashed var(--blue);
+            align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: var(--txt);
+        }
+        .drop-veil.show { display: flex; }
+        .changelog-list { margin: 0; padding: 0; list-style: none; }
+        .changelog-list li { padding: 10px 0; border-bottom: 1px solid var(--line-soft); }
+        .changelog-list li:last-child { border-bottom: 0; }
+        .changelog-date { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+        /* A bigger picture of a skin while the mouse is on it. */
+        .hover-preview {
+            position: fixed; z-index: 250; pointer-events: none; display: none;
+            width: 220px; height: 220px; padding: 10px; border-radius: 18px;
+            background: var(--card); border: 1px solid var(--line); box-shadow: 0 18px 50px rgba(0, 0, 0, .45);
+        }
+        .hover-preview img { width: 100%; height: 100%; object-fit: contain; }
+        @media (hover: none), (max-width: 700px) { .hover-preview { display: none !important; } }
     </style>
 </head>
 <body>
@@ -569,7 +629,15 @@
     <nav class="nav">
         <div class="nav-brand"><span class="nav-logo"></span>Rivals Skin Changer</div>
         <div class="nav-sub">Pick your look, save the config, run it in Matcha.</div>
+        <div class="nav-tools">
+            <button class="btn-ghost btn-sm" onclick="openChangelog()">What's new</button>
+            <button class="btn-ghost btn-sm" onclick="importPrompt()" title="Paste a share code or pick a rivals_config.lua - you can also drop the file on the page">Import</button>
+            <button class="btn-ghost btn-sm" id="themeToggle" onclick="toggleTheme()" aria-label="Switch light or dark">Light</button>
+        </div>
     </nav>
+    <input type="file" id="importFile" accept=".lua,.txt,text/plain" hidden>
+    <div class="drop-veil" id="dropVeil">Drop your rivals_config.lua to load it</div>
+    <div class="hover-preview" id="hoverPreview"><img alt=""></div>
 
     <div class="page-wrap" id="dashboard">
         <div class="dash-top">
@@ -673,6 +741,17 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="changelogModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>What's new</h3>
+                <button class="modal-close" onclick="closeChangelog()" aria-label="Close">&#10005;</button>
+            </div>
+            <div class="modal-body">
+                <ul class="changelog-list" id="changelogList"></ul>
+            </div>
+        </div>
+    </div>
     <div class="toast" id="toast">Config copied</div>
 
     <script>
@@ -4559,8 +4638,9 @@
             try { handsConfig = JSON.parse(localStorage.getItem("rivals_hands_saved") || "{}") || {}; } catch (e) { handsConfig = {}; }
             try { healthConfig = JSON.parse(localStorage.getItem("rivals_healthbar_saved") || "{}") || {}; } catch (e) { healthConfig = {}; }
             try { buttonsConfig = JSON.parse(localStorage.getItem("rivals_buttons_saved") || "{}") || {}; } catch (e) { buttonsConfig = {}; }
+            try { themeConfig = JSON.parse(localStorage.getItem("rivals_theme_saved") || "{}") || {}; } catch (e) { themeConfig = {}; }
             loadCosmeticConfigs();
-            setDashMode(["wraps", "advanced", "skybox", "sounds", "spoof", "tracers", "hands", "healthbar", "buttons", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
+            setDashMode(["wraps", "advanced", "skybox", "sounds", "spoof", "tracers", "hands", "healthbar", "buttons", "theme", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
         }
 
         const CATEGORY_ORDER = ["Primary", "Secondary", "Melee", "Utility"];
@@ -4651,6 +4731,12 @@
             if (dashMode === "buttons") {
                 renderMiscSwitch(grid);
                 renderButtonsGrid(grid);
+                updateFootCount();
+                return;
+            }
+            if (dashMode === "theme") {
+                renderMiscSwitch(grid);
+                renderThemeGrid(grid);
                 updateFootCount();
                 return;
             }
@@ -5305,7 +5391,7 @@
             saveLightConfig();
             renderGrid();
             showToast(lightConfig.preset === "match" ? "Lighting now matches the sky"
-                : (lightConfig.preset ? "Darker lighting on" : "Lighting left as the game has it"));
+                : (lightConfig.preset ? "Darker lighting on" : (Object.keys(lightConfig).length ? "Lighting fine-tuned" : "Lighting left as the game has it")));
         }
 
         // ---- Sounds tab ----
@@ -5425,7 +5511,7 @@
 
         // ---- Misc tab ----
         // Smaller features share one tab, each a tab of its own under it.
-        const MISC_MODES = {tracers: "Tracers", hands: "Hands", spoof: "Spoof", healthbar: "Health bar", buttons: "Buttons"};
+        const MISC_MODES = {tracers: "Tracers", hands: "Hands", spoof: "Spoof", healthbar: "Health bar", buttons: "Buttons", theme: "Theme"};
         let lastMiscMode = "tracers";
         function renderMiscSwitch(grid) {
             const bar = document.createElement("div");
@@ -5811,6 +5897,38 @@
                 row("Speed", "How fast it moves; 0 holds a gradient still", sp, healthConfig.Speed !== undefined);
             }
 
+            // Extras for any style: shine, pulse at low health, the backing.
+            function onOff(key, name, sub) {
+                const pick = document.createElement("select");
+                pick.className = "sound-pick";
+                pick.innerHTML = '<option value="">Off</option><option value="on">On</option>';
+                pick.value = healthConfig[key] === "on" ? "on" : "";
+                pick.addEventListener("click", function (e) { e.stopPropagation(); });
+                pick.addEventListener("change", function () { setHealth(key, pick.value); renderGrid(); });
+                row(name, sub, pick, !!healthConfig[key]);
+            }
+            onOff("Shine", "Shine", "A highlight sweeps along the bar");
+            onOff("Pulse", "Pulse at low health", "Below half health it throbs, faster as it drops");
+            const bgBox = document.createElement("div");
+            bgBox.style.display = "flex";
+            bgBox.style.gap = "6px";
+            const bgPick = document.createElement("select");
+            bgPick.className = "sound-pick";
+            bgPick.innerHTML = '<option value="">Game\'s</option><option value="dark">Dark</option><option value="custom">Colour</option>';
+            const bgNow = (healthConfig.Background || "").toLowerCase();
+            bgPick.value = bgNow === "dark" ? "dark" : (/^[0-9a-f]{6}$/.test(bgNow) ? "custom" : "");
+            const bgCol = document.createElement("input");
+            bgCol.type = "color";
+            bgCol.value = /^[0-9a-f]{6}$/.test(bgNow) ? "#" + bgNow : "#1a1a24";
+            bgCol.hidden = bgPick.value !== "custom";
+            [bgPick, bgCol].forEach(function (el) { el.addEventListener("click", function (e) { e.stopPropagation(); }); bgBox.appendChild(el); });
+            bgPick.addEventListener("change", function () {
+                setHealth("Background", bgPick.value === "custom" ? bgCol.value.slice(1).toLowerCase() : bgPick.value);
+                renderGrid();
+            });
+            bgCol.addEventListener("change", function () { setHealth("Background", bgCol.value.slice(1).toLowerCase()); });
+            row("Backing", "Behind the bar: the game's, darker, or your own colour", bgBox, !!healthConfig.Background);
+
             const note = document.createElement("div");
             note.className = "sky-card";
             note.dataset.name = "health bar note";
@@ -5823,8 +5941,8 @@
         }
 
         function generateHealthLines() {
-            if (!healthConfig.Style) return [];
-            const order = ["Style", "Color", "Color1", "Color2", "Full", "Mid", "Low", "Speed"];
+            if (!healthConfig.Style && !healthConfig.Shine && !healthConfig.Pulse && !healthConfig.Background) return [];
+            const order = ["Style", "Color", "Color1", "Color2", "Full", "Mid", "Low", "Speed", "Shine", "Pulse", "Background"];
             const keys = order.filter(function (k) { return healthConfig[k]; });
             return ["", "[HealthBar]", "-- Style = Color, Rainbow, Gradient, Health or Sky. Colours in hex; Color1=rainbow for a spectrum. Speed in % (0 = still)."]
                 .concat(keys.map(function (k) { return k + "=" + healthConfig[k]; }));
@@ -5847,6 +5965,81 @@
             if (value) buttonsConfig[key] = value; else delete buttonsConfig[key];
             saveButtonsConfig();
             updateFootCount();
+        }
+
+        // ---- Theme tab ----
+        // One look for the menu buttons, the health bar and the tracers, saved
+        // as [Theme]. The changer fills in only what those tabs leave unset.
+        let themeConfig = {};
+        const THEMES = [["", "None", "8a96ab", "5f6b80"], ["neon", "Neon", "ff00e6", "00f0ff"], ["pastel", "Pastel", "ffb3d9", "b3e5ff"],
+            ["mono", "Monochrome", "ffffff", "7a7a7a"], ["sunset", "Sunset", "ff5e3a", "ffcc33"], ["ocean", "Ocean", "0077ff", "00e5c7"],
+            ["halloween", "Halloween", "ff7a00", "8a2dff"], ["christmas", "Christmas", "e01b24", "1fae4b"]];
+        const THEME_FOLLOW = [["", "Nothing", "The preset's colours stay as they are"],
+            ["time", "Time of day", "Dawn orange, day blue, dusk pink, night purple - from your clock when it applies"],
+            ["rarity", "Skin rarity", "Each gun's tracers take its skin's rarity colour"],
+            ["wrap", "Wrap in hand", "Tracers match the weapon in your hands"]];
+        function setTheme(key, value) {
+            if (value) themeConfig[key] = value; else delete themeConfig[key];
+            try { localStorage.setItem("rivals_theme_saved", JSON.stringify(themeConfig)); } catch (e) {}
+            renderGrid();
+        }
+        function renderThemeGrid(grid) {
+            const card = document.createElement("div");
+            card.className = "weapon-card";
+            const label = document.createElement("div");
+            label.className = "card-label";
+            label.textContent = "Theme - buttons, health bar and tracers in one go. Their own tabs win.";
+            card.appendChild(label);
+            const now = (themeConfig.Preset || "").toLowerCase();
+            THEMES.forEach(function (t) {
+                const r = document.createElement("div");
+                r.className = "sky-card" + (now === t[0] && t[0] ? " active" : "");
+                r.dataset.name = ("theme " + t[1]).toLowerCase();
+                r.style.cursor = "pointer";
+                const info = document.createElement("div");
+                info.style.display = "flex";
+                info.style.alignItems = "center";
+                info.style.gap = "12px";
+                const sw = document.createElement("div");
+                sw.style.cssText = "width:120px;height:28px;border-radius:9px;flex:none;background:linear-gradient(90deg,#" + t[2] + ",#" + t[3] + ")";
+                const name = document.createElement("div");
+                name.className = "sky-name";
+                name.textContent = t[1] + (now === t[0] ? "  (picked)" : "");
+                info.appendChild(sw);
+                info.appendChild(name);
+                r.appendChild(info);
+                r.addEventListener("click", function () { setTheme("Preset", t[0]); });
+                card.appendChild(r);
+            });
+            const follow = (themeConfig.Follow || "").toLowerCase();
+            const fr = document.createElement("div");
+            fr.className = "sky-card" + (follow ? " active" : "");
+            const fi = document.createElement("div");
+            const cur = THEME_FOLLOW.filter(function (f) { return f[0] === follow; })[0] || THEME_FOLLOW[0];
+            fi.innerHTML = '<div class="sky-name">Follow</div><div class="sky-sub"></div>';
+            fi.querySelector(".sky-sub").textContent = cur[2];
+            fr.appendChild(fi);
+            const pick = document.createElement("select");
+            pick.className = "sound-pick";
+            THEME_FOLLOW.forEach(function (f) {
+                const o = document.createElement("option");
+                o.value = f[0];
+                o.textContent = f[1];
+                if (f[0] === follow) o.selected = true;
+                pick.appendChild(o);
+            });
+            pick.addEventListener("click", function (e) { e.stopPropagation(); });
+            pick.addEventListener("change", function () { setTheme("Follow", pick.value); });
+            fr.appendChild(pick);
+            card.appendChild(fr);
+            grid.appendChild(card);
+        }
+        function generateThemeLines() {
+            if (!themeConfig.Preset && !themeConfig.Follow) return [];
+            const lines = ["", "[Theme]", "-- Preset = neon, pastel, mono, sunset, ocean, halloween, christmas. Follow = time, rarity or wrap."];
+            if (themeConfig.Preset) lines.push("Preset=" + themeConfig.Preset);
+            if (themeConfig.Follow) lines.push("Follow=" + themeConfig.Follow);
+            return lines;
         }
 
         function renderButtonsGrid(grid) {
@@ -6160,10 +6353,21 @@
         }
 
         function generateLightLines() {
-            if (!lightConfig.preset) return [];
-            const lines = ["", "[Lighting]", "-- Applied right away and kept across map changes.", "Preset=" + lightConfig.preset];
-            if (lightConfig.exposure !== undefined && lightConfig.exposure !== "") lines.push("Exposure=" + lightConfig.exposure);
+            const tune = LIGHT_TUNE.filter(function (t) { return lightConfig[t[0]] !== undefined && lightConfig[t[0]] !== ""; });
+            if (!lightConfig.preset && !tune.length) return [];
+            const lines = ["", "[Lighting]", "-- Applied right away and kept across map changes."];
+            if (lightConfig.preset) lines.push("Preset=" + lightConfig.preset);
+            tune.forEach(function (t) { lines.push(t[1] + "=" + lightConfig[t[0]]); });
             return lines;
+        }
+        // Fine-tuning over the preset: [config key on the site, key in the file].
+        const LIGHT_TUNE = [["exposure", "Exposure"], ["brightness", "Brightness"], ["ambient", "Ambient"], ["outdoor", "Outdoor"]];
+        // A preset switch keeps the fine-tuning.
+        function withPreset(preset) {
+            const next = {};
+            LIGHT_TUNE.forEach(function (t) { if (lightConfig[t[0]] !== undefined) next[t[0]] = lightConfig[t[0]]; });
+            if (preset) next.preset = preset;
+            return next;
         }
 
         function renderLightingRow(card) {
@@ -6189,7 +6393,7 @@
             toggle.textContent = lightConfig.preset === "dark" ? "On" : "Off";
             toggle.addEventListener("click", function (e) {
                 e.stopPropagation();
-                onLightChange(lightConfig.preset === "dark" ? {} : {preset: "dark"});
+                onLightChange(withPreset(lightConfig.preset === "dark" ? null : "dark"));
             });
             box.appendChild(exp);
             box.appendChild(toggle);
@@ -6211,9 +6415,70 @@
             mbox.appendChild(mtoggle);
             match.appendChild(mbox);
             match.addEventListener("click", function () {
-                onLightChange(lightConfig.preset === "match" ? {} : {preset: "match"});
+                onLightChange(withPreset(lightConfig.preset === "match" ? null : "match"));
             });
             card.appendChild(match);
+
+            // Fine-tuning: brightness and exposure sliders, ambient colours.
+            function tuneRow(key, name, sub, control) {
+                const r = document.createElement("div");
+                r.className = "sky-card" + (lightConfig[key] !== undefined ? " active" : "");
+                r.dataset.name = "lighting " + name.toLowerCase();
+                const i = document.createElement("div");
+                i.innerHTML = '<div class="sky-name"></div><div class="sky-sub"></div>';
+                i.querySelector(".sky-name").textContent = name;
+                i.querySelector(".sky-sub").textContent = sub;
+                r.appendChild(i);
+                const b = document.createElement("div");
+                b.className = "sky-add";
+                b.appendChild(control);
+                const reset = document.createElement("button");
+                reset.className = "sky-mini";
+                reset.textContent = "Game's";
+                reset.hidden = lightConfig[key] === undefined;
+                reset.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                    const next = Object.assign({}, lightConfig);
+                    delete next[key];
+                    onLightChange(next);
+                });
+                b.appendChild(reset);
+                r.appendChild(b);
+                card.appendChild(r);
+            }
+            function slider(key, lo, hi, def) {
+                const box = document.createElement("span");
+                box.style.cssText = "display:flex;gap:8px;align-items:center";
+                const range = document.createElement("input");
+                range.type = "range";
+                range.min = lo; range.max = hi; range.step = 0.05;
+                range.value = lightConfig[key] !== undefined ? lightConfig[key] : def;
+                const out = document.createElement("span");
+                out.style.minWidth = "44px";
+                out.textContent = lightConfig[key] !== undefined ? Number(lightConfig[key]).toFixed(2) : "game's";
+                range.addEventListener("click", function (e) { e.stopPropagation(); });
+                range.addEventListener("input", function () { out.textContent = Number(range.value).toFixed(2); });
+                range.addEventListener("change", function () {
+                    onLightChange(Object.assign({}, lightConfig, {[key]: String(Number(range.value))}));
+                });
+                box.appendChild(range);
+                box.appendChild(out);
+                return box;
+            }
+            function colour(key, def) {
+                const pick = document.createElement("input");
+                pick.type = "color";
+                pick.value = /^[0-9a-f]{6}$/.test(lightConfig[key] || "") ? "#" + lightConfig[key] : def;
+                pick.addEventListener("click", function (e) { e.stopPropagation(); });
+                pick.addEventListener("change", function () {
+                    onLightChange(Object.assign({}, lightConfig, {[key]: pick.value.slice(1).toLowerCase()}));
+                });
+                return pick;
+            }
+            tuneRow("brightness", "Brightness", "How strong the sun is (the game's is about 2)", slider("brightness", 0, 6, 2));
+            tuneRow("exposure", "Exposure", "Lower is darker, higher is brighter", slider("exposure", -3, 3, 0));
+            tuneRow("ambient", "Ambient", "The light in shadowed areas", colour("ambient", "#4c5058"));
+            tuneRow("outdoor", "Outdoor ambient", "The light in open areas", colour("outdoor", "#8c96a8"));
         }
 
         function renderSkyGrid(grid) {
@@ -6693,13 +6958,18 @@
                     : (tracerConfig.Speed ? "Tracer speed " + tracerConfig.Speed + "%" : "Tracers unchanged"));
                 return;
             }
+            if (dashMode === "theme") {
+                el.textContent = themeConfig.Preset || themeConfig.Follow
+                    ? "Theme: " + (themeConfig.Preset || "none") + (themeConfig.Follow ? ", follows " + themeConfig.Follow : "") : "No theme";
+                return;
+            }
             if (dashMode === "buttons") {
                 const k = ["Green", "Blue", "Yellow", "Gold"].filter(function (x) { return buttonsConfig[x]; }).length;
                 el.textContent = k ? k + (k === 1 ? " button style recoloured" : " button styles recoloured") : "Buttons unchanged";
                 return;
             }
             if (dashMode === "healthbar") {
-                el.textContent = healthConfig.Style ? "Health bar: " + (healthConfig.Style === "Health" ? "by health" : healthConfig.Style.toLowerCase()) : "Health bar unchanged";
+                el.textContent = healthConfig.Style ? "Health bar: " + (healthConfig.Style === "Health" ? "by health" : healthConfig.Style.toLowerCase()) : (healthConfig.Shine || healthConfig.Pulse || healthConfig.Background ? "Health bar extras on" : "Health bar unchanged");
                 return;
             }
             if (dashMode === "spoof") {
@@ -6785,7 +7055,7 @@
                 lines = lines.concat(swapLines);
             }
             return lines.concat(generateWrapLines()).concat(generateSkyLines()).concat(generateLightLines()).concat(generateSoundLines())
-                .concat(generateSpoofLines()).concat(generateTracerLines()).concat(generateHealthLines()).concat(generateButtonsLines()).concat(generateHandsLines())
+                .concat(generateSpoofLines()).concat(generateTracerLines()).concat(generateHealthLines()).concat(generateButtonsLines()).concat(generateThemeLines()).concat(generateHandsLines())
                 .concat(generateCosmeticLines("finishers")).concat(generateCosmeticLines("charms")).join("\n");
         }
 
@@ -7034,6 +7304,162 @@
                 modal.style.display = "none";
             });
         }
+        // ---- Import, theme, what's new, hover preview ----
+        // A config (a rivals_config.lua, or a share code "RSC1:..." from the
+        // in-game GUI) is read back into every tab, then the page reloads.
+        function importConfigText(text) {
+            text = String(text || "").trim();
+            const code = text.match(/^RSC1:([A-Za-z0-9+/=]+)$/);
+            if (code) {
+                try {
+                    const bytes = Uint8Array.from(atob(code[1]), function (c) { return c.charCodeAt(0); });
+                    text = new TextDecoder().decode(bytes);
+                } catch (e) { showToast("That share code is broken"); return false; }
+            }
+            const out = {skins: {}, swaps: {}, Wraps: {}, Sounds: {}, Spoof: {}, Tracers: {}, HealthBar: {}, Buttons: {},
+                NoHands: {}, Finishers: {}, Charms: {}, Skybox: {}, Lighting: {}, Theme: {}};
+            let section = "skins", count = 0;
+            text.split(/\r?\n/).forEach(function (line) {
+                line = line.trim();
+                if (!line || line.indexOf("--") === 0) return;
+                const head = line.match(/^\[(.+)\]$/);
+                if (head) { section = head[1]; return; }
+                const swap = section === "skins" && line.match(/^(.+?)\s*\|\s*(.+?)\s*>\s*(.+)$/);
+                if (swap) {
+                    (out.swaps[swap[1]] = out.swaps[swap[1]] || {})[swap[2]] = swap[3];
+                    count++;
+                    return;
+                }
+                const eq = line.indexOf("=");
+                if (eq < 1 || !out[section]) return;
+                out[section][line.slice(0, eq).trim()] = line.slice(eq + 1).trim();
+                count++;
+            });
+            if (!count) { showToast("Nothing to import - is that a rivals_config.lua?"); return false; }
+            const sky = {};
+            if (out.Skybox.All) sky.all = out.Skybox.All;
+            else if (out.Skybox.Preset) sky.preset = out.Skybox.Preset;
+            else {
+                const faces = {};
+                ["BK", "DN", "FT", "LF", "RT", "UP"].forEach(function (k) { if (out.Skybox[k]) faces[k.toLowerCase()] = out.Skybox[k]; });
+                if (Object.keys(faces).length) sky.faces = faces;
+            }
+            const light = {};
+            if (out.Lighting.Preset) light.preset = out.Lighting.Preset;
+            if (out.Lighting.Exposure) light.exposure = out.Lighting.Exposure;
+            if (out.Lighting.Brightness) light.brightness = out.Lighting.Brightness;
+            if (out.Lighting.Ambient) light.ambient = out.Lighting.Ambient.replace(/^#/, "").toLowerCase();
+            if (out.Lighting.Outdoor) light.outdoor = out.Lighting.Outdoor.replace(/^#/, "").toLowerCase();
+            const save = {
+                rivals_config_saved: out.skins, rivals_skinswaps_saved: out.swaps, rivals_wraps_saved: out.Wraps,
+                rivals_skybox_saved: sky, rivals_lighting_saved: light, rivals_sounds_saved: out.Sounds,
+                rivals_spoof_saved: out.Spoof, rivals_tracers_saved: out.Tracers, rivals_healthbar_saved: out.HealthBar,
+                rivals_buttons_saved: out.Buttons, rivals_hands_saved: out.NoHands,
+                rivals_finishers_saved: out.Finishers, rivals_charms_saved: out.Charms, rivals_theme_saved: out.Theme
+            };
+            if (!confirm("Load this config? It replaces what you have picked on the site (" + count + " settings).")) return false;
+            try {
+                Object.keys(save).forEach(function (k) { localStorage.setItem(k, JSON.stringify(save[k])); });
+            } catch (e) { showToast("Your browser blocked saving - nothing was changed"); return false; }
+            location.reload();
+            return true;
+        }
+        function importPrompt() {
+            const code = prompt("Paste a share code (RSC1:...) from the in-game GUI.\nCancel to pick a rivals_config.lua file instead.");
+            if (code && code.trim()) { importConfigText(code); return; }
+            document.getElementById("importFile").click();
+        }
+        function readImportFile(file) {
+            if (!file) return;
+            if (file.size > 512 * 1024) { showToast("That file is too big to be a config"); return; }
+            const reader = new FileReader();
+            reader.onload = function () { importConfigText(reader.result); };
+            reader.readAsText(file);
+        }
+        (function () {
+            const input = document.getElementById("importFile");
+            input.addEventListener("change", function () { readImportFile(input.files[0]); input.value = ""; });
+            const veil = document.getElementById("dropVeil");
+            let depth = 0;
+            function hasFile(e) { return e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], "Files") >= 0; }
+            window.addEventListener("dragenter", function (e) { if (hasFile(e)) { depth++; veil.classList.add("show"); } });
+            window.addEventListener("dragleave", function () { depth = Math.max(0, depth - 1); if (!depth) veil.classList.remove("show"); });
+            window.addEventListener("dragover", function (e) { if (hasFile(e)) e.preventDefault(); });
+            window.addEventListener("drop", function (e) {
+                if (!hasFile(e)) return;
+                e.preventDefault();
+                depth = 0;
+                veil.classList.remove("show");
+                readImportFile(e.dataTransfer.files[0]);
+            });
+        })();
+
+        function applyTheme(theme) {
+            if (theme === "light") document.documentElement.setAttribute("data-theme", "light");
+            else document.documentElement.removeAttribute("data-theme");
+            const btn = document.getElementById("themeToggle");
+            if (btn) btn.textContent = theme === "light" ? "Dark" : "Light";
+        }
+        function toggleTheme() {
+            const next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+            try { localStorage.setItem("rivals_theme", next); } catch (e) {}
+            applyTheme(next);
+        }
+        try { applyTheme(localStorage.getItem("rivals_theme") || "dark"); } catch (e) { applyTheme("dark"); }
+
+        const CHANGELOG = [
+            ["2026-10-22", "Themes: Neon, Pastel, Monochrome, Sunset, Ocean, Halloween, Christmas - and themes that follow the time of day, skin rarity or your wrap."],
+            ["2026-10-22", "Light / dark switch for this site."],
+            ["2026-10-22", "Panic key, safe mode and FPS-friendly mode in both GUIs."],
+            ["2026-10-22", "Favourites, recently used, sort by name / rarity / recent, rarity and owned-only filters."],
+            ["2026-10-22", "New items are picked up straight from the game, before this site lists them."],
+            ["2026-10-22", "Config history with one-click restore, share codes, import here by code or by dropping the file."],
+            ["2026-10-22", "Progress bar, notification options, a log page and \"copy output for support\" in the GUI."],
+            ["2026-10-20", "Profile card: wins, win rate and picture, with presets and a preview."],
+            ["2026-10-20", "Fixed for Roblox build 9ac8595; faster joins; tracers apply after joining."],
+            ["2026-10-18", "Health bar styles, menu button colours and scopes."]
+        ];
+        function openChangelog() {
+            const list = document.getElementById("changelogList");
+            list.innerHTML = "";
+            CHANGELOG.forEach(function (c) {
+                const li = document.createElement("li");
+                const d = document.createElement("div");
+                d.className = "changelog-date";
+                d.textContent = c[0];
+                li.appendChild(d);
+                li.appendChild(document.createTextNode(c[1]));
+                list.appendChild(li);
+            });
+            document.getElementById("changelogModal").style.display = "flex";
+        }
+        function closeChangelog() { document.getElementById("changelogModal").style.display = "none"; }
+        document.getElementById("changelogModal").addEventListener("click", function (e) { if (e.target === this) closeChangelog(); });
+
+        // Any skin, wrap, finisher or charm picture: a bigger copy follows the mouse.
+        (function () {
+            const box = document.getElementById("hoverPreview"), img = box.querySelector("img");
+            function pictureOf(el) {
+                const tile = el && el.closest && el.closest(".skin-option, .weapon-card, .cos-tile");
+                const pic = tile && tile.querySelector("img");
+                return pic && pic.src && pic.naturalWidth ? pic : null;
+            }
+            document.addEventListener("mouseover", function (e) {
+                const pic = pictureOf(e.target);
+                if (!pic) { box.style.display = "none"; return; }
+                if (img.src !== pic.src) img.src = pic.src;
+                box.style.display = "block";
+            });
+            document.addEventListener("mousemove", function (e) {
+                if (box.style.display !== "block") return;
+                const x = e.clientX + 24 + 220 > innerWidth ? e.clientX - 244 : e.clientX + 24;
+                const y = Math.min(innerHeight - 236, Math.max(8, e.clientY - 110));
+                box.style.left = x + "px";
+                box.style.top = y + "px";
+            });
+            document.addEventListener("scroll", function () { box.style.display = "none"; }, true);
+        })();
+
         // The footbar comes after this script; wait for it before the first render.
         if (document.readyState === "loading") {
             document.addEventListener("DOMContentLoaded", function () { init(); showNoticeOnce(); });
