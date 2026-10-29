@@ -2330,10 +2330,11 @@ end
 -- thread keeps its global state. Build 02c37bc (Sep 30 2026) had tt +1,
 -- lsizenode +4, global state +0x68; cec3ad5 (Oct 2026) moved tt back to +0.
 -- So they are found at runtime (ROUTE.detect) instead of being hard-coded.
--- Defaults: Roblox build 9ac8595 (ModuleScript thread +0x150, registry slot
--- +0x170, thread tag at byte +2); ROUTE.detect looks again when they don't fit.
-local ROUTE = {thread = 0x150, slot = 0x170, globalState = 0x78, registry = 0x618, node = 0x18, array = 0x20,
-    sizearray = 8, tt = 2, lsize = 4}
+-- Defaults: Roblox build 5a21b87 (ModuleScript thread +0x168, registry slot
+-- +0x170, tag at byte +1, global state +0x38, array +0x28); ROUTE.detect
+-- looks again when they don't fit.
+local ROUTE = {thread = 0x168, slot = 0x170, globalState = 0x38, registry = 0x618, node = 0x18, array = 0x28,
+    sizearray = 8, tt = 1, lsize = 4}
 local TAG_TABLE, TAG_THREAD = 7, 10
 
 local function rbyte(a) local ok, v = pcall(mrd, "byte", a) return ok and v or nil end
@@ -4919,20 +4920,33 @@ local function applyLighting(conf, cache)
     -- The game's own values, recorded the first time each one is written in
     -- this server and put back at the start of every run, so an emptied
     -- [Lighting] (or the panic key) restores them.
+    -- An original is only put back where the address still holds exactly
+    -- what this changer wrote: the game replaces its lighting values (a map
+    -- change rebuilds them), and writing into memory that has since been
+    -- reused crashed Roblox a minute later.
     local rec = _G.__RSC_LIGHT_ORIG
     if type(rec) ~= "table" or rec.job ~= game.JobId then
         rec = {job = game.JobId, vals = {}}
         _G.__RSC_LIGHT_ORIG = rec
     else
-        for _, v in pairs(rec.vals) do pcall(mwr, v[1], v[2], v[3]) end
+        for key, v in pairs(rec.vals) do
+            local okN, now = pcall(mrd, v[1], v[2])
+            if okN and type(now) == "number" and type(v[4]) == "number" and math.abs(now - v[4]) < 1e-6 then
+                pcall(mwr, v[1], v[2], v[3])
+            end
+            rec.vals[key] = nil
+        end
     end
     local function lw(kind, addr, val)
         local key = kind .. ":" .. tostring(addr)
         if not rec.vals[key] then
             local okO, old = pcall(mrd, kind, addr)
-            if okO and old ~= nil then rec.vals[key] = {kind, addr, old} end
+            if okO and type(old) == "number" then rec.vals[key] = {kind, addr, old} end
         end
         mwr(kind, addr, val)
+        -- What is there now (a float reads back rounded), to compare with later.
+        local okB, back = pcall(mrd, kind, addr)
+        if rec.vals[key] then rec.vals[key][4] = okB and back or nil end
     end
     local values = {}
     local name = conf.preset and tostring(conf.preset):lower()
@@ -5281,10 +5295,10 @@ local function applyTracersEffect()
             end
             return nil
         end
-        -- Proto layouts: build 9ac8595, 11f155f3, cec3ad5, 02c37bc, then the older one.
+        -- Proto layouts: build 5a21b87, 9ac8595, 11f155f3, cec3ad5, 02c37bc, then the older one.
         -- Every layout is tried for an exact 800 first, so a stray constant on
         -- a wrong layout can't pass for an earlier run's speed.
-        local PATHS = {{0x30, 0x48}, {0x18, 0x20}, {0x48, 0x20}, {0x28, 0x48}, {0x20, 0x38, 8}}
+        local PATHS = {{0x58, 0x80}, {0x30, 0x48}, {0x18, 0x20}, {0x48, 0x20}, {0x28, 0x48}, {0x20, 0x38, 8}}
         local k
         for pass = 1, 2 do
             for _, pth in ipairs(PATHS) do
@@ -6180,7 +6194,7 @@ pcall(function()
     -- The constants list: the offset moves between Roblox builds, so it's the
     -- one that holds the scope names.
     local k, slots
-    for _, off in ipairs({0x20, 0x48, 0x38, 0x28, 0x30, 0x40, 0x18, 0x50}) do
+    for _, off in ipairs({0x80, 0x20, 0x48, 0x38, 0x28, 0x30, 0x40, 0x18, 0x50, 0x58, 0x60, 0x68, 0x70, 0x78, 0x88}) do
         local arr = proto and proto > 0x10000 and rd(proto + off)
         if arr and arr > 0x10000 then
             local found, n = {}, 0
