@@ -599,7 +599,7 @@
         @media (max-width: 760px) { .nav-sub { display: none; } }
         :root[data-theme="light"] ::selection { background: #bcd2ff; }
         .nav-tools { margin-left: auto; display: flex; gap: 8px; align-items: center; }
-        .nav-tools .btn-ghost { white-space: nowrap; }
+        .nav-tools .btn-ghost { white-space: nowrap; text-decoration: none; }
         /* Drop a config file anywhere on the page. */
         .drop-veil {
             display: none; position: fixed; inset: 0; z-index: 300; pointer-events: none;
@@ -630,6 +630,7 @@
         <div class="nav-brand"><span class="nav-logo"></span>Rivals Skin Changer</div>
         <div class="nav-sub">Pick your look, save the config, run it in Matcha.</div>
         <div class="nav-tools">
+            <a class="btn-ghost btn-sm" href="https://discord.gg/NZSyZwAXgd" target="_blank" rel="noopener">Discord</a>
             <button class="btn-ghost btn-sm" onclick="openChangelog()">What's new</button>
             <button class="btn-ghost btn-sm" onclick="importPrompt()" title="Paste a share code or pick a rivals_config.lua - you can also drop the file on the page">Import</button>
             <button class="btn-ghost btn-sm" id="themeToggle" onclick="toggleTheme()" aria-label="Switch light or dark">Light</button>
