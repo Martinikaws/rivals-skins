@@ -1794,6 +1794,7 @@ local MISC_SPECIAL_MAP = {
     ["Glorious Jump Pad"] = { JumpPads = "Glorious Jump Pad" },
     ["Spider Web"] = { JumpPads = "Spider Web" },
     ["Jolly Man"] = { JumpPads = "Jolly Man" },
+    ["Flamingo Floatie"] = { JumpPads = "Flamingo Floatie" },
     ["Electropunk Warper"] = { Portals = "Electropunk Warper" },
     ["Experiment W4"] = { Portals = "Experiment W4" },
     ["Glitter Warper"] = { Portals = "Glitter Warper" },
@@ -3343,7 +3344,10 @@ local function applySkinSwapper()
                             local folder = mi:FindFirstChild(folderName)
                             if folder then
 
+                                -- These folders belong to one item, whose plain look is
+                                -- named Default (JumpPads), not after the weapon.
                                 local weaponItem = folder:FindFirstChild(srcName)
+                                    or (not ownedSwap and folder:FindFirstChild("Default")) or nil
                                 local skinItem = folder:FindFirstChild(itemName)
                                 if skinItem and weaponItem then
                                     swapTwoWay(weaponItem, skinItem, folder)
