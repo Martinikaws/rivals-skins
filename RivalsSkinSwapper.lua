@@ -1489,6 +1489,7 @@ local configSpoof = {}
 local configLighting = {}
 local configTracers = {}
 _G.__RSC_HPBAR_CFG = {} -- [Health Bar]; a global, the main chunk is at its local limit
+_G.__RSC_CW_CFG = {} -- [CustomWrap1..3]: what each custom wrap is made of
 _G.__RSC_BTN_CFG = {} -- [Buttons]
 -- Where a UIGradient keeps its colour stops (list pointer, then the count 8
 -- bytes on; 20-byte stops: time, r, g, b, envelope) and its transparency
@@ -2747,6 +2748,100 @@ local VM_FIELDS = {Animations = true, RootPartOffset = true, Image = true, Image
 local WRAP_FIELDS = {WrapGroups = true}
 
 -- Animations, offsets, icons, wraps
+-- Custom wraps: writes kept in _G so the next run can put them back, each only
+-- where the address still holds what was written.
+local CW_BASES = {{"Bubbles", "Bright"}, {"Sea Glass", "Hologram"}, {"Rivalry", "Dark"}}
+local function cwBase(n, cw)
+    local pat = tostring(cw.pattern or ""):lower()
+    local b = CW_BASES[n]
+    return b and ((pat ~= "" and pat ~= "none") and b[1] or b[2]) or nil
+end
+local CW_MATERIALS = {neon = "Bright", forcefield = "Mesh", glass = "Copper", metal = "Cold Metal",
+    smoothplastic = "Beige", plastic = "Classic"}
+local function cwWrite(kind, addr, value)
+    local okO, old = pcall(mrd, kind, addr)
+    if not okO or old == nil then return false end
+    if not pcall(mwr, kind, addr, value) then return false end
+    local okB, back = pcall(mrd, kind, addr)
+    local undo = _G.__RSC_CW_UNDO or {}
+    undo[#undo + 1] = {kind, addr, old, okB and back or value}
+    _G.__RSC_CW_UNDO = undo
+    return true
+end
+local function cwUndo()
+    local undo = _G.__RSC_CW_UNDO
+    _G.__RSC_CW_UNDO = nil
+    for i = #(type(undo) == "table" and undo or {}), 1, -1 do
+        local u = undo[i]
+        local okN, now = pcall(mrd, u[1], u[2])
+        if okN and now == u[4] then pcall(mwr, u[1], u[2], u[3]) end
+    end
+end
+local function applyCustomWraps(cos, cache)
+    local cfg = _G.__RSC_CW_CFG or {}
+    if not next(cfg) then return end
+    local want = {}
+    for _, name in pairs(CW_MATERIALS) do want[name] = true end
+    for n, cw in pairs(cfg) do
+        local base = cwBase(n, cw)
+        if base then want[base] = true end
+        local pat = tostring(cw.pattern or "")
+        if pat ~= "" and pat:lower() ~= "none" then want[pat] = true end
+    end
+    local nodes = cache.cosBase and walkNodes(cache.cosBase, cache.cosCount or 16384, want) or (cos and walkAround(cos, 4096, want)) or {}
+    local FIELDS = {Color = true, Material = true, Transparency = true, Textures = true}
+    -- The fields of each group of a wrap: {{Color = node, ...}, ...}
+    local function groupsOf(name)
+        local node = nodes[name]
+        local f = node and tableFields(rd(node), 32, WRAP_FIELDS)
+        local g = f and f.WrapGroups and rd(f.WrapGroups)
+        local size, arr = g and rint(g + ROUTE.sizearray), g and rd(g + ROUTE.array)
+        local out = {}
+        if size and arr and size >= 1 and size <= 8 and arr > 0x10000 then
+            for i = 0, size - 1 do
+                local t = rd(arr + i * 16)
+                if t and t > 0x10000 and rbyte(t + ROUTE.tt) == TAG_TABLE then
+                    out[#out + 1] = tableFields(t, 32, FIELDS)
+                end
+            end
+        end
+        return out
+    end
+    for n, cw in pairs(cfg) do
+        local base = cwBase(n, cw)
+        local groups = base and groupsOf(base) or {}
+        local pat = tostring(cw.pattern or "")
+        local patStr
+        if pat ~= "" and pat:lower() ~= "none" then
+            for _, g in ipairs(groupsOf(pat)) do
+                if g.Textures then patStr = rd(g.Textures) break end
+            end
+            if not patStr then print("[RivalsSkinChanger] Custom wrap " .. n .. ": " .. pat .. " has no pattern to borrow") end
+        end
+        local done = 0
+        for i = 1, 3 do
+            local g = groups[i]
+            if g then
+                local hex = tostring(cw["color" .. i] or ""):gsub("^#", ""):lower()
+                local ud = g.Color and rd(g.Color)
+                if hex:match("^%x%x%x%x%x%x$") and ud and ud > 0x10000 then
+                    for c = 0, 2 do cwWrite("float", ud + 16 + c * 4, tonumber(hex:sub(c * 2 + 1, c * 2 + 2), 16) / 255) end
+                end
+                local src = CW_MATERIALS[tostring(cw["material" .. i] or ""):lower()]
+                local from = src and groupsOf(src)[1]
+                local mat = from and from.Material and rd(from.Material)
+                if mat and mat > 0x10000 and g.Material then cwWrite("uintptr_t", g.Material, mat) end
+                local tr = tonumber(cw["transparency" .. i])
+                if tr and tr >= 0 and tr <= 1 and g.Transparency then cwWrite("double", g.Transparency, tr) end
+                if patStr and patStr > 0x10000 and g.Textures then cwWrite("uintptr_t", g.Textures, patStr) end
+                done = done + 1
+            end
+        end
+        print("[RivalsSkinChanger] Custom wrap " .. n .. ": " .. tostring(cw.replace or "used from your wrap list") .. " (" .. done .. " groups on " .. tostring(base)
+            .. ") - shows on your next match or when you re-enter an area")
+    end
+end
+
 local function syncSkinData(pairList, wrapPairs, cache)
     if #pairList == 0 and #wrapPairs == 0 then return 0 end
     local vm, cos, err = findDictionaries(cache, #pairList > 0, #wrapPairs > 0)
@@ -2792,12 +2887,13 @@ local function syncSkinData(pairList, wrapPairs, cache)
         local ownedSlot, targetSlot = wrapGroupsSlot(p[1]), wrapGroupsSlot(p[2])
         local targetGroups = targetSlot and rd(targetSlot)
         if ownedSlot and targetGroups and targetGroups ~= 0 and ownedSlot ~= targetSlot then
-            wr(ownedSlot, targetGroups)
+            cwWrite("uintptr_t", ownedSlot, targetGroups) -- undone by the next run
             wrapsApplied = wrapsApplied + 1
         else
             wrapsMissed[#wrapsMissed + 1] = p[1] .. "=" .. p[2]
         end
     end
+    pcall(applyCustomWraps, cos, cache)
     local note = (#missed > 0) and ("not found: " .. table.concat(missed, ", ")) or err
     return synced, note, wrapsApplied, wrapsMissed, missed
 end
@@ -3039,8 +3135,13 @@ local function applySkinSwapper()
         local header = rawLine:gsub(string.char(13), ""):match("^%s*%[%s*(.-)%s*%]%s*$")
         if header then
             local h = header:lower()
+            local cwSlot = tonumber(h:match("^customwrap%s*(%d)$"))
+            if cwSlot then
+                _G.__RSC_CW_CFG[cwSlot] = _G.__RSC_CW_CFG[cwSlot] or {}
+                _G.__RSC_CW_CUR = cwSlot
+            end
 
-            section = h:find("health") and "healthbar" or h:find("button") and "buttons" or h:find("wrap") and "wraps" or (h:find("sky") and "skybox"
+            section = h:find("customwrap") and "customwrap" or h:find("health") and "healthbar" or h:find("button") and "buttons" or h:find("wrap") and "wraps" or (h:find("sky") and "skybox"
                 or (h:find("light") and "lighting" or (h:find("finisher") and "finishers"
                 or (h:find("charm") and "charms" or (h:find("sound") and "sounds"
                 or (h:find("spoof") and "spoof" or (h:find("tracer") and "tracers" or (h:find("hand") and "nohands"
@@ -3080,6 +3181,10 @@ local function applySkinSwapper()
         elseif section == "buttons" then
             local key, value = parseConfigLine(rawLine)
             if key and value then _G.__RSC_BTN_CFG[key:lower()] = value end
+        elseif section == "customwrap" then
+            local key, value = parseConfigLine(rawLine)
+            local cw = _G.__RSC_CW_CFG[_G.__RSC_CW_CUR or 0]
+            if cw and key and value then cw[key:lower()] = value end
         else
             local weaponName, skinTarget = parseConfigLine(rawLine)
             if weaponName and skinTarget then
@@ -3589,13 +3694,34 @@ pcall(function()
 end)
 
 -- Wraps
+-- Custom wraps: the game paints a wrap from its WrapGroups, each group a table
+-- with Color, Material, Transparency and Textures (an image folder's name). So
+-- owned wraps are swapped to a base wrap and the base's groups are rewritten
+-- (see applyCustomWraps) before the game paints them. Fields can be changed,
+-- not added, so a wrap with a pattern needs a base that has Textures. Each of
+-- the 3 slots has its own pair of bases.
 local function readWrapPairs()
     local list, seen = {}, {}
-
+    for n, cw in pairs(_G.__RSC_CW_CFG or {}) do
+        local base = cwBase(n, cw)
+        for owned in tostring(cw.replace or ""):gmatch("[^,]+") do
+            owned = owned:match("^%s*(.-)%s*$")
+            if base and owned ~= "" and not seen[owned] then
+                seen[owned] = true
+                list[#list + 1] = {owned, base}
+            end
+        end
+    end
     for _, p in ipairs(configWrapPairs) do
         if not seen[p[1]] then
-            seen[p[1]] = true
-            list[#list + 1] = p
+            -- "Owned=Custom Wrap 2" uses that custom wrap's base.
+            local n = tonumber(tostring(p[2]):match("^[Cc]ustom [Ww]rap (%d)$"))
+            local cw = n and (_G.__RSC_CW_CFG or {})[n]
+            local target = n and (cw and cwBase(n, cw)) or (not n and p[2]) or nil
+            if target then
+                seen[p[1]] = true
+                list[#list + 1] = {p[1], target}
+            end
         end
     end
     for _, p in ipairs({"rivals_wraps.lua", "rivals_wraps.txt", "workspace/rivals_wraps.lua", "workspace/rivals_wraps.txt"}) do
@@ -5126,6 +5252,7 @@ _G.__RSC_SKY_COLORS = function()
     return #out > 0 and out or nil
 end
 
+if not QUICK then pcall(cwUndo) end
 local wrapPairs = readWrapPairs()
 if ENABLE_SKIN_DATA_SYNC and not QUICK and (#skinDataPairs > 0 or #wrapPairs > 0) then
     print("[RivalsSkinChanger] Applying skin animations, offsets, icons" .. (#wrapPairs > 0 and " + wraps" or "") .. "...")

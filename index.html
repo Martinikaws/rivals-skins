@@ -4640,8 +4640,9 @@
             try { healthConfig = JSON.parse(localStorage.getItem("rivals_healthbar_saved") || "{}") || {}; } catch (e) { healthConfig = {}; }
             try { buttonsConfig = JSON.parse(localStorage.getItem("rivals_buttons_saved") || "{}") || {}; } catch (e) { buttonsConfig = {}; }
             try { themeConfig = JSON.parse(localStorage.getItem("rivals_theme_saved") || "{}") || {}; } catch (e) { themeConfig = {}; }
+            try { customWraps = JSON.parse(localStorage.getItem("rivals_customwraps_saved") || "{}") || {}; } catch (e) { customWraps = {}; }
             loadCosmeticConfigs();
-            setDashMode(["wraps", "advanced", "skybox", "sounds", "spoof", "tracers", "hands", "healthbar", "buttons", "theme", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
+            setDashMode(["wraps", "advanced", "skybox", "sounds", "spoof", "tracers", "hands", "healthbar", "buttons", "theme", "customwraps", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
         }
 
         const CATEGORY_ORDER = ["Primary", "Secondary", "Melee", "Utility"];
@@ -4738,6 +4739,12 @@
             if (dashMode === "theme") {
                 renderMiscSwitch(grid);
                 renderThemeGrid(grid);
+                updateFootCount();
+                return;
+            }
+            if (dashMode === "customwraps") {
+                renderMiscSwitch(grid);
+                renderCustomWrapGrid(grid);
                 updateFootCount();
                 return;
             }
@@ -5025,6 +5032,7 @@
                 options.push(opt);
             }
             addOption("Default", "Keep " + name + "'s own look", WRAP_BY_NAME[name], null, null);
+            customWrapItems().forEach(function (w) { addOption(w[0], "Your custom wrap", w, w[1], w[0]); });
             WRAP_LIST.slice().sort(function (a, b) { return b[1] - a[1] || a[0].localeCompare(b[0]); }).forEach(function (w) {
                 if (w[0] !== name) addOption(w[0], WRAP_TESTED[w[0]] ? "Tested in game" : "", w, w[1], w[0]);
             });
@@ -5512,7 +5520,7 @@
 
         // ---- Misc tab ----
         // Smaller features share one tab, each a tab of its own under it.
-        const MISC_MODES = {tracers: "Tracers", hands: "Hands", spoof: "Spoof", healthbar: "Health bar", buttons: "Buttons", theme: "Theme"};
+        const MISC_MODES = {tracers: "Tracers", hands: "Hands", spoof: "Spoof", healthbar: "Health bar", buttons: "Buttons", theme: "Theme", customwraps: "Custom wraps"};
         let lastMiscMode = "tracers";
         function renderMiscSwitch(grid) {
             const bar = document.createElement("div");
@@ -6034,6 +6042,108 @@
             fr.appendChild(pick);
             card.appendChild(fr);
             grid.appendChild(card);
+        }
+        // ---- Custom wraps tab ----
+        // Up to 3 wraps of your own, saved as [CustomWrap1..3]: the owned wraps
+        // each replaces, one pattern from any wrap, and a material, colour and
+        // transparency for the 3 parts of a wrap.
+        let customWraps = {};
+        let cwSlot = 1;
+        const CW_KEYS = ["Replace", "Pattern", "Color1", "Material1", "Transparency1", "Color2", "Material2", "Transparency2", "Color3", "Material3", "Transparency3"];
+        function setCustomWrap(key, value) {
+            const c = customWraps[cwSlot] = customWraps[cwSlot] || {};
+            if (value) c[key] = value; else delete c[key];
+            if (!Object.keys(c).length) delete customWraps[cwSlot];
+            try { localStorage.setItem("rivals_customwraps_saved", JSON.stringify(customWraps)); } catch (e) {}
+            updateFootCount();
+        }
+        function renderCustomWrapGrid(grid) {
+            const card = document.createElement("div");
+            card.className = "weapon-card";
+            const label = document.createElement("div");
+            label.className = "card-label";
+            label.textContent = "Custom wraps - only you see them. Most guns are mainly the Main part; Neon hides patterns.";
+            card.appendChild(label);
+            const c = customWraps[cwSlot] || {};
+            function row(name, sub, control, active) {
+                const r = document.createElement("div");
+                r.className = "sky-card" + (active ? " active" : "");
+                r.dataset.name = "custom wrap " + name.toLowerCase();
+                const i = document.createElement("div");
+                i.innerHTML = '<div class="sky-name"></div><div class="sky-sub"></div>';
+                i.querySelector(".sky-name").textContent = name;
+                i.querySelector(".sky-sub").textContent = sub;
+                r.appendChild(i);
+                r.appendChild(control);
+                card.appendChild(r);
+            }
+            function pick(options, value, onChange) {
+                const el = document.createElement("select");
+                el.className = "sound-pick";
+                options.forEach(function (o) {
+                    const opt = document.createElement("option");
+                    opt.value = o[0];
+                    opt.textContent = o[1];
+                    el.appendChild(opt);
+                });
+                el.value = value || "";
+                el.addEventListener("change", function () { onChange(el.value); });
+                return el;
+            }
+            const slot = pick([["1", "Wrap 1"], ["2", "Wrap 2"], ["3", "Wrap 3"]], String(cwSlot), function (v) { cwSlot = Number(v); renderGrid(); });
+            row("Custom wrap", "You can have 3 at once", slot, !!customWraps[cwSlot]);
+            const rep = document.createElement("input");
+            rep.placeholder = "Blue, Yellow";
+            rep.value = (c.Replace || "").split(",").join(", ");
+            rep.addEventListener("change", function () {
+                setCustomWrap("Replace", rep.value.split(",").map(function (x) { return x.trim(); }).filter(Boolean).join(","));
+            });
+            row("Replaces", "Optional: or pick Custom Wrap in the Wraps tab. Wraps you own, separated by commas", rep, !!c.Replace);
+            const pat = document.createElement("input");
+            pat.placeholder = "None, or a wrap name like Fracture";
+            pat.value = c.Pattern || "";
+            pat.addEventListener("change", function () { setCustomWrap("Pattern", pat.value.trim()); });
+            row("Pattern", "Borrowed from any wrap that has one", pat, !!c.Pattern);
+            const mats = [["", "Game's"], ["Neon", "Neon"], ["ForceField", "ForceField"], ["Glass", "Glass"], ["Metal", "Metal"], ["SmoothPlastic", "Plastic"]];
+            const trans = [["0", "Solid"], ["0.25", "25%"], ["0.5", "50%"], ["0.75", "75%"]];
+            ["Main", "Second", "Accent"].forEach(function (part, i) {
+                const k = i + 1;
+                const box = document.createElement("div");
+                box.style.cssText = "display:flex;gap:6px;align-items:center";
+                box.appendChild(pick(mats, c["Material" + k], function (v) { setCustomWrap("Material" + k, v); }));
+                const col = document.createElement("input");
+                col.type = "color";
+                col.value = /^[0-9a-f]{6}$/.test(c["Color" + k] || "") ? "#" + c["Color" + k] : "#ff00e6";
+                col.addEventListener("change", function () { setCustomWrap("Color" + k, col.value.slice(1).toLowerCase()); });
+                box.appendChild(col);
+                box.appendChild(pick(trans, c["Transparency" + k] || "0", function (v) { setCustomWrap("Transparency" + k, v); }));
+                row(part + " part", "Material, colour and how see-through it is", box, !!(c["Material" + k] || c["Color" + k]));
+            });
+            grid.appendChild(card);
+        }
+        // Custom wraps as entries of the wrap list, in a Custom rarity of their own.
+        const CW_RARITY = (window.WRAP_RARITIES || []).length;
+        if (window.WRAP_RARITIES) window.WRAP_RARITIES.push(["Custom", "#ff4fd8"]);
+        function customWrapItems() {
+            return [1, 2, 3].filter(function (n) { return customWraps[n] && Object.keys(customWraps[n]).length; }).map(function (n) {
+                const c = customWraps[n];
+                const parts = [1, 2, 3].map(function (k) {
+                    return [c["Material" + k] || "SmoothPlastic", "#" + (c["Color" + k] || c.Color1 || "ff4fd8"), Number(c["Transparency" + k] || 0), 0];
+                });
+                const item = ["Custom Wrap " + n, CW_RARITY, 0, parts];
+                WRAP_BY_NAME[item[0]] = item;
+                return item;
+            });
+        }
+        function generateCustomWrapLines() {
+            let lines = [];
+            [1, 2, 3].forEach(function (n) {
+                const c = customWraps[n];
+                if (!c || !Object.keys(c).length) return;
+                lines.push("", "[CustomWrap" + n + "]");
+                CW_KEYS.forEach(function (k) { if (c[k]) lines.push(k + "=" + c[k]); });
+            });
+            return lines;
         }
         function generateThemeLines() {
             if (!themeConfig.Preset && !themeConfig.Follow) return [];
@@ -6959,6 +7069,11 @@
                     : (tracerConfig.Speed ? "Tracer speed " + tracerConfig.Speed + "%" : "Tracers unchanged"));
                 return;
             }
+            if (dashMode === "customwraps") {
+                const k = Object.keys(customWraps).length;
+                el.textContent = k ? k + (k === 1 ? " custom wrap" : " custom wraps") : "No custom wraps";
+                return;
+            }
             if (dashMode === "theme") {
                 el.textContent = themeConfig.Preset || themeConfig.Follow
                     ? "Theme: " + (themeConfig.Preset || "none") + (themeConfig.Follow ? ", follows " + themeConfig.Follow : "") : "No theme";
@@ -7056,7 +7171,7 @@
                 lines = lines.concat(swapLines);
             }
             return lines.concat(generateWrapLines()).concat(generateSkyLines()).concat(generateLightLines()).concat(generateSoundLines())
-                .concat(generateSpoofLines()).concat(generateTracerLines()).concat(generateHealthLines()).concat(generateButtonsLines()).concat(generateThemeLines()).concat(generateHandsLines())
+                .concat(generateSpoofLines()).concat(generateTracerLines()).concat(generateHealthLines()).concat(generateButtonsLines()).concat(generateThemeLines()).concat(generateCustomWrapLines()).concat(generateHandsLines())
                 .concat(generateCosmeticLines("finishers")).concat(generateCosmeticLines("charms")).join("\n");
         }
 
@@ -7319,12 +7434,23 @@
             }
             const out = {skins: {}, swaps: {}, Wraps: {}, Sounds: {}, Spoof: {}, Tracers: {}, HealthBar: {}, Buttons: {},
                 NoHands: {}, Finishers: {}, Charms: {}, Skybox: {}, Lighting: {}, Theme: {}};
+            const importedWraps = {};
             let section = "skins", count = 0;
             text.split(/\r?\n/).forEach(function (line) {
                 line = line.trim();
                 if (!line || line.indexOf("--") === 0) return;
                 const head = line.match(/^\[(.+)\]$/);
                 if (head) { section = head[1]; return; }
+                const cwHead = section.match(/^CustomWrap(\d)$/i);
+                if (cwHead) {
+                    const cwEq = line.indexOf("=");
+                    if (cwEq > 0) {
+                        const cwSet = importedWraps[cwHead[1]] = importedWraps[cwHead[1]] || {};
+                        cwSet[line.slice(0, cwEq).trim()] = line.slice(cwEq + 1).trim();
+                        count++;
+                    }
+                    return;
+                }
                 const swap = section === "skins" && line.match(/^(.+?)\s*\|\s*(.+?)\s*>\s*(.+)$/);
                 if (swap) {
                     (out.swaps[swap[1]] = out.swaps[swap[1]] || {})[swap[2]] = swap[3];
@@ -7356,7 +7482,7 @@
                 rivals_skybox_saved: sky, rivals_lighting_saved: light, rivals_sounds_saved: out.Sounds,
                 rivals_spoof_saved: out.Spoof, rivals_tracers_saved: out.Tracers, rivals_healthbar_saved: out.HealthBar,
                 rivals_buttons_saved: out.Buttons, rivals_hands_saved: out.NoHands,
-                rivals_finishers_saved: out.Finishers, rivals_charms_saved: out.Charms, rivals_theme_saved: out.Theme
+                rivals_finishers_saved: out.Finishers, rivals_charms_saved: out.Charms, rivals_theme_saved: out.Theme, rivals_customwraps_saved: importedWraps
             };
             if (!confirm("Load this config? It replaces what you have picked on the site (" + count + " settings).")) return false;
             try {
@@ -7409,6 +7535,7 @@
         try { applyTheme(localStorage.getItem("rivals_theme") || "dark"); } catch (e) { applyTheme("dark"); }
 
         const CHANGELOG = [
+            ["2026-10-31", "Custom wraps: build up to 3 wraps with your own colours, materials, see-through and any game pattern, listed under a Custom rarity."],
             ["2026-10-22", "Themes: Neon, Pastel, Monochrome, Sunset, Ocean, Halloween, Christmas - and themes that follow the time of day, skin rarity or your wrap."],
             ["2026-10-22", "Light / dark switch for this site."],
             ["2026-10-22", "Panic key, safe mode and FPS-friendly mode in both GUIs."],
