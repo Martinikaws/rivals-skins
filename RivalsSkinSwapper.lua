@@ -9,6 +9,27 @@ local PANIC_RUN = type(_G.__RSC_CONFIG_OVERRIDE) == "string" and _G.__RSC_CONFIG
 local QUICK = _G.__RSC_QUICK == true and not PANIC_RUN and {} or nil
 _G.__RSC_QUICK = nil
 
+-- Crash trail: every step goes straight to a file, so when Matcha itself dies
+-- (nothing else records why) the last lines say what was running. It keeps
+-- the last 300 lines across joins and restarts. Nothing is sent anywhere.
+if type(_G.__RSC_CRUMB) ~= "function" then
+    _G.__RSC_CRUMB = function(step)
+        pcall(function()
+            local file = "rivals_crash_trail.txt"
+            local okR, body = pcall(readfile, file)
+            local lines = {}
+            if okR and type(body) == "string" then
+                for line in body:gmatch("[^\n]+") do lines[#lines + 1] = line end
+            end
+            local okT, stamp = pcall(os.date, "%m-%d %H:%M:%S")
+            lines[#lines + 1] = (okT and stamp or "?") .. "  " .. tostring(game.JobId):sub(1, 8) .. "  " .. tostring(step):sub(1, 150)
+            local from = math.max(1, #lines - 299)
+            writefile(file, table.concat(lines, "\n", from) .. "\n")
+        end)
+    end
+end
+_G.__RSC_CRUMB("changer: start")
+
 -- Health: every warning the run prints is also noted, and the run ends with
 -- one line saying whether everything applied, for players to paste back.
 _G.__RSC_PROBLEMS = {}
@@ -39,6 +60,7 @@ local print = (function(realPrint)
         local log = _G.__RSC_LOG
         if type(log) == "table" then
             log[#log + 1] = msg:gsub("^%[RivalsSkinChanger%]%s*", "")
+            pcall(_G.__RSC_CRUMB, "changer: " .. log[#log])
             while #log > 300 do table.remove(log, 1) end
         end
         local short = msg:gsub("^%[RivalsSkinChanger%]%s*", "")
@@ -6491,6 +6513,7 @@ pcall(function()
 end)
 
 -- Save state
+_G.__RSC_CRUMB("changer: done")
 _G.__RSC_LAST_QUICK = QUICK and true or nil
 _G.__RIVALS_SKIN_CHANGER_STATE ={restores = memoryRestores, wfAddr = wf.Address, nameCopies = nameCopies, dicts = dictCache, floats = floatRestores}
 saveUndo()
