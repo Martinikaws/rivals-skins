@@ -690,6 +690,7 @@
             <button class="btn-ghost btn-sm skins-only" onclick="applyPreset('key')">Key Set</button>
             <button class="btn-ghost btn-sm skins-only" onclick="applyPreset('pixel')">Pixel Set</button>
             <button class="btn-ghost btn-sm wraps-only" onclick="applyPreset('dev')" hidden>Dev Set</button>
+            <button class="btn-ghost btn-sm wraps-only" onclick="setDashMode('customwraps')" title="Build up to 3 wraps of your own: colour, material, pattern" hidden>Custom Wraps</button>
             <button class="btn-ghost btn-sm" onclick="applyPreset('default')">Reset</button>
             <div class="adv-note adv-only" hidden>Tap a weapon, pick the skin you own, then the skin it should look like.</div>
         </div>
@@ -4996,12 +4997,12 @@
             body.appendChild(search);
             const current = wrapConfig[name] || null;
             const options = [];
-            function addOption(label, subText, w, rarityIdx, target) {
+            function addOption(label, subText, w, rarityIdx, target, after) {
                 const active = target === current;
                 const opt = document.createElement("div");
                 opt.className = "skin-option" + (active ? " active" : "");
                 opt.dataset.name = label.toLowerCase();
-                opt.addEventListener("click", function () { onWrapChange(name, target); closeSkinModal(); });
+                opt.addEventListener("click", function () { onWrapChange(name, target); closeSkinModal(); if (after) after(); });
                 const ic = document.createElement("div");
                 ic.className = "skin-option-icon";
                 ic.innerHTML = wrapIconSVG(w);
@@ -5032,7 +5033,12 @@
                 options.push(opt);
             }
             addOption("Default", "Keep " + name + "'s own look", WRAP_BY_NAME[name], null, null);
-            customWrapItems().forEach(function (w) { addOption(w[0], "Your custom wrap", w, w[1], w[0]); });
+            // All 3 slots are listed; picking one not built yet opens its builder.
+            customWrapItems(true).forEach(function (w) {
+                const n = Number(w[0].slice(-1));
+                if (w.built) addOption(w[0], "Your custom wrap", w, w[1], w[0]);
+                else addOption(w[0], "Not built yet - opens the builder", w, w[1], w[0], function () { cwSlot = n; setDashMode("customwraps"); });
+            });
             WRAP_LIST.slice().sort(function (a, b) { return b[1] - a[1] || a[0].localeCompare(b[0]); }).forEach(function (w) {
                 if (w[0] !== name) addOption(w[0], WRAP_TESTED[w[0]] ? "Tested in game" : "", w, w[1], w[0]);
             });
@@ -6124,13 +6130,15 @@
         // Custom wraps as entries of the wrap list, in a Custom rarity of their own.
         const CW_RARITY = (window.WRAP_RARITIES || []).length;
         if (window.WRAP_RARITIES) window.WRAP_RARITIES.push(["Custom", "#ff4fd8"]);
-        function customWrapItems() {
-            return [1, 2, 3].filter(function (n) { return customWraps[n] && Object.keys(customWraps[n]).length; }).map(function (n) {
-                const c = customWraps[n];
+        // Built slots only, or all 3 (unbuilt ones flagged built = false).
+        function customWrapItems(all) {
+            return [1, 2, 3].filter(function (n) { return all || (customWraps[n] && Object.keys(customWraps[n]).length); }).map(function (n) {
+                const c = customWraps[n] || {};
                 const parts = [1, 2, 3].map(function (k) {
                     return [c["Material" + k] || "SmoothPlastic", "#" + (c["Color" + k] || c.Color1 || "ff4fd8"), Number(c["Transparency" + k] || 0), 0];
                 });
                 const item = ["Custom Wrap " + n, CW_RARITY, 0, parts];
+                item.built = Object.keys(c).length > 0;
                 WRAP_BY_NAME[item[0]] = item;
                 return item;
             });
