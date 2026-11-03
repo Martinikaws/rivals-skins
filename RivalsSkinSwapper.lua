@@ -31,42 +31,69 @@ if type(_G.__RSC_CRUMB) ~= "function" then
 end
 _G.__RSC_CRUMB("changer: start")
 
--- Live loops: every per-frame loop runs through this. It stops the loop when
--- the server changes, skips frames while the session check fails, turns the
--- feature off for this server after 60 failures in a row (one line in the
--- console, not a stuck loop), and notes any frame slower than 0.2 s in the
--- crash trail. _G.__RSC_HB(name) stands in for RunService.Heartbeat.
+-- Live loops: one scheduler runs every feature's per-frame work from a
+-- single Heartbeat connection, instead of one connection each. Jobs marked
+-- every-frame (the health bar, which the game repaints every frame) always run;
+-- the rest share a 4 ms budget per frame, taking turns, so one slow frame
+-- delays them instead of piling up. A job stops when the server changes,
+-- skips frames while the session check fails, is turned off for this server
+-- after 60 failures in a row (one line in the console), and a call slower than
+-- 0.2 s is noted in the crash trail. _G.__RSC_HB(name, everyFrame) stands in for
+-- RunService.Heartbeat: :Connect(fn) returns something with :Disconnect().
 do
     local job = game.JobId
-    _G.__RSC_HB = function(name)
+    local S = _G.__RSC_SCHED
+    if type(S) ~= "table" or S.job ~= job then
+        if type(S) == "table" and S.conn then pcall(function() S.conn:Disconnect() end) end
+        S = {job = job, jobs = {}, turn = 0}
+        _G.__RSC_SCHED = S
+        local BUDGET = 0.004
+        S.conn = game:GetService("RunService").Heartbeat:Connect(function(dt)
+            if game.JobId ~= S.job then
+                pcall(function() S.conn:Disconnect() end)
+                return
+            end
+            local check = _G.__RSC_SESSION_OK
+            if type(check) == "function" and not check() then return end
+            local now = tick()
+            local list = S.jobs
+            for i = #list, 1, -1 do if list[i].off then table.remove(list, i) end end
+            local n = #list
+            if n == 0 then return end
+            local spent = 0
+            S.turn = S.turn % n + 1
+            for k = 0, n - 1 do
+                local j = list[(S.turn + k - 1) % n + 1]
+                if not j.off and (j.everyFrame or spent < BUDGET) then
+                    local jdt = now - (j.last or now - (dt or 1 / 60))
+                    j.last = now
+                    local t0 = tick()
+                    local ok, err = pcall(j.fn, jdt)
+                    local took = tick() - t0
+                    if not j.everyFrame then spent = spent + took end
+                    if took > 0.2 and now - (j.slowNoted or 0) > 10 then
+                        j.slowNoted = now
+                        pcall(_G.__RSC_CRUMB, string.format("loop %s slow: %.2fs", j.name, took))
+                    end
+                    if ok then
+                        j.fails = 0
+                    else
+                        j.fails = (j.fails or 0) + 1
+                        if j.fails >= 60 then
+                            j.off = true
+                            print("[RivalsSkinChanger] " .. j.name .. ": turned off for this server after repeated errors - " .. tostring(err):sub(1, 120))
+                            pcall(_G.__RSC_CRUMB, "loop " .. j.name .. " turned off: " .. tostring(err):sub(1, 100))
+                        end
+                    end
+                end
+            end
+        end)
+    end
+    _G.__RSC_HB = function(name, everyFrame)
         return {Connect = function(_, fn)
-            local fails, off, slowNoted, conn = 0, false, 0, nil
-            conn = game:GetService("RunService").Heartbeat:Connect(function(...)
-                if off then return end
-                if game.JobId ~= job then
-                    off = true
-                    pcall(function() conn:Disconnect() end)
-                    return
-                end
-                local check = _G.__RSC_SESSION_OK
-                if type(check) == "function" and not check() then return end
-                local t0 = tick()
-                local ok, err = pcall(fn, ...)
-                local took = tick() - t0
-                if took > 0.2 and tick() - slowNoted > 10 then
-                    slowNoted = tick()
-                    pcall(_G.__RSC_CRUMB, string.format("loop %s slow: %.2fs", name, took))
-                end
-                if ok then fails = 0 return end
-                fails = fails + 1
-                if fails >= 60 then
-                    off = true
-                    pcall(function() conn:Disconnect() end)
-                    print("[RivalsSkinChanger] " .. name .. ": turned off for this server after repeated errors - " .. tostring(err):sub(1, 120))
-                    pcall(_G.__RSC_CRUMB, "loop " .. name .. " turned off: " .. tostring(err):sub(1, 100))
-                end
-            end)
-            return conn
+            local j = {name = name, fn = fn, everyFrame = everyFrame == true}
+            table.insert(_G.__RSC_SCHED.jobs, j)
+            return {Disconnect = function() j.off = true end}
         end}
     end
 end
@@ -6359,7 +6386,7 @@ Delta.health = function()
 
     local acc, fpsAcc, pulsePhase, shinePos = 0, 0, 0, 0
     local conn
-    conn = _G.__RSC_HB("Health bar"):Connect(function(dt)
+    conn = _G.__RSC_HB("Health bar", true):Connect(function(dt)
         if _G.__RSC_HPBAR ~= token or game.JobId ~= job then
             pcall(function() conn:Disconnect() end)
             if game.JobId == job then releaseBar(bar) end
