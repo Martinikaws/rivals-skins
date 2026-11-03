@@ -31,6 +31,46 @@ if type(_G.__RSC_CRUMB) ~= "function" then
 end
 _G.__RSC_CRUMB("changer: start")
 
+-- Live loops: every per-frame loop runs through this. It stops the loop when
+-- the server changes, skips frames while the session check fails, turns the
+-- feature off for this server after 60 failures in a row (one line in the
+-- console, not a stuck loop), and notes any frame slower than 0.2 s in the
+-- crash trail. _G.__RSC_HB(name) stands in for RunService.Heartbeat.
+do
+    local job = game.JobId
+    _G.__RSC_HB = function(name)
+        return {Connect = function(_, fn)
+            local fails, off, slowNoted, conn = 0, false, 0, nil
+            conn = game:GetService("RunService").Heartbeat:Connect(function(...)
+                if off then return end
+                if game.JobId ~= job then
+                    off = true
+                    pcall(function() conn:Disconnect() end)
+                    return
+                end
+                local check = _G.__RSC_SESSION_OK
+                if type(check) == "function" and not check() then return end
+                local t0 = tick()
+                local ok, err = pcall(fn, ...)
+                local took = tick() - t0
+                if took > 0.2 and tick() - slowNoted > 10 then
+                    slowNoted = tick()
+                    pcall(_G.__RSC_CRUMB, string.format("loop %s slow: %.2fs", name, took))
+                end
+                if ok then fails = 0 return end
+                fails = fails + 1
+                if fails >= 60 then
+                    off = true
+                    pcall(function() conn:Disconnect() end)
+                    print("[RivalsSkinChanger] " .. name .. ": turned off for this server after repeated errors - " .. tostring(err):sub(1, 120))
+                    pcall(_G.__RSC_CRUMB, "loop " .. name .. " turned off: " .. tostring(err):sub(1, 100))
+                end
+            end)
+            return conn
+        end}
+    end
+end
+
 -- Health: every warning the run prints is also noted, and the run ends with
 -- one line saying whether everything applied, for players to paste back.
 _G.__RSC_PROBLEMS = {}
@@ -224,6 +264,7 @@ do
         valid = ok and result == true
         return valid
     end
+    _G.__RSC_SESSION_OK = validSession
     mrd = function(kind, address)
         if not validSession() then error("server changed - memory read cancelled") end
         return rawRead(kind, address)
@@ -2480,6 +2521,19 @@ ROUTE.detectAt = function(ms)
         trace.arrays = trace.arrays + 1
         local no, lsize = nodesOfTable(t)
         if not no then trace.stop = "module table found but its nodes weren't" return false end
+        -- Slot 3 or a wrong layout can still land on some other table with
+        -- string keys (Luau keeps its own there), so a module we know must
+        -- hold its known key.
+        local expect = ({CosmeticLibrary = "Cosmetics", ItemLibrary = "ViewModels"})[ms.Name]
+        if expect then
+            local base, l, found = rd(t + no), rbyte(t + lsize), false
+            for i = 0, math.min(2 ^ (l or 0), 256) - 1 do
+                local kp = base and rd(base + i * 32 + 16)
+                local ok, k = pcall(mrd, "string", (kp or 0) + 24)
+                if ok and k == expect then found = true break end
+            end
+            if not found then trace.stop = "a table was found, but not " .. ms.Name .. "'s" return false end
+        end
         ROUTE.tt, ROUTE.globalState, ROUTE.registry, ROUTE.lsize = tt, x, y, lsize
         ROUTE.sizearray, ROUTE.array, ROUTE.node, ROUTE.ok = so, ao, no, true
         _G.__RSC_LAYOUT = {tt = tt, globalState = x, registry = y, lsize = lsize, sizearray = so, array = ao, node = no,
@@ -2541,7 +2595,7 @@ ROUTE.detect = function(ms)
             for _, d in ipairs({8, 0x20, 0x10, 0x18, 0x28}) do
                 local sl = th + d
                 local v = rint(a + sl)
-                if not tried[th .. ":" .. sl] and v and v >= 1 and v < 10000000 then
+                if not tried[th .. ":" .. sl] and v and v >= 16 and v < 10000000 then
                     tried[th .. ":" .. sl] = true
                     ROUTE.thread, ROUTE.slot, ROUTE.nextFull = th, sl, nil
                     if ROUTE.detectAt(ms) then
@@ -4344,7 +4398,7 @@ local function startVolumeWatcher(conf)
     if _G.__RIVALS_SOUND_CONN then pcall(function() _G.__RIVALS_SOUND_CONN:Disconnect() end) end
     local seen = {}
     local soundLast = 0
-    _G.__RIVALS_SOUND_CONN = game:GetService("RunService").Heartbeat:Connect(function()
+    _G.__RIVALS_SOUND_CONN = _G.__RSC_HB("Sound volume"):Connect(function()
         if _G.__RIVALS_SOUND_WATCH ~= token then return end
         local now = tick()
         if _G.__RSC_FPS then
@@ -5007,7 +5061,7 @@ local function startSpoof(conf)
     if not okFirst then print("[RivalsSkinChanger] Spoof: " .. tostring(firstErr)) end
     if any then
         local lastRun, lastError, lastCard = tick(), nil, 0
-        _G.__RIVALS_SPOOF_CONN = game:GetService("RunService").Heartbeat:Connect(function()
+        _G.__RIVALS_SPOOF_CONN = _G.__RSC_HB("Spoof"):Connect(function()
             if _G.__RIVALS_SPOOF ~= token then return end
             local now = tick()
             -- FPS-friendly mode: the profile card 4 times a second, values once.
@@ -5709,7 +5763,7 @@ local function applyTracersEffect()
         end
         local wrapCol
         local conn
-        conn = game:GetService("RunService").Heartbeat:Connect(function(dt)
+        conn = _G.__RSC_HB("Tracers"):Connect(function(dt)
             if _G.__RIVALS_TRACERS ~= token then pcall(function() conn:Disconnect() end) return end
             dt = dt or 1 / 60
             acc, sinceCheck = acc + dt, sinceCheck + dt
@@ -5767,7 +5821,7 @@ local function applyTracersEffect()
         -- again every 2 s for 2 minutes and apply as soon as it's there.
         print("[RivalsSkinChanger] Tracers: waiting for the game to load its tracers - they apply by themselves")
         local acc, waited, conn = 0, 0, nil
-        conn = game:GetService("RunService").Heartbeat:Connect(function(dt)
+        conn = _G.__RSC_HB("Tracers (waiting)"):Connect(function(dt)
             if _G.__RIVALS_TRACERS ~= token or game.JobId ~= job then pcall(function() conn:Disconnect() end) return end
             dt = dt or 1 / 60
             acc, waited = acc + dt, waited + dt
@@ -5881,7 +5935,7 @@ local function applyNoHandsEffect()
     -- so they come back as their weapons are equipped.
     if any or hidden.any then
         local acc, conn = 0, nil
-        conn = game:GetService("RunService").Heartbeat:Connect(function(dt)
+        conn = _G.__RSC_HB("No hands"):Connect(function(dt)
             if _G.__RIVALS_NOHANDS ~= token or game.JobId ~= job then pcall(function() conn:Disconnect() end) return end
             acc = acc + (dt or 1 / 60)
             if acc < (_G.__RSC_FPS and 0.5 or 0.15) then return end
@@ -6305,7 +6359,7 @@ Delta.health = function()
 
     local acc, fpsAcc, pulsePhase, shinePos = 0, 0, 0, 0
     local conn
-    conn = game:GetService("RunService").Heartbeat:Connect(function(dt)
+    conn = _G.__RSC_HB("Health bar"):Connect(function(dt)
         if _G.__RSC_HPBAR ~= token or game.JobId ~= job then
             pcall(function() conn:Disconnect() end)
             if game.JobId == job then releaseBar(bar) end
@@ -6568,12 +6622,24 @@ Delta.buttons = function()
         return {math.min(1, c[1] * k + (1 - c[1] * k) * w), math.min(1, c[2] * k + (1 - c[2] * k) * w),
             math.min(1, c[3] * k + (1 - c[3] * k) * w)}
     end
+    -- Nothing to colour and nothing to put back: no need to walk the UI.
+    if not next(want) and not next(prev) then
+        if next(conf) then
+            print("[RivalsSkinChanger] Buttons: no colour to use (hex like ff4fd8, ff4fd8>3b5bff, rainbow, or sky with a sky preset that has lighting) - left as they are")
+        end
+        return
+    end
     local GC = _G.__RSC_GRADOFF()
     local function stopsOf(g)
         if not GC then return nil end
         local p, n = rd(g + GC), mrd("int", g + GC + 8)
         if p and p > 0x10000 and n and n >= 3 and n <= 4 then return p, n end
     end
+    -- A game button's gradient starts with one of these: anything else is
+    -- left after one colour read instead of up to twelve.
+    local FIRST = {}
+    for sig in pairs(STYLES) do FIRST[sig:sub(1, 6)] = true end
+    local function hex(c) return string.format("%02x%02x%02x", math.floor(c[1] * 255 + 0.5), math.floor(c[2] * 255 + 0.5), math.floor(c[3] * 255 + 0.5)) end
 
     local map, count = {}, {}
     -- The templates live in PlayerScripts.UserInterface and the buttons in
@@ -6595,6 +6661,10 @@ Delta.buttons = function()
                     for i, c in ipairs(old) do
                         for j = 1, 3 do mwr("float", p + (i - 1) * 20 + j * 4, c[j]) end
                     end
+                end
+                if p and not old then
+                    local first = hex({mrd("float", p + 4), mrd("float", p + 8), mrd("float", p + 12)})
+                    if not FIRST[first] then p = nil end
                 end
                 if p then
                     local sig, cols = {}, {}
