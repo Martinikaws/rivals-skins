@@ -4638,12 +4638,13 @@
             try { spoofConfig = JSON.parse(localStorage.getItem("rivals_spoof_saved") || "{}") || {}; } catch (e) { spoofConfig = {}; }
             try { tracerConfig = JSON.parse(localStorage.getItem("rivals_tracers_saved") || "{}") || {}; } catch (e) { tracerConfig = {}; }
             try { handsConfig = JSON.parse(localStorage.getItem("rivals_hands_saved") || "{}") || {}; } catch (e) { handsConfig = {}; }
+            try { scopeConfig = JSON.parse(localStorage.getItem("rivals_scope_saved") || "{}") || {}; } catch (e) { scopeConfig = {}; }
             try { healthConfig = JSON.parse(localStorage.getItem("rivals_healthbar_saved") || "{}") || {}; } catch (e) { healthConfig = {}; }
             try { buttonsConfig = JSON.parse(localStorage.getItem("rivals_buttons_saved") || "{}") || {}; } catch (e) { buttonsConfig = {}; }
             try { themeConfig = JSON.parse(localStorage.getItem("rivals_theme_saved") || "{}") || {}; } catch (e) { themeConfig = {}; }
             try { customWraps = JSON.parse(localStorage.getItem("rivals_customwraps_saved") || "{}") || {}; } catch (e) { customWraps = {}; }
             loadCosmeticConfigs();
-            setDashMode(["wraps", "advanced", "skybox", "sounds", "spoof", "tracers", "hands", "healthbar", "buttons", "theme", "customwraps", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
+            setDashMode(["wraps", "advanced", "skybox", "sounds", "spoof", "tracers", "hands", "healthbar", "buttons", "theme", "customwraps", "scope", "finishers", "charms"].indexOf(mode) >= 0 ? mode : "skins");
         }
 
         const CATEGORY_ORDER = ["Primary", "Secondary", "Melee", "Utility"];
@@ -4740,6 +4741,12 @@
             if (dashMode === "theme") {
                 renderMiscSwitch(grid);
                 renderThemeGrid(grid);
+                updateFootCount();
+                return;
+            }
+            if (dashMode === "scope") {
+                renderMiscSwitch(grid);
+                renderScopeGrid(grid);
                 updateFootCount();
                 return;
             }
@@ -5526,7 +5533,7 @@
 
         // ---- Misc tab ----
         // Smaller features share one tab, each a tab of its own under it.
-        const MISC_MODES = {tracers: "Tracers", hands: "Hands", spoof: "Spoof", healthbar: "Health bar", buttons: "Buttons", theme: "Theme", customwraps: "Custom wraps"};
+        const MISC_MODES = {tracers: "Tracers", hands: "Hands", spoof: "Spoof", healthbar: "Health bar", buttons: "Buttons", theme: "Theme", customwraps: "Custom wraps", scope: "Scope"};
         let lastMiscMode = "tracers";
         function renderMiscSwitch(grid) {
             const bar = document.createElement("div");
@@ -5603,6 +5610,52 @@
                 + 'Only you see it - other players see your character as usual.</div></div>';
             card.appendChild(note);
             grid.appendChild(card);
+        }
+        // ---- Scope tab ----
+        // [Scope] Clear=on hides the dark vignette and the black ring around
+        // the Sniper's and Crossbow's scope; the reticle stays.
+        let scopeConfig = {};
+        function renderScopeGrid(grid) {
+            const card = document.createElement("div");
+            card.className = "weapon-card";
+            const label = document.createElement("div");
+            label.className = "card-label";
+            label.textContent = "Scope - only you see it";
+            card.appendChild(label);
+            const on = scopeConfig.Clear === "on";
+            const r = document.createElement("div");
+            r.className = "sky-card sky-custom" + (on ? " active" : "");
+            r.dataset.name = "scope shading sniper crossbow vignette";
+            const info = document.createElement("div");
+            info.innerHTML = '<div class="sky-name">Scope shading</div><div class="sky-sub">The dark vignette and black ring around the view when you scope in with the Sniper, the Crossbow and their skins</div>';
+            r.appendChild(info);
+            const box = document.createElement("div");
+            box.className = "sky-add";
+            const pick = document.createElement("select");
+            pick.className = "sound-pick";
+            pick.innerHTML = '<option value="">Game\'s scope</option><option value="on">No shading</option>';
+            pick.value = on ? "on" : "";
+            pick.addEventListener("change", function () {
+                if (pick.value) scopeConfig.Clear = "on"; else delete scopeConfig.Clear;
+                try { localStorage.setItem("rivals_scope_saved", JSON.stringify(scopeConfig)); } catch (e) {}
+                renderGrid();
+                filterWeapons();
+                showToast(pick.value ? "Scope shading removed - the reticle stays" : "Scope back to the game's");
+            });
+            box.appendChild(pick);
+            r.appendChild(box);
+            card.appendChild(r);
+            const note = document.createElement("div");
+            note.className = "sky-card";
+            note.dataset.name = "scope note";
+            note.innerHTML = '<div><div class="sky-name">How it works</div><div class="sky-sub">'
+                + 'Only the shading is hidden: the crosshair lines and the red dot stay, and nothing else about the weapon changes. '
+                + 'It shows on your next scope-in after the changer runs.</div></div>';
+            card.appendChild(note);
+            grid.appendChild(card);
+        }
+        function generateScopeLines() {
+            return scopeConfig.Clear === "on" ? ["", "[Scope]", "-- Clear=on hides the dark shading when scoped in. The reticle stays.", "Clear=on"] : [];
         }
         function generateHandsLines() {
             const keys = Object.keys(handsConfig).filter(function (k) { return handsConfig[k]; })
@@ -6600,6 +6653,92 @@
             tuneRow("outdoor", "Outdoor ambient", "The light in open areas", colour("outdoor", "#8c96a8"));
         }
 
+        // Advanced: your own Roblox image ids - one on all six faces, or one
+        // per face - with a name to keep the set. The changer only writes
+        // images from its own skies unless Force=yes is in the config.
+        let skyAdvancedOpen = false;
+        function renderSkyAdvanced(card) {
+            const ownIds = !!(skyConfig.all || (skyConfig.faces && !skyConfig.preset
+                && !sharedSkies.some(function (x) { return sameFaces(x.faces, skyConfig.faces); })));
+            const open = skyAdvancedOpen || ownIds;
+            const head = document.createElement("div");
+            head.className = "sky-card" + (ownIds ? " active" : "");
+            head.dataset.name = "advanced custom asset id own roblox image";
+            head.innerHTML = '<div><div class="sky-name">Advanced - your own image ids</div><div class="sky-sub">'
+                + 'Type Roblox image ids for the sky: one for all six faces, or one per face</div></div>';
+            const tog = document.createElement("button");
+            tog.className = "sky-mini";
+            tog.textContent = open ? "Hide" : "Open";
+            tog.addEventListener("click", function (e) { e.stopPropagation(); skyAdvancedOpen = !open; renderGrid(); filterWeapons(); });
+            const act = document.createElement("div");
+            act.className = "sky-actions";
+            act.appendChild(tog);
+            head.appendChild(act);
+            card.appendChild(head);
+            if (!open) return;
+
+            function idOf(v) { return (v || "").replace(/[^0-9]/g, ""); }
+            function row(name, sub, control, active) {
+                const r = document.createElement("div");
+                r.className = "sky-card sky-custom" + (active ? " active" : "");
+                r.dataset.name = "advanced sky " + name.toLowerCase();
+                const i = document.createElement("div");
+                i.innerHTML = '<div class="sky-name"></div><div class="sky-sub"></div>';
+                i.querySelector(".sky-name").textContent = name;
+                i.querySelector(".sky-sub").textContent = sub;
+                r.appendChild(i);
+                r.appendChild(control);
+                card.appendChild(r);
+            }
+            const all = document.createElement("input");
+            all.placeholder = "e.g. 10196550367";
+            all.value = skyConfig.all || "";
+            all.addEventListener("change", function () {
+                const v = idOf(all.value);
+                onSkyChange(v ? {all: v, force: skyConfig.force} : {});
+            });
+            row("All faces", "One image id on all six faces", all, !!skyConfig.all);
+
+            const faces = Object.assign({}, (!skyConfig.all && !skyConfig.preset && skyConfig.faces) || {});
+            const FACE_NAMES = {ft: "Front", bk: "Back", lf: "Left", rt: "Right", up: "Up", dn: "Down"};
+            const box = document.createElement("div");
+            box.style.cssText = "display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-width:min(420px,100%)";
+            SKY_FACE_ORDER.forEach(function (k) {
+                const inp = document.createElement("input");
+                inp.placeholder = FACE_NAMES[k];
+                inp.title = FACE_NAMES[k] + " face";
+                inp.value = faces[k] || "";
+                inp.style.width = "100%";
+                inp.addEventListener("change", function () {
+                    const v = idOf(inp.value);
+                    if (v) faces[k] = v; else delete faces[k];
+                    onSkyChange(Object.keys(faces).length ? {faces: faces, force: skyConfig.force} : {});
+                });
+                box.appendChild(inp);
+            });
+            row("One per face", "Front, Back, Left, Right, Up, Down - leave one empty to keep the map's own", box,
+                !skyConfig.all && Object.keys(faces).length > 0);
+
+            const force = document.createElement("select");
+            force.className = "sound-pick";
+            force.innerHTML = '<option value="">Changer\'s skies only</option><option value="yes">Force</option>';
+            force.value = skyConfig.force ? "yes" : "";
+            force.addEventListener("change", function () {
+                if (force.value && !confirm("Force writes your ids as they are.\n\nAn image the game can't load - a private or brand-new upload - crashes Roblox on the next map load. Only use public images.\n\nTurn Force on?")) {
+                    force.value = "";
+                    return;
+                }
+                const next = Object.assign({}, skyConfig);
+                if (force.value) next.force = true; else delete next.force;
+                onSkyChange(next);
+            });
+            row("Safety check", skyConfig.force
+                ? "Force is on: an image the game can't load (private or new upload) crashes Roblox on the next map load"
+                : "Ids that aren't from the changer's own skies are turned down, so a bad image can't crash the game. Force writes them anyway", force, !!skyConfig.force);
+
+            renderSkyAdd(card);
+        }
+
         function renderSkyGrid(grid) {
             const card = document.createElement("div");
             card.className = "weapon-card";
@@ -6635,25 +6774,8 @@
                 card.appendChild(row);
             });
 
-            // Any Roblox image asset, on all six faces.
-            const custom = document.createElement("div");
-            custom.className = "sky-card sky-custom" + (skyConfig.all ? " active" : "");
-            custom.dataset.name = "custom asset id";
-            const cinfo = document.createElement("div");
-            cinfo.innerHTML = '<div class="sky-name">Custom asset</div><div class="sky-sub">One image id on all six faces - the changer only applies images from its own skies, unless the config adds Force=yes</div>';
-            const input = document.createElement("input");
-            input.placeholder = "e.g. 10196550367";
-            input.value = skyConfig.all || "";
-            input.addEventListener("click", function (e) { e.stopPropagation(); });
-            input.addEventListener("change", function () {
-                const v = input.value.replace(/[^0-9]/g, "");
-                onSkyChange(v ? {all: v} : {});
-            });
-            custom.appendChild(cinfo);
-            custom.appendChild(input);
-            card.appendChild(custom);
-
             renderCustomSkies(card);
+            renderSkyAdvanced(card);
 
             renderLightingRow(card);
 
@@ -6680,7 +6802,8 @@
         }
 
         function generateSkyLines() {
-            if (skyConfig.all) return ["", "[Skybox]", "-- One image on all six faces. Shows on the next map or area load.", "All=" + skyConfig.all];
+            const forceLine = skyConfig.force ? ["-- Force=yes skips the safety check: an image the game can't load crashes Roblox.", "Force=yes"] : [];
+            if (skyConfig.all) return ["", "[Skybox]", "-- One image on all six faces. Shows on the next map or area load.", "All=" + skyConfig.all].concat(forceLine);
             if (skyConfig.preset) return ["", "[Skybox]", "-- Shows on the next map or area load.", "Preset=" + skyConfig.preset];
             // Shared skies are built into the changer by name, which also lets
             // "match" lighting find the lighting made for them.
@@ -6690,7 +6813,7 @@
             const keys = ["bk", "dn", "ft", "lf", "rt", "up"].filter(function (k) { return faces[k]; });
             if (!keys.length) return [];
             return ["", "[Skybox]", "-- One image id per face. Shows on the next map or area load."]
-                .concat(keys.map(function (k) { return k.toUpperCase() + "=" + faces[k]; }));
+                .concat(keys.map(function (k) { return k.toUpperCase() + "=" + faces[k]; })).concat(forceLine);
         }
 
         // ---- Finishers and Charms tabs ----
@@ -7077,6 +7200,10 @@
                     : (tracerConfig.Speed ? "Tracer speed " + tracerConfig.Speed + "%" : "Tracers unchanged"));
                 return;
             }
+            if (dashMode === "scope") {
+                el.textContent = scopeConfig.Clear === "on" ? "Scope shading removed" : "Scope unchanged";
+                return;
+            }
             if (dashMode === "customwraps") {
                 const k = Object.keys(customWraps).length;
                 el.textContent = k ? k + (k === 1 ? " custom wrap" : " custom wraps") : "No custom wraps";
@@ -7179,7 +7306,7 @@
                 lines = lines.concat(swapLines);
             }
             return lines.concat(generateWrapLines()).concat(generateSkyLines()).concat(generateLightLines()).concat(generateSoundLines())
-                .concat(generateSpoofLines()).concat(generateTracerLines()).concat(generateHealthLines()).concat(generateButtonsLines()).concat(generateThemeLines()).concat(generateCustomWrapLines()).concat(generateHandsLines())
+                .concat(generateSpoofLines()).concat(generateTracerLines()).concat(generateHealthLines()).concat(generateButtonsLines()).concat(generateThemeLines()).concat(generateCustomWrapLines()).concat(generateHandsLines()).concat(generateScopeLines())
                 .concat(generateCosmeticLines("finishers")).concat(generateCosmeticLines("charms")).join("\n");
         }
 
@@ -7206,6 +7333,15 @@
             }
             if (dashMode === "hands") {
                 if (presetType === "default") { handsConfig = {}; saveHandsConfig(); renderGrid(); showToast("Hands shown on every weapon"); }
+                return;
+            }
+            if (dashMode === "scope") {
+                if (presetType === "default") {
+                    scopeConfig = {};
+                    try { localStorage.setItem("rivals_scope_saved", "{}"); } catch (e) {}
+                    renderGrid();
+                    showToast("Scope back to the game's");
+                }
                 return;
             }
             if (dashMode === "tracers") {
@@ -7441,7 +7577,7 @@
                 } catch (e) { showToast("That share code is broken"); return false; }
             }
             const out = {skins: {}, swaps: {}, Wraps: {}, Sounds: {}, Spoof: {}, Tracers: {}, HealthBar: {}, Buttons: {},
-                NoHands: {}, Finishers: {}, Charms: {}, Skybox: {}, Lighting: {}, Theme: {}};
+                NoHands: {}, Finishers: {}, Charms: {}, Skybox: {}, Lighting: {}, Theme: {}, Scope: {}};
             const importedWraps = {};
             let section = "skins", count = 0;
             text.split(/\r?\n/).forEach(function (line) {
@@ -7479,6 +7615,7 @@
                 ["BK", "DN", "FT", "LF", "RT", "UP"].forEach(function (k) { if (out.Skybox[k]) faces[k.toLowerCase()] = out.Skybox[k]; });
                 if (Object.keys(faces).length) sky.faces = faces;
             }
+            if (!sky.preset && /^(yes|true|on|1)$/i.test(out.Skybox.Force || "")) sky.force = true;
             const light = {};
             if (out.Lighting.Preset) light.preset = out.Lighting.Preset;
             if (out.Lighting.Exposure) light.exposure = out.Lighting.Exposure;
@@ -7490,6 +7627,7 @@
                 rivals_skybox_saved: sky, rivals_lighting_saved: light, rivals_sounds_saved: out.Sounds,
                 rivals_spoof_saved: out.Spoof, rivals_tracers_saved: out.Tracers, rivals_healthbar_saved: out.HealthBar,
                 rivals_buttons_saved: out.Buttons, rivals_hands_saved: out.NoHands,
+                rivals_scope_saved: /^(on|true|yes|1)$/i.test(out.Scope.Clear || "") ? {Clear: "on"} : {},
                 rivals_finishers_saved: out.Finishers, rivals_charms_saved: out.Charms, rivals_theme_saved: out.Theme, rivals_customwraps_saved: importedWraps
             };
             if (!confirm("Load this config? It replaces what you have picked on the site (" + count + " settings).")) return false;

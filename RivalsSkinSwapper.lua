@@ -213,18 +213,20 @@ do
     end
 end
 
--- Run lock
+-- Run lock, for this server only: Matcha keeps _G across teleports, and a
+-- run cut off by a queue teleport (it never gets to clear the lock) used to
+-- stop the next server's run for three minutes.
 local RUN_LOCK_SECONDS = 180
 do
     local busy = _G.__RIVALS_SKIN_CHANGER_BUSY
-    if type(busy) == "number" and tick() - busy < RUN_LOCK_SECONDS then
+    if type(busy) == "number" and tick() - busy < RUN_LOCK_SECONDS and _G.__RIVALS_SKIN_CHANGER_BUSY_JOB == game.JobId then
         print("[RivalsSkinChanger] Already running - wait for it to finish, then run it again if needed")
         if typeof(notify) == "function" then
             pcall(notify, "Already running - wait for it to finish", "Rivals Skin Changer", 5)
         end
         return
     end
-    _G.__RIVALS_SKIN_CHANGER_BUSY = tick()
+    _G.__RIVALS_SKIN_CHANGER_BUSY, _G.__RIVALS_SKIN_CHANGER_BUSY_JOB = tick(), game.JobId
 end
 
 if typeof(notify) == "function" then pcall(notify, "Starting - applying your skins...", "Rivals Skin Changer", 5) end
@@ -2468,10 +2470,22 @@ end
 -- looks again when they don't fit.
 local ROUTE = {thread = 0x168, slot = 0x170, globalState = 0x38, registry = 0x618, node = 0x18, array = 0x28,
     sizearray = 8, tt = 1, lsize = 4}
-local TAG_TABLE, TAG_THREAD = 7, 10
+local TAG_TABLE, TAG_THREAD, TAG_STRING = 7, 10, 6
 
 local function rbyte(a) local ok, v = pcall(mrd, "byte", a) return ok and v or nil end
 local function rint(a) local ok, v = pcall(mrd, "int", a) return ok and v or nil end
+-- Type tags move too: Roblox build 4ea8e85 (Nov 2026) numbers Luau's types
+-- one lower (string 5, table 6, thread 9; was 6, 7, 10). A thread's header
+-- says which numbering this build uses: the byte holding 10 (older builds,
+-- checked first) or 9.
+ROUTE.threadTagAt = function(p)
+    for _, tag in ipairs({10, 9}) do
+        for b = 0, 3 do if rbyte(p + b) == tag then return b, tag end end
+    end
+end
+ROUTE.useTags = function(threadTag)
+    TAG_THREAD, TAG_TABLE, TAG_STRING = threadTag, threadTag - 3, threadTag - 4
+end
 
 -- Finds tt, the global-state offset, the registry offset and lsizenode from
 -- one module: its thread's header says where tt is; the right global state
@@ -2483,8 +2497,8 @@ ROUTE.detectAt = function(ms)
     local thread = rd(ms.Address + ROUTE.thread)
     local slot = rint(ms.Address + ROUTE.slot)
     if not thread or thread < 0x10000 or not slot or slot < 1 then trace.stop = "no thread/slot on the module" return false end
-    local tt
-    for b = 0, 3 do if rbyte(thread + b) == TAG_THREAD then tt = b break end end
+    local tt, threadTag = ROUTE.threadTagAt(thread)
+    if tt then ROUTE.useTags(threadTag) end
     if not tt then trace.stop = "no thread tag in the thread header" return false end
     trace.tt, trace.slot, trace.pointers, trace.tagged, trace.arrays = tt, slot, 0, 0, 0
     -- A table's array: a size and a pointer somewhere in its first 0x30
@@ -2527,7 +2541,7 @@ ROUTE.detectAt = function(ms)
                         for i = 0, count - 1 do
                             local n = base + i * 32
                             local kp = rd(n + 16)
-                            if (rint(n + 28) or 0) % 16 == 6 and kp and kp > 0x10000 then
+                            if (rint(n + 28) or 0) % 16 == TAG_STRING and kp and kp > 0x10000 then
                                 local ok, k = pcall(mrd, "string", kp + 24)
                                 if ok and type(k) == "string" and #k > 0 and #k < 64 then keys = keys + 1 end
                             end
@@ -2564,7 +2578,7 @@ ROUTE.detectAt = function(ms)
         ROUTE.tt, ROUTE.globalState, ROUTE.registry, ROUTE.lsize = tt, x, y, lsize
         ROUTE.sizearray, ROUTE.array, ROUTE.node, ROUTE.ok = so, ao, no, true
         _G.__RSC_LAYOUT = {tt = tt, globalState = x, registry = y, lsize = lsize, sizearray = so, array = ao, node = no,
-            thread = ROUTE.thread, slot = ROUTE.slot}
+            thread = ROUTE.thread, slot = ROUTE.slot, tagThread = TAG_THREAD}
         print(string.format("[RivalsSkinChanger] Memory layout: type byte +%d, global state +0x%x, registry +0x%x, size byte +%d, array +0x%x/+%d, nodes +0x%x",
             tt, x, y, lsize, ao, so, no))
         return true
@@ -2615,7 +2629,7 @@ ROUTE.detect = function(ms)
         local p = rd(a + th)
         local isThread = false
         if p and p > 0x10000 and p < 0x7fffffffffff then
-            for b = 0, 3 do if rbyte(p + b) == TAG_THREAD then isThread = true end end
+            isThread = ROUTE.threadTagAt(p) ~= nil
         end
         if isThread then
             anyThread = true
@@ -2652,7 +2666,7 @@ ROUTE.apply = function(lay, from)
     if type(lay.thread) == "number" and type(lay.slot) == "number" then ROUTE.thread, ROUTE.slot = lay.thread, lay.slot end
     ROUTE.ok = true
     _G.__RSC_LAYOUT = {tt = lay.tt, globalState = lay.globalState, registry = lay.registry, lsize = lay.lsize,
-        sizearray = lay.sizearray, array = lay.array, node = lay.node, thread = ROUTE.thread, slot = ROUTE.slot}
+        sizearray = lay.sizearray, array = lay.array, node = lay.node, thread = ROUTE.thread, slot = ROUTE.slot, tagThread = TAG_THREAD}
     print(string.format("[RivalsSkinChanger] Memory layout (%s): type byte +%d, global state +0x%x, registry +0x%x, size byte +%d, array +0x%x/+%d, nodes +0x%x",
         from, lay.tt, lay.globalState, lay.registry, lay.lsize, lay.array, lay.sizearray, lay.node))
 end
@@ -2676,7 +2690,7 @@ ROUTE.valueOf = function(t, lay, key)
     for i = 0, 2 ^ l - 1 do
         local n = base + i * 32
         local kp = rd(n + 16)
-        if (rint(n + 28) or 0) % 16 == 6 and kp and kp > 0x10000 then
+        if (rint(n + 28) or 0) % 16 == TAG_STRING and kp and kp > 0x10000 then
             local ok, k = pcall(mrd, "string", kp + 24)
             if ok and k == key then return rd(n) end
         end
@@ -2689,6 +2703,8 @@ ROUTE.useSaved = function(ms)
     -- tried again on the next call instead of being called wrong.
     local th, sl = rd(ms.Address + ROUTE.thread), rint(ms.Address + ROUTE.slot)
     if not th or th < 0x10000 or not sl or sl < 1 then return false end
+    local _, threadTag = ROUTE.threadTagAt(th)
+    if threadTag then ROUTE.useTags(threadTag) end
     ROUTE.triedSaved = true
     local okF, raw = pcall(function() local f = ROUTE.savedFile() return isfile(f) and readfile(f) or nil end)
     if not okF or type(raw) ~= "string" then return false end
@@ -2712,11 +2728,13 @@ ROUTE.learn = function(ms, nodes)
     local thread = rd(ms.Address + ROUTE.thread)
     if not thread or thread < 0x10000 then return false end
     local tts = {}
-    for b = 0, 3 do if rbyte(thread + b) == TAG_THREAD then tts[#tts + 1] = b end end
-    local steps = 0
+    local b0, threadTag = ROUTE.threadTagAt(thread)
+    if b0 then ROUTE.useTags(threadTag); tts[1] = b0 end
+    local steps, deadline = 0, tick() + 12
     local function fits(lay)
         steps = steps + 1
         if steps % 400 == 0 then pcall(task.wait) end
+        if tick() > deadline or game.JobId ~= Delta.runJob then error("layout learning stopped") end
         local t = ROUTE.tableWith(ms, lay)
         if not t then return false end
         for _, no in ipairs({0x18, 0x20, 0x10, 0x28, 0x30, 0x8}) do
@@ -3181,6 +3199,7 @@ local function applySkinSwapper()
     configWrapPairs, configFinishers, configCharms = {}, {}, {}
     configSkybox, configSounds, configSpoof = {}, {}, {}
     configLighting, configTracers, configNoHands = {}, {}, {}
+    _G.__RSC_SCOPE_CFG = {}
     _G.__RSC_HPBAR_CFG, _G.__RSC_BTN_CFG = {}, {}
     if not isfile or not readfile then
         return 0, "Executor does not support isfile/readfile functions."
@@ -3332,7 +3351,7 @@ local function applySkinSwapper()
                 or (h:find("light") and "lighting" or (h:find("finisher") and "finishers"
                 or (h:find("charm") and "charms" or (h:find("sound") and "sounds"
                 or (h:find("spoof") and "spoof" or (h:find("tracer") and "tracers" or (h:find("hand") and "nohands"
-                or (h:find("skin") and "skins" or "other")))))))))
+                or (h == "scope" and "scope" or (h:find("skin") and "skins" or "other"))))))))))
         elseif section == "other" then
 
         elseif section == "finishers" or section == "charms" then
@@ -3356,6 +3375,9 @@ local function applySkinSwapper()
         elseif section == "nohands" then
             local key, value = parseConfigLine(rawLine)
             if key and value then configNoHands[key:lower()] = value end
+        elseif section == "scope" then
+            local key, value = parseConfigLine(rawLine)
+            if key and value then _G.__RSC_SCOPE_CFG[key:lower()] = value end
         elseif section == "tracers" then
             local key, value = parseConfigLine(rawLine)
             if key and value then configTracers[key:lower()] = value end
@@ -3645,6 +3667,7 @@ local function applySkinSwapper()
 end
 
 -- Wait for the game
+Delta.runJob = game.JobId
 local gameReady = false
 do
     local mods = game:GetService("ReplicatedStorage"):WaitForChild("Modules", 30)
@@ -3691,6 +3714,13 @@ do
 end
 
 local count, errorReason = applySkinSwapper()
+-- After a teleport this run's addresses belong to the old server: stop, and
+-- leave the new server's lock, undo file and state to its own run.
+Delta.runJob = Delta.runJob or game.JobId
+if game.JobId ~= Delta.runJob or not _G.__RSC_SESSION_OK() then
+    _G.__RSC_CRUMB("changer: server changed mid-run - stopped")
+    return
+end
 saveUndo() -- saved now, in case a later step fails before the final save
 local elapsed = math.floor((tick() - t_start) * 1000)
 
@@ -4297,7 +4327,7 @@ local SOUND_TARGETS = {
     ["rbxassetid://16530229541"] = "kill",
     ["rbxassetid://16530229695"] = "kill",
 }
-local SOUND_TEXT_MAX, SOUND_LEN, TAG_STRING = 31, 20, 6
+local SOUND_TEXT_MAX, SOUND_LEN = 31, 20
 
 -- nil = keep the game's sound, "" = silence, false = not usable.
 local function soundText(v)
@@ -5633,10 +5663,10 @@ local function applyTracersEffect()
             end
             return nil
         end
-        -- Proto layouts: build 5a21b87, 9ac8595, 11f155f3, cec3ad5, 02c37bc, then the older one.
+        -- Proto layouts: build 4ea8e85, 5a21b87, 9ac8595, 11f155f3, cec3ad5, 02c37bc, then the older one.
         -- Every layout is tried for an exact 800 first, so a stray constant on
         -- a wrong layout can't pass for an earlier run's speed.
-        local PATHS = {{0x58, 0x80}, {0x30, 0x48}, {0x18, 0x20}, {0x48, 0x20}, {0x28, 0x48}, {0x20, 0x38, 8}}
+        local PATHS = {{0x38, 0x28}, {0x58, 0x80}, {0x30, 0x48}, {0x18, 0x20}, {0x48, 0x20}, {0x28, 0x48}, {0x20, 0x38, 8}}
         local k
         for pass = 1, 2 do
             for _, pth in ipairs(PATHS) do
@@ -5979,7 +6009,74 @@ local function applyNoHandsEffect()
         end
     end
 end
+if not _G.__RSC_SESSION_OK() then _G.__RSC_CRUMB("changer: server changed mid-run - stopped") return end
 applyNoHandsEffect()
+
+-- Scope shading ([Scope] Clear=on): hides the dark vignette (Scope.Blur) and
+-- the black ring with its side bars (Scope.Circle) while scoped in with the
+-- Sniper, Crossbow and their skins. The reticle and red dot are in
+-- Scope.Reticle and stay. Each weapon's interface gets its own scope, built
+-- again on every respawn, so a slow live loop hides each new one. Matcha
+-- can't set Visible, so it's written in memory (the GUI is drawn from it);
+-- its offset moves with BackgroundColor3, found by the default border colour
+-- right after it, as for the health bar.
+Delta.clearScope = function()
+    _G.__RSC_SCOPE_TOKEN = (_G.__RSC_SCOPE_TOKEN or 0) + 1
+    local token, job = _G.__RSC_SCOPE_TOKEN, game.JobId
+    local conf = _G.__RSC_SCOPE_CFG or {}
+    local on = spoofFlag(conf.clear) == true
+    local hidden = _G.__RSC_SCOPE_HIDDEN
+    if type(hidden) ~= "table" or hidden.job ~= job then hidden = {job = job, any = false} end
+    _G.__RSC_SCOPE_HIDDEN = hidden
+    if not on and not hidden.any then return end
+    local vis
+    local function visOffset(frame)
+        if vis then return vis end
+        local b = frame.Address
+        local function border(at)
+            local ok, r, g, bl = pcall(function() return mrd("float", b + at), mrd("float", b + at + 4), mrd("float", b + at + 8) end)
+            return ok and r and math.abs(r - 27 / 255) < 0.002 and math.abs(g - 42 / 255) < 0.002 and math.abs(bl - 53 / 255) < 0.002
+        end
+        if border(OFF.GuiColor + 0xC) then vis = OFF.GuiVisible return vis end
+        for at = 0x400, 0x800, 4 do
+            if border(at) then vis = OFF.GuiVisible + (at - 0xC - OFF.GuiColor) return vis end
+        end
+    end
+    local function pass()
+        local pg = LP:FindFirstChild("PlayerGui")
+        local mg = pg and pg:FindFirstChild("MainGui")
+        local mf = mg and mg:FindFirstChild("MainFrame")
+        local ii = mf and mf:FindFirstChild("ItemInterfaces")
+        for _, si in ipairs(ii and ii:GetChildren() or {}) do
+            local mouse = si:FindFirstChild("Mouse")
+            local scope = mouse and mouse:FindFirstChild("Scope")
+            for _, name in ipairs({"Blur", "Circle"}) do
+                local f = scope and scope:FindFirstChild(name)
+                local off = f and visOffset(f)
+                if off then
+                    local okV, v = pcall(mrd, "byte", f.Address + off)
+                    if okV and on and v == 1 then
+                        pcall(mwr, "byte", f.Address + off, 0)
+                        hidden.any = true
+                    elseif okV and not on and v == 0 then
+                        pcall(mwr, "byte", f.Address + off, 1)
+                    end
+                end
+            end
+        end
+    end
+    local acc, conn = 0, nil
+    conn = _G.__RSC_HB("Clear scope"):Connect(function(dt)
+        if _G.__RSC_SCOPE_TOKEN ~= token or game.JobId ~= job then pcall(function() conn:Disconnect() end) return end
+        acc = acc + (dt or 1 / 60)
+        if acc < (_G.__RSC_FPS and 0.5 or 0.25) then return end
+        acc = 0
+        pcall(pass)
+    end)
+    pcall(pass)
+    if on then print("[RivalsSkinChanger] Scope shading: off - only the reticle shows when scoped in") end
+end
+pcall(Delta.clearScope)
 
 -- Finishers and charms
 -- Season rank charms
@@ -6251,11 +6348,16 @@ Delta.health = function()
     -- A UIGradient keeps its transparency stops at +0xb8 (count +0xc0, 12
     -- bytes each) and colour stops at +0xf8 (count +0x100, 20 bytes each:
     -- time, r, g, b, envelope).
+    -- Since Roblox build 4ea8e85 (Nov 2026) these slots sit in a separate
+    -- block the frame points to (frame +0x630): UICorner at +0x50, UIGradient
+    -- at +0x30, flag at +0x48. Returns the slot's and the flag's addresses.
     local function slotsOf(bar)
         if not bar.corner then return nil end
         local ca = bar.corner.Address
         for off = 0x600, 0xC00, 8 do
-            if rd(bar.bar + off) == ca then return off - 0x30, off - 8 end
+            local v = rd(bar.bar + off)
+            if v == ca then return bar.bar + off - 0x30, bar.bar + off - 8 end
+            if v and v > 0x10000 and v < 0x7fffffffffff and rd(v + 0x50) == ca then return v + 0x30, v + 0x48 end
         end
     end
     local GC, GT = _G.__RSC_GRADOFF()
@@ -6292,7 +6394,7 @@ Delta.health = function()
     local function link(bar)
         local slot, flag = slotsOf(bar)
         if not slot then return nil end
-        local g = rd(bar.bar + slot)
+        local g = rd(slot)
         if not (g and g > 0x10000 and stops(g)) then
             g = donor()
             if not g then return nil end
@@ -6300,9 +6402,9 @@ Delta.health = function()
             local uses = ctrl and ctrl > 0x10000 and mrd("int", ctrl + 8)
             if not uses or uses < 1 or uses > 1000 then return nil end
             mwr("int", ctrl + 8, uses + 1)
-            wr(bar.bar + slot + 8, ctrl)
-            wr(bar.bar + slot, g)
-            mwr("byte", bar.bar + flag, 1)
+            wr(slot + 8, ctrl)
+            wr(slot, g)
+            mwr("byte", flag, 1)
         end
         -- Opaque all along.
         local tp, tn = rd(g + GT), mrd("int", g + GT + 8)
@@ -6318,7 +6420,7 @@ Delta.health = function()
     local function unlink(bar)
         local slot = slotsOf(bar)
         if not slot then return end
-        local g = rd(bar.bar + slot)
+        local g = rd(slot)
         if not g or g < 0x10000 then return end
         local p, n = stops(g)
         for i = 0, (n or 0) - 1 do
@@ -6487,6 +6589,7 @@ Delta.health = function()
     print("[RivalsSkinChanger] Health bar: " .. (conf.label or style) .. (#extras > 0 and (" + " .. table.concat(extras, ", ")) or "")
         .. (bar and "" or ", once the bar shows up") .. " - only you see it")
 end
+if not _G.__RSC_SESSION_OK() then _G.__RSC_CRUMB("changer: server changed mid-run - stopped") return end
 pcall(Delta.health)
 
 -- Scope setups. Mouse.Scope._Setup picks a scope by the viewmodel's name:
@@ -6731,6 +6834,7 @@ end
 pcall(Delta.buttons)
 
 -- Save state
+if not _G.__RSC_SESSION_OK() then _G.__RSC_CRUMB("changer: server changed mid-run - stopped") return end
 _G.__RSC_LAST_QUICK = QUICK and true or nil
 _G.__RSC_CRUMB("changer: done")
 _G.__RIVALS_SKIN_CHANGER_STATE ={restores = memoryRestores, wfAddr = wf.Address, jobId = game.JobId, nameCopies = nameCopies, dicts = dictCache, floats = floatRestores}
@@ -6772,7 +6876,7 @@ function Delta.snapshot(text)
                 or h:find("light") and "lighting" or h:find("finisher") and "finishers"
                 or h:find("charm") and "charms" or h:find("sound") and "sounds"
                 or h:find("spoof") and "spoof" or h:find("tracer") and "tracers"
-                or h:find("hand") and "nohands" or h:find("skin") and "skins" or "other"
+                or h:find("hand") and "nohands" or h == "scope" and "scope" or h:find("skin") and "skins" or "other"
         elseif section ~= "other" then
             local key, value = parseConfigLine(line)
             if section == "skins" then
@@ -6925,7 +7029,7 @@ do
         assert(_G.__RIVALS_SKIN_CHANGER_STATE == owner and game.JobId == jobId and game.Address == gameAddress,
             "Server changed; wait for auto-apply in the new server.")
         mrd("int", game.Address) -- existing guard also verifies the live Weapons folder
-        assert(not _G.__RIVALS_SKIN_CHANGER_BUSY, "Another apply is running.")
+        assert(not (_G.__RIVALS_SKIN_CHANGER_BUSY and _G.__RIVALS_SKIN_CHANGER_BUSY_JOB == game.JobId), "Another apply is running.")
         local nextState = Delta.snapshot(text)
         local changed = Delta.plan(nextState)
         if not next(changed) then return "No changes to apply." end
@@ -6939,7 +7043,7 @@ do
         table.sort(names)
         print("[RivalsSkinChanger] Applying changes only: " .. table.concat(names, ", "))
         Delta.pending, Delta.changed = changed, changed
-        _G.__RIVALS_SKIN_CHANGER_BUSY = tick()
+        _G.__RIVALS_SKIN_CHANGER_BUSY, _G.__RIVALS_SKIN_CHANGER_BUSY_JOB = tick(), game.JobId
         _G.__RSC_PROBLEMS = {}
         local previousWr, previousMwr = wr, mwr
         Delta.writeError = nil
@@ -6997,6 +7101,7 @@ do
                 or (changed.skybox and uses(configTracers, "sky"))
                 or (wrapChanged and uses(configTracers, "wrap")) then applyTracersEffect() end
             if changed.nohands then applyNoHandsEffect() end
+            if changed.scope then Delta.clearScope() end
             if scopeChanged then Delta.scopes() end
             if changed.healthbar or (changed.skybox and uses(_G.__RSC_HPBAR_CFG, "sky")) then Delta.health() end
             if changed.buttons or (changed.skybox and uses(_G.__RSC_BTN_CFG, "sky")) then Delta.buttons() end
