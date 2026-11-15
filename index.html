@@ -5692,8 +5692,9 @@
 
             function row(key, name, sub) {
                 const current = tracerConfig[key] || "";
+                const gunSpeed = key === "Color" ? "" : (tracerConfig[key + " Speed"] || "");
                 const r = document.createElement("div");
-                r.className = "sky-card sky-custom" + (current ? " active" : "");
+                r.className = "sky-card sky-custom" + (current || gunSpeed ? " active" : "");
                 r.dataset.name = (name + " tracer").toLowerCase();
                 const info = document.createElement("div");
                 info.innerHTML = '<div class="sky-name"></div><div class="sky-sub"></div>';
@@ -5725,7 +5726,7 @@
                     color.hidden = !hex;
                     if (hex) color.value = "#" + v;
                     setTracer(key, v);
-                    r.classList.toggle("active", !!v);
+                    r.classList.toggle("active", !!(v || tracerConfig[key + " Speed"]));
                 });
                 color.addEventListener("input", function () {
                     const v = color.value.slice(1).toLowerCase();
@@ -5735,6 +5736,24 @@
                 });
                 box.appendChild(color);
                 box.appendChild(pick);
+                if (key !== "Color") {
+                    // This gun's own tracer speed (percent; 100 = the game's own); blank = the global Speed.
+                    const spd = document.createElement("select");
+                    spd.className = "sound-pick";
+                    spd.title = "Tracer speed for this gun";
+                    const steps = [20, 35, 50, 75, 100, 125, 150, 200];
+                    if (gunSpeed && steps.indexOf(Number(gunSpeed)) < 0) steps.push(Number(gunSpeed));
+                    steps.sort(function (a, b) { return a - b; });
+                    spd.innerHTML = '<option value="">Speed: same as all</option>'
+                        + steps.map(function (n) { return '<option value="' + n + '">Speed: ' + n + '%' + (n === 100 ? " (game's)" : "") + '</option>'; }).join("");
+                    spd.value = gunSpeed;
+                    spd.addEventListener("click", function (e) { e.stopPropagation(); });
+                    spd.addEventListener("change", function () {
+                        setTracer(key + " Speed", spd.value);
+                        r.classList.toggle("active", !!(spd.value || tracerConfig[key]));
+                    });
+                    box.appendChild(spd);
+                }
                 r.appendChild(box);
                 card.appendChild(r);
             }
@@ -5746,7 +5765,7 @@
             const speedNow = Number(tracerConfig.Speed) || 100;
             speedRow.className = "sky-card sky-custom" + (tracerConfig.Speed ? " active" : "");
             speedRow.dataset.name = "tracer speed slow fast keyper";
-            speedRow.innerHTML = '<div><div class="sky-name">Speed</div><div class="sky-sub">How fast tracers fly. Low is slow, like the Keyper.</div></div>'
+            speedRow.innerHTML = '<div><div class="sky-name">Speed</div><div class="sky-sub">The default speed for every gun (a gun can have its own below). Low is slow, like the Keyper.</div></div>'
                 + '<div class="sky-add"><input type="range" class="tracer-speed" min="5" max="200" step="5"><span class="tracer-speed-val"></span></div>';
             const range = speedRow.querySelector("input");
             const val = speedRow.querySelector(".tracer-speed-val");
@@ -5761,6 +5780,22 @@
                 speedRow.classList.toggle("active", v !== 100);
             });
             card.appendChild(speedRow);
+
+            const ktRow = document.createElement("div");
+            const ktOn = tracerConfig.KeyperTracer === "true";
+            ktRow.className = "sky-card sky-custom" + (ktOn ? " active" : "");
+            ktRow.dataset.name = "keyper tracer sniper wrap automatic";
+            ktRow.innerHTML = '<div><div class="sky-name">Keyper tracer</div>'
+                + '<div class="sky-sub">When Keyper is equipped, instantly adds its tracer matched with your wrap colour.</div></div>'
+                + '<div class="sky-add"><select class="sound-pick"><option value="">Off</option><option value="true">On</option></select></div>';
+            const ktPick = ktRow.querySelector("select");
+            ktPick.value = ktOn ? "true" : "";
+            ktPick.addEventListener("click", function (e) { e.stopPropagation(); });
+            ktPick.addEventListener("change", function () {
+                setTracer("KeyperTracer", ktPick.value);
+                ktRow.classList.toggle("active", !!ktPick.value);
+            });
+            card.appendChild(ktRow);
 
             // The game draws no tracers for the Energy Pistols; this turns them on.
             const epRow = document.createElement("div");
@@ -5796,7 +5831,7 @@
             const keys = Object.keys(tracerConfig).filter(function (k) { return tracerConfig[k]; })
                 .sort(function (a, b) { return a === "Color" ? -1 : (b === "Color" ? 1 : a.localeCompare(b)); });
             if (!keys.length) return [];
-            return ["", "[Tracers]", "-- Color = every gun; a gun's own line wins while it's out. Hex, rainbow, sky, wrap or default. Speed in % (100 = the game's)."]
+            return ["", "[Tracers]", "-- Color = every gun; a gun's own line wins while it's out. Hex, rainbow, sky, wrap or default. Speed = default speed in % for every gun (100 = the game's); '<Gun> Speed' sets one gun's own."]
                 .concat(keys.map(function (k) { return k + "=" + tracerConfig[k]; }));
         }
 
@@ -7195,9 +7230,10 @@
                 return;
             }
             if (dashMode === "tracers") {
-                const k = Object.keys(tracerConfig).filter(function (x) { return x !== "Color" && x !== "Speed"; }).length;
+                const k = Object.keys(tracerConfig).filter(function (x) { return x !== "Color" && x !== "Speed" && !/ Speed$/.test(x) && x !== "EnergyPistolsTracers" && x !== "KeyperTracer"; }).length;
                 el.textContent = tracerConfig.Color ? "Tracers recoloured" : (k ? k + (k === 1 ? " gun recoloured" : " guns recoloured")
-                    : (tracerConfig.Speed ? "Tracer speed " + tracerConfig.Speed + "%" : "Tracers unchanged"));
+                    : (tracerConfig.KeyperTracer === "true" ? "Keyper tracer matched to wrap"
+                    : (tracerConfig.Speed ? "Tracer speed " + tracerConfig.Speed + "%" : "Tracers unchanged")));
                 return;
             }
             if (dashMode === "scope") {

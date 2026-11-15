@@ -3405,6 +3405,12 @@ local function applySkinSwapper()
         end
     end
     for _, j in ipairs(swapJobs) do jobs[#jobs + 1] = j end
+    _G.__RSC_KEYPER_SRC = {}
+    for _, j in ipairs(jobs) do
+        if j[1] == "Sniper" and j[2]:lower() == "keyper" then
+            _G.__RSC_KEYPER_SRC[(j[3] or "sniper"):lower()] = true
+        end
+    end
     if QUICK then
         local n = 0
         for _, j in ipairs(jobs) do
@@ -3412,6 +3418,7 @@ local function applySkinSwapper()
             if t ~= "default" and t ~= "standard" then
                 n = n + 1
                 if j[3] == j[1] then ACTIVE_CONFIG_SKINS[j[1]] = j[2] end
+                if SCOPE_RETICLES[j[1]] then scopeSkins[j[1]] = {j[2], j[3] ~= j[1] and j[3] or nil} end
             end
         end
         return math.max(1, n)
@@ -5744,6 +5751,26 @@ local function applyTracersEffect()
         pcall(mwr, "double", orig.speed[1], orig.speed[2])
     end
     conf.speed = nil
+    -- "<Gun or skin> Speed = N": a speed of its own for that gun, written when
+    -- it's equipped (a gun's own line wins; the plain Speed is the default).
+    -- Taken out of conf so pick() never reads them as colours.
+    local gunSpeeds, gunCount = {}, 0
+    for k, v in pairs(conf) do
+        local gun = k:match("^(.-)%s+speed$")
+        if gun and gun ~= "" then
+            local n = tonumber(v)
+            if n then
+                gunSpeeds[gun] = math.max(5, math.min(300, n))
+                gunCount = gunCount + 1
+            end
+            conf[k] = nil
+        end
+    end
+    local function speedFor(name)
+        local parts = {}
+        for p in tostring(name or ""):gmatch("[^%-]+") do parts[#parts + 1] = p:match("^%s*(.-)%s*$"):lower() end
+        return (parts[3] and gunSpeeds[parts[3]]) or (parts[2] and gunSpeeds[parts[2]]) or speed
+    end
 
     -- Energy Pistols ship with DisableTracerEffects = true, so the game draws
     -- no tracers for them. EnergyPistolsTracers=true flips it off (the gun then
@@ -5771,12 +5798,14 @@ local function applyTracersEffect()
         end
     end)
     conf.energypistolstracers = nil
+    local keyperTracer = spoofFlag(conf.keypertracer) == true
+    conf.keypertracer = nil
     local fallback = conf.color or conf.all or conf.default
-    local any = next(conf) ~= nil
+    local any = next(conf) ~= nil or gunCount > 0 or keyperTracer
 
     if any and te then
         local seqs, current, lastName = collect(), nil, false
-        local acc, sinceCheck, lastRgb = 0, 0, nil
+        local acc, sinceCheck, equipAge, lastRgb, lastSpd = 0, 0, 0, nil, nil
         local function equipped()
             local vmf = workspace:FindFirstChild("ViewModels")
             local fp = vmf and vmf:FindFirstChild("FirstPerson")
@@ -5786,6 +5815,9 @@ local function applyTracersEffect()
         local function pick(name)
             local parts = {}
             for p in tostring(name or ""):gmatch("[^%-]+") do parts[#parts + 1] = p:match("^%s*(.-)%s*$"):lower() end
+            if keyperTracer and (parts[3] == "keyper" or (parts[2] == "sniper" and (_G.__RSC_KEYPER_SRC or {})[parts[3] or "sniper"])) then
+                return (parts[3] and conf[parts[3]]) or "wrap"
+            end
             return (parts[3] and conf[parts[3]]) or (parts[2] and conf[parts[2]]) or fallback
         end
         -- Color=sky: the sky preset's most vivid colour.
@@ -5818,17 +5850,17 @@ local function applyTracersEffect()
             -- An all-grey weapon gives its brightest grey.
             return (bestScore > 0.08 and best) or bright
         end
-        local wrapCol
+        local wrapCol, spdSlot
         local conn
         conn = _G.__RSC_HB("Tracers"):Connect(function(dt)
             if _G.__RIVALS_TRACERS ~= token then pcall(function() conn:Disconnect() end) return end
             dt = dt or 1 / 60
-            acc, sinceCheck = acc + dt, sinceCheck + dt
+            acc, sinceCheck, equipAge = acc + dt, sinceCheck + dt, equipAge + dt
             if acc < (_G.__RSC_FPS and 0.25 or 0.05) then return end
             acc = 0
-            if sinceCheck >= 1 then
-                sinceCheck, lastRgb = 0, nil -- rewrite once a second in case the game reset one
-                if current == "wrap" then wrapCol = weaponColor() end
+            local sec = sinceCheck >= 1
+            if sec then
+                sinceCheck, lastRgb, lastSpd = 0, nil, nil -- rewrite once a second in case the game reset one
                 if game.JobId ~= job or tracerModule() ~= te then
                     pcall(function() conn:Disconnect() end)
                     return
@@ -5836,10 +5868,24 @@ local function applyTracersEffect()
             end
             local name = equipped()
             if name ~= lastName then
-                lastName, lastRgb = name, nil
+                lastName, lastRgb, lastSpd, equipAge = name, nil, nil, 0
                 seqs = collect()
                 current = pick(name)
                 wrapCol = current == "wrap" and weaponColor() or nil
+            elseif current == "wrap" and (equipAge < 1 or sec) then
+                wrapCol = weaponColor()
+            end
+            -- Per-gun speed: the game's 800 is rewritten when the gun changes.
+            if gunCount > 0 then
+                local pct = speedFor(name)
+                -- looked up once: a failed search isn't repeated every tick
+                if spdSlot == nil then spdSlot = speedSlot() or false end
+                local slot = spdSlot
+                local want = slot and (pct and 800 * pct / 100 or orig.speed[2])
+                if want and want ~= lastSpd then
+                    lastSpd = want
+                    pcall(mwr, "double", slot, want)
+                end
             end
             local r, g, b
             if current == "rainbow" then
@@ -5861,6 +5907,12 @@ local function applyTracersEffect()
             end
         end)
         _G.__RIVALS_TRACER_CONN = conn
+        if gunCount > 0 then
+            print("[RivalsSkinChanger] Tracers: own speed for " .. gunCount .. " guns (switches as you equip them)")
+        end
+        if keyperTracer then
+            print("[RivalsSkinChanger] Tracers: Keyper tracer matched to wrap colour")
+        end
         print("[RivalsSkinChanger] Tracers: recolouring " .. #seqs .. " tracer colours (more load as you equip skins)")
         local wantsSky = false
         for _, v in pairs(conf) do if v == "sky" then wantsSky = true end end
@@ -7099,7 +7151,7 @@ do
             for k in pairs(changed) do if k:match("^wrap:") then wrapChanged = true break end end
             if changed.tracers or (skinChanged and next(configTracers))
                 or (changed.skybox and uses(configTracers, "sky"))
-                or (wrapChanged and uses(configTracers, "wrap")) then applyTracersEffect() end
+                or (wrapChanged and (uses(configTracers, "wrap") or spoofFlag(configTracers.keypertracer) == true)) then applyTracersEffect() end
             if changed.nohands then applyNoHandsEffect() end
             if changed.scope then Delta.clearScope() end
             if scopeChanged then Delta.scopes() end
